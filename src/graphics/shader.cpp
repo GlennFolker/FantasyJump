@@ -1,12 +1,13 @@
 #include <SDL.h>
 #include <gl/glew.h>
+#include <string>
 
 #include "shader.h"
 
 namespace Fantasy {
     Shader::Shader(const char *vertSource, const char *fragSource): Shader((char**)&vertSource, (char**)&fragSource) {}
 
-    Shader::Shader(char **vertSource, char **fragSource) {
+    Shader::Shader(char *vertSource[], char *fragSource[]) {
         vertPtr = createShader(GL_VERTEX_SHADER, vertSource);
         if(vertPtr == NULL) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create vertex shader.");
@@ -30,6 +31,7 @@ namespace Fantasy {
         
         glAttachShader(progPtr, vertPtr);
         glAttachShader(progPtr, fragPtr);
+        glBindFragDataLocation(progPtr, 0, "fragColor");
         glLinkProgram(progPtr);
 
         int success;
@@ -41,12 +43,26 @@ namespace Fantasy {
             this->~Shader();
             return;
         }
+
+        uniforms = new std::map<const char *, GLuint>();
+        attributes = new std::map<const char *, GLuint>();
     }
 
     Shader::~Shader() {
-        if(fragPtr != NULL) glDeleteShader(fragPtr);
-        if(vertPtr != NULL) glDeleteShader(vertPtr);
-        if(progPtr != NULL) glDeleteProgram(progPtr);
+        if(fragPtr != NULL) {
+            glDeleteShader(fragPtr);
+            fragPtr = NULL;
+        }
+        
+        if(vertPtr != NULL) {
+            glDeleteShader(vertPtr);
+            vertPtr = NULL;
+        }
+
+        if(progPtr != NULL) {
+            glDeleteProgram(progPtr);
+            progPtr = NULL;
+        }
     }
 
     void Shader::logProgram() {
@@ -81,7 +97,7 @@ namespace Fantasy {
         delete[] log;
     }
 
-    GLuint Shader::createShader(int type, char **source) {
+    GLuint Shader::createShader(int type, char *source[]) {
         GLuint shader = glCreateShader(type);
         if(shader == NULL) return NULL;
 
@@ -98,5 +114,42 @@ namespace Fantasy {
         } else {
             return shader;
         }
+    }
+
+    GLuint Shader::uniformLoc(const char *alias) {
+        if(progPtr == NULL) throw std::exception("Program pointer not defined.");
+        if(!uniforms->contains(alias)) {
+            GLuint loc = glGetUniformLocation(progPtr, alias);
+            if(loc == -1) {
+                std::string append(alias);
+                throw std::exception(("Uniform not found: '" + append + "'.").c_str());
+            } else {
+                uniforms->emplace(alias, loc);
+                return loc;
+            }
+        }
+
+        return uniforms->at(alias);
+    }
+
+    GLuint Shader::attributeLoc(const char *alias) {
+        if(progPtr == NULL) throw std::exception("Program pointer not defined.");
+        if(!attributes->contains(alias)) {
+            GLuint loc = glGetAttribLocation(progPtr, alias);
+            if(loc == -1) {
+                std::string append(alias);
+                throw std::exception(("Attribute not found: '" + append + "'.").c_str());
+            } else {
+                attributes->emplace(alias, loc);
+                return loc;
+            }
+        }
+
+        return attributes->at(alias);
+    }
+
+    void Shader::bind() {
+        if(progPtr == NULL) throw std::exception("Program pointer not defined.");
+        glUseProgram(progPtr);
     }
 }

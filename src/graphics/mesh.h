@@ -1,7 +1,10 @@
 #ifndef MESH_H
 #define MESH_H
 
+#include <exception>
 #include <gl/glew.h>
+
+#include "shader.h"
 
 namespace Fantasy {
     struct VertexAttr {
@@ -9,11 +12,10 @@ namespace Fantasy {
         static const VertexAttr position;
         static const VertexAttr texCoords;
 
-        private:
         int components;
         int type;
         bool normalized;
-        char *alias;
+        const char *alias;
         int size;
 
         public:
@@ -23,42 +25,24 @@ namespace Fantasy {
             this->components = components;
             this->type = type;
             this->normalized = normalized;
-            this->alias = (char *)alias;
+            this->alias = alias;
 
             switch(type) {
                 case GL_FLOAT:
                 case GL_FIXED:
-                    size = 4 * components;
+                    size = sizeof(GLfloat) * components;
                     break;
                 case GL_UNSIGNED_BYTE:
                 case GL_BYTE:
-                    size = components;
+                    size = sizeof(GLbyte) * components;
                     break;
                 case GL_UNSIGNED_SHORT:
                 case GL_SHORT:
-                    size = 2 * components;
+                    size = sizeof(GLshort) * components;
                     break;
+                default:
+                    throw std::exception("Invalid attribute type.");
             }
-        }
-
-        int getComponents() {
-            return components;
-        }
-
-        int getType() {
-            return type;
-        }
-
-        bool isNormalized() {
-            return normalized;
-        }
-
-        char *getAlias() {
-            return alias;
-        }
-
-        int getSize() {
-            return size;
         }
     };
 
@@ -66,14 +50,16 @@ namespace Fantasy {
         public:
         GLuint verticesData;
         GLuint indicesData;
+
         GLfloat *vertices;
         GLushort *indices;
 
-        VertexAttr *attributes;
         size_t maxVertices;
         size_t maxIndices;
         size_t vertSize;
+
         size_t attrCount;
+        VertexAttr *attributes;
 
         public:
         Mesh(size_t, size_t, size_t, VertexAttr *);
@@ -81,6 +67,9 @@ namespace Fantasy {
 
         void setVertices(GLfloat *, size_t, size_t);
         void setIndices(GLushort *, size_t, size_t);
+        void render(Shader *, GLenum, size_t, size_t);
+        void bind(Shader *);
+        void unbind(Shader *);
     };
 }
 
