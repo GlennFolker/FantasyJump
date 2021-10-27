@@ -9,7 +9,6 @@ namespace Fantasy {
         public:
         static App *instance;
 
-        public:
         SDL_Window *window = NULL;
         SDL_GLContext context;
 
@@ -18,11 +17,8 @@ namespace Fantasy {
 
         public:
         App(int *, char **[]);
-
         ~App();
-
         void run();
-
         void exit();
     };
 }
