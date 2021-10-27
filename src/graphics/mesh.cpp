@@ -16,8 +16,8 @@ namespace Fantasy {
             vertSize += a.size;
         }
 
-        vertices = (GLfloat *)calloc(maxVertices * vertSize, sizeof(GLfloat));
-        indices = (GLushort *)calloc(maxIndices, sizeof(GLushort));
+        vertices = new GLfloat[maxVertices * vertSize];
+        indices = new GLushort[maxIndices];
 
         glGenBuffers(1, &verticesData);
         glBindBuffer(GL_ARRAY_BUFFER, verticesData);
@@ -30,10 +30,10 @@ namespace Fantasy {
 
     Mesh::~Mesh() {
         glDeleteBuffers(1, &verticesData);
-        free(vertices);
+        delete[] vertices;
 
         glDeleteBuffers(1, &indicesData);
-        free(indices);
+        delete[] indices;
     }
 
     void Mesh::setVertices(GLfloat *vertices, size_t offset, size_t count) {
