@@ -3,7 +3,12 @@
 
 #include "mesh.h"
 
+using namespace std;
+
 namespace Fantasy {
+    const VertexAttr VertexAttr::position = VertexAttr(3, GL_FLOAT, "a_position");
+    const VertexAttr VertexAttr::texCoords = VertexAttr(2, GL_FLOAT, "a_tex_coords_0");
+
     Mesh::Mesh(size_t maxVertices, size_t maxIndices, size_t attrCount, VertexAttr *attributes) {
         this->maxVertices = maxVertices;
         this->maxIndices = maxIndices;
@@ -13,7 +18,7 @@ namespace Fantasy {
         vertSize = 0;
         for(size_t i = 0; i < attrCount; i++) {
             VertexAttr a = attributes[i];
-            vertSize += a.size;
+            vertSize += a.getSize();
         }
 
         vertices = new GLfloat[maxVertices * vertSize];
@@ -31,20 +36,21 @@ namespace Fantasy {
     Mesh::~Mesh() {
         glDeleteBuffers(1, &verticesData);
         delete[] vertices;
-
         glDeleteBuffers(1, &indicesData);
         delete[] indices;
+
+        delete[] attributes;
     }
 
     void Mesh::setVertices(GLfloat *vertices, size_t offset, size_t count) {
-        memcpy(this->vertices, vertices + offset, count);
+        SDL_memcpy(this->vertices, vertices + offset, count);
 
         glBindBuffer(GL_ARRAY_BUFFER, verticesData);
         glBufferData(GL_ARRAY_BUFFER, maxVertices * vertSize * sizeof(GLfloat), this->vertices, GL_STATIC_DRAW);
     }
 
     void Mesh::setIndices(GLushort *indices, size_t offset, size_t count) {
-        memcpy(this->indices, indices + offset, count);
+        SDL_memcpy(this->indices, indices + offset, count);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesData);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxIndices * sizeof(GLushort), this->indices, GL_STATIC_DRAW);
