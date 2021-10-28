@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_executable(Fantasy
     "src/main.cpp"
     "src/app.cpp"
+    "src/graphics/camera.cpp"
     "src/graphics/shader.cpp"
     "src/graphics/mesh.cpp"
     "src/graphics/sprite_batch.cpp"

@@ -3,7 +3,7 @@
 #include "../app.h"
 #include "sprite_batch.h"
 
-#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Fantasy {
     SpriteBatch::SpriteBatch(): SpriteBatch(4096, NULL) {}
@@ -15,10 +15,7 @@ namespace Fantasy {
             return;
         }
         
-        batching = false;
         index = 0;
-        projection = ortho(0, App::instance->getWidth(), App::instance->getHeight(), 0, 0, 100);
-        transform = identity<mat4>();
 
         this->shader = shader == NULL ? new Shader(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER) : shader;
 
@@ -54,34 +51,9 @@ namespace Fantasy {
         if(vertices != NULL) delete[] vertices;
     }
 
-    void SpriteBatch::begin() {
-        if(batching) throw std::exception("Don't begin() twice.");
-        batching = true;
-
-        vertices[index++] = -0.5f;
-        vertices[index++] = -0.5f;
-        vertices[index++] = 0.0f;
-
-        vertices[index++] = 0.5f;
-        vertices[index++] = -0.5f;
-        vertices[index++] = 0.0f;
-
-        vertices[index++] = 0.5f;
-        vertices[index++] = 0.5f;
-        vertices[index++] = 0.0f;
-
-        vertices[index++] = -0.5f;
-        vertices[index++] = 0.5f;
-        vertices[index++] = 0.0f;
-    }
-
-    void SpriteBatch::end() {
-        if(!batching) throw std::exception("Don't end() twice.");
-        batching = false;
-
+    void SpriteBatch::flush(mat4 projection) {
         shader->bind();
-        glUniformMatrix4fv(shader->uniformLoc("u_proj"), 1, false, &projection[0][0]);
-        glUniformMatrix4fv(shader->uniformLoc("u_trans"), 1, false, &transform[0][0]);
+        glUniformMatrix4fv(shader->uniformLoc("u_proj"), 1, false, value_ptr(projection));
 
         mesh->setVertices(vertices, 0, index);
         mesh->render(shader, GL_TRIANGLES, 0, index / spriteSize * 6);

@@ -39,6 +39,7 @@ namespace Fantasy {
 
         int getWidth();
         int getHeight();
+        float getAspect();
     };
 }
 

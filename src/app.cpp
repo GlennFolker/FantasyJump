@@ -125,4 +125,8 @@ namespace Fantasy {
 
         return h;
     }
+
+    float App::getAspect() {
+        return (float)getWidth() / (float)getHeight();
+    }
 }
