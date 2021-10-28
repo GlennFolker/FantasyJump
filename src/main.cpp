@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     config.height = 600;
     config.resizable = true;
 
-    App *app = new App(&argc, &argv, config);
+    App *app = new App(argc, argv, config);
     if(app != NULL && app->run()) {
         app->~App();
 

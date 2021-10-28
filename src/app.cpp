@@ -10,7 +10,7 @@
 namespace Fantasy {
     App *App::instance = NULL;
 
-    App::App(int *argc, char **argv[], AppConfig config) {
+    App::App(int argc, char *argv[], AppConfig config) {
         if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s\n", SDL_GetError());
             this->~App();

@@ -31,7 +31,7 @@ namespace Fantasy {
         bool exiting;
 
         public:
-        App(int *, char **[], AppConfig);
+        App(int, char *[], AppConfig);
         ~App();
 
         bool run();

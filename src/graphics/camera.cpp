@@ -27,7 +27,7 @@ namespace Fantasy {
 
     void Camera::update() {
         if(!isPerspective) {
-            projection = ortho(-width / 2.0f, width / 2.0f, height / 2.0f, -height / 2.0f, near, far);
+            projection = ortho(-width / 2.0f, width / 2.0f, -height / 2.0f, height / 2.0f, near, far);
         } else {
             projection = perspective(fov, width / height, near, far);
         }
