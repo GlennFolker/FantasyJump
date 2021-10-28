@@ -19,4 +19,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
-target_link_libraries(Fantasy opengl32 GLEW::GLEW glm::glm SDL2::SDL2main SDL2::SDL2)
+target_link_libraries(Fantasy PRIVATE opengl32 GLEW::GLEW glm::glm SDL2::SDL2main SDL2::SDL2)
+
+find_path(STB_INCLUDE_DIRS "stb.h")
+target_include_directories(Fantasy PRIVATE ${STB_INCLUDE_DIRS})

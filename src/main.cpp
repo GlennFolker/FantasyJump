@@ -1,4 +1,5 @@
 #define GLEW_STATIC
+#define STB_IMAGE_IMPLEMENTATION
 
 #include <SDL.h>
 
