@@ -14,7 +14,7 @@ uniform mat4 u_proj;\n\
 uniform mat4 u_trans;\n\
 \n\
 void main() {\n\
-    gl_Position = u_proj * u_trans * vec4(a_position.x, a_position.y, a_position.z, 1.0);\n\
+    gl_Position = matrix * vec4(a_position.x, a_position.y, a_position.z, 1.0);\n\
 }\n\
 ";
 
@@ -31,14 +31,16 @@ using namespace glm;
 
 namespace Fantasy {
     class SpriteBatch {
+        private:
         bool batching;
         size_t index;
+        size_t spriteSize;
 
         Mesh *mesh;
         Shader *shader;
         mat4 projection;
         mat4 transform;
-        GLfloat *vertices;
+        float *vertices;
 
         public:
         SpriteBatch();

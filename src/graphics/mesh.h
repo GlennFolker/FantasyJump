@@ -26,19 +26,19 @@ namespace Fantasy {
             this->type = type;
             this->normalized = normalized;
             this->alias = alias;
-
+            
             switch(type) {
                 case GL_FLOAT:
                 case GL_FIXED:
-                    size = sizeof(GLfloat) * components;
+                    size = sizeof(float) * components;
                     break;
                 case GL_UNSIGNED_BYTE:
                 case GL_BYTE:
-                    size = sizeof(GLbyte) * components;
+                    size = components;
                     break;
                 case GL_UNSIGNED_SHORT:
                 case GL_SHORT:
-                    size = sizeof(GLshort) * components;
+                    size = sizeof(short) * components;
                     break;
                 default:
                     throw std::exception("Invalid attribute type.");
@@ -48,11 +48,11 @@ namespace Fantasy {
 
     class Mesh {
         public:
-        GLuint verticesData;
-        GLuint indicesData;
+        unsigned int verticesData;
+        unsigned int indicesData;
 
-        GLfloat *vertices;
-        GLushort *indices;
+        float *vertices;
+        unsigned short *indices;
 
         size_t maxVertices;
         size_t maxIndices;
@@ -65,9 +65,9 @@ namespace Fantasy {
         Mesh(size_t, size_t, size_t, VertexAttr *);
         ~Mesh();
 
-        void setVertices(GLfloat *, size_t, size_t);
-        void setIndices(GLushort *, size_t, size_t);
-        void render(Shader *, GLenum, size_t, size_t);
+        void setVertices(float *, size_t, size_t);
+        void setIndices(unsigned short *, size_t, size_t);
+        void render(Shader *, unsigned int, size_t, size_t);
         void bind(Shader *);
         void unbind(Shader *);
     };

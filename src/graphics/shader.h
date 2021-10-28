@@ -7,26 +7,26 @@
 namespace Fantasy {
     class Shader {
         private:
-        GLuint progPtr;
-        GLuint vertPtr;
-        GLuint fragPtr;
+        unsigned int progPtr;
+        unsigned int vertPtr;
+        unsigned int fragPtr;
 
-        std::map<const char *, GLuint> *uniforms;
-        std::map<const char *, GLuint> *attributes;
+        std::map<const char *, unsigned int> *uniforms;
+        std::map<const char *, unsigned int> *attributes;
 
         public:
         Shader(const char *, const char *);
         Shader(char *[], char *[]);
         ~Shader();
 
-        GLuint uniformLoc(const char *);
-        GLuint attributeLoc(const char *);
+        unsigned int uniformLoc(const char *);
+        unsigned int attributeLoc(const char *);
         void bind();
 
         private:
-        GLuint createShader(int, char*[]);
+        unsigned int createShader(int, char*[]);
         void logProgram();
-        void logShader(GLuint);
+        void logShader(unsigned int);
     };
 }
 

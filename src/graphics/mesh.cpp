@@ -22,19 +22,23 @@ namespace Fantasy {
             vertSize += a.size;
         }
 
-        vertices = new GLfloat[maxVertices * vertSize];
-        indices = new GLushort[maxIndices];
+        vertices = new float[maxVertices * vertSize];
+        indices = new unsigned short[maxIndices];
 
         glGenBuffers(1, &verticesData);
         glBindBuffer(GL_ARRAY_BUFFER, verticesData);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, NULL);
 
         glGenBuffers(1, &indicesData);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesData);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);
     }
 
     Mesh::~Mesh() {
+        delete[] attributes;
+
         glDeleteBuffers(1, &verticesData);
         verticesData = NULL;
         delete[] vertices;
@@ -42,27 +46,25 @@ namespace Fantasy {
         glDeleteBuffers(1, &indicesData);
         indicesData = NULL;
         delete[] indices;
-
-        delete[] attributes;
     }
 
-    void Mesh::setVertices(GLfloat *vertices, size_t offset, size_t count) {
-        SDL_memcpy(this->vertices, vertices + offset, count * sizeof(GLfloat));
+    void Mesh::setVertices(float *vertices, size_t offset, size_t count) {
+        SDL_memcpy(this->vertices, vertices + offset, count * sizeof(float));
 
         glBindBuffer(GL_ARRAY_BUFFER, verticesData);
-        glBufferData(GL_ARRAY_BUFFER, count * sizeof(GLfloat), this->vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, count * sizeof(float), this->vertices, GL_STATIC_DRAW);
     }
 
-    void Mesh::setIndices(GLushort *indices, size_t offset, size_t count) {
-        SDL_memcpy(this->indices, indices + offset, count * sizeof(GLushort));
+    void Mesh::setIndices(unsigned short *indices, size_t offset, size_t count) {
+        SDL_memcpy(this->indices, indices + offset, count * sizeof(unsigned short));
         
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesData);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(GLushort), this->indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned short), this->indices, GL_STATIC_DRAW);
     }
 
-    void Mesh::render(Shader *shader, GLenum type, size_t offset, size_t count) {
+    void Mesh::render(Shader *shader, unsigned int type, size_t offset, size_t count) {
         bind(shader);
-        glDrawElements(type, count, GL_UNSIGNED_SHORT, indices + offset);
+        glDrawElements(type, count, GL_UNSIGNED_SHORT, (void *)offset);
         unbind(shader);
     }
 
@@ -72,7 +74,7 @@ namespace Fantasy {
         size_t off = 0;
         for(size_t i = 0; i < attrCount; i++) {
             VertexAttr attr = attributes[i];
-            GLuint loc = shader->attributeLoc(attr.alias);
+            unsigned int loc = shader->attributeLoc(attr.alias);
 
             glEnableVertexAttribArray(loc);
             glVertexAttribPointer(loc, attr.components, attr.type, attr.normalized, vertSize, (void *)off);

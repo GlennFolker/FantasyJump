@@ -44,8 +44,8 @@ namespace Fantasy {
             return;
         }
 
-        uniforms = new std::map<const char *, GLuint>();
-        attributes = new std::map<const char *, GLuint>();
+        uniforms = new std::map<const char *, unsigned int>();
+        attributes = new std::map<const char *, unsigned int>();
     }
 
     Shader::~Shader() {
@@ -81,7 +81,7 @@ namespace Fantasy {
         delete[] log;
     }
 
-    void Shader::logShader(GLuint shader) {
+    void Shader::logShader(unsigned int shader) {
         if(shader == NULL || !glIsShader(shader)) return;
 
         int len = 0;
@@ -97,8 +97,8 @@ namespace Fantasy {
         delete[] log;
     }
 
-    GLuint Shader::createShader(int type, char *source[]) {
-        GLuint shader = glCreateShader(type);
+    unsigned int Shader::createShader(int type, char *source[]) {
+        unsigned int shader = glCreateShader(type);
         if(shader == NULL) return NULL;
 
         glShaderSource(shader, 1, source, NULL);
@@ -116,10 +116,10 @@ namespace Fantasy {
         }
     }
 
-    GLuint Shader::uniformLoc(const char *alias) {
+    unsigned int Shader::uniformLoc(const char *alias) {
         if(progPtr == NULL) throw std::exception("Program pointer not defined.");
         if(!uniforms->contains(alias)) {
-            GLuint loc = glGetUniformLocation(progPtr, alias);
+            unsigned int loc = glGetUniformLocation(progPtr, alias);
             if(loc == -1) {
                 std::string append(alias);
                 throw std::exception(("Uniform not found: '" + append + "'.").c_str());
@@ -132,10 +132,10 @@ namespace Fantasy {
         return uniforms->at(alias);
     }
 
-    GLuint Shader::attributeLoc(const char *alias) {
+    unsigned int Shader::attributeLoc(const char *alias) {
         if(progPtr == NULL) throw std::exception("Program pointer not defined.");
         if(!attributes->contains(alias)) {
-            GLuint loc = glGetAttribLocation(progPtr, alias);
+            unsigned int loc = glGetAttribLocation(progPtr, alias);
             if(loc == -1) {
                 std::string append(alias);
                 throw std::exception(("Attribute not found: '" + append + "'.").c_str());

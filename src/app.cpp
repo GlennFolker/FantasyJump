@@ -10,7 +10,7 @@
 namespace Fantasy {
     App *App::instance = NULL;
 
-    App::App(int *argc, char **argv[]) {
+    App::App(int *argc, char **argv[], AppConfig config) {
         if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s\n", SDL_GetError());
             this->~App();
@@ -19,20 +19,22 @@ namespace Fantasy {
 
         SDL_Log("Initialized SDL v%d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
 
-        SDL_Rect viewport = {SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600};
-        /*SDL_DisplayMode mode;
-        if(SDL_GetCurrentDisplayMode(0, &mode) == 0) {
-            viewport.w = mode.w;
-            viewport.h = mode.h;
-        }*/
+        Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+        if(config.fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
+        if(config.resizable) flags |= SDL_WINDOW_RESIZABLE;
 
-        window = SDL_CreateWindow("Fantasy", viewport.x, viewport.y, viewport.w, viewport.h, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+        window = SDL_CreateWindow("Fantasy",
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            config.width, config.height,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
+        );
+
         if(window == NULL) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create SDL window: %s", SDL_GetError());
             this->~App();
             return;
         }
-
+        
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);

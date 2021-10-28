@@ -17,7 +17,7 @@ namespace Fantasy {
         
         batching = false;
         index = 0;
-        projection = ortho(0, App::instance->getWidth(), 0, App::instance->getHeight());
+        projection = ortho(0, App::instance->getWidth(), App::instance->getHeight(), 0, 0, 100);
         transform = identity<mat4>();
 
         this->shader = shader == NULL ? new Shader(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER) : shader;
@@ -26,8 +26,14 @@ namespace Fantasy {
         mesh = new Mesh(size * 4, indicesCount, 1, new VertexAttr[]{
             VertexAttr::position
         });
+        
+        spriteSize = 0;
+        for(size_t i = 0; i < mesh->attrCount; i++) {
+            spriteSize += mesh->attributes[i].components;
+        }
+        spriteSize *= 4;
 
-        GLushort *indices = new GLushort[indicesCount];
+        unsigned short *indices = new unsigned short[indicesCount];
         for(size_t i = 0, j = 0; i < indicesCount; i += 6, j += 4) {
             indices[i] = j;
             indices[i + 1] = j + 1;
@@ -39,7 +45,7 @@ namespace Fantasy {
         mesh->setIndices(indices, 0, indicesCount);
         delete[] indices;
 
-        vertices = new GLfloat[size * (4 * 3)];
+        vertices = new float[size * spriteSize];
     }
 
     SpriteBatch::~SpriteBatch() {
@@ -52,20 +58,20 @@ namespace Fantasy {
         if(batching) throw std::exception("Don't begin() twice.");
         batching = true;
 
-        vertices[index++] = -10.0f;
-        vertices[index++] = -10.0f;
+        vertices[index++] = -0.5f;
+        vertices[index++] = -0.5f;
         vertices[index++] = 0.0f;
 
-        vertices[index++] = 10.0f;
-        vertices[index++] = -10.0f;
+        vertices[index++] = 0.5f;
+        vertices[index++] = -0.5f;
         vertices[index++] = 0.0f;
 
-        vertices[index++] = 10.0f;
-        vertices[index++] = 10.0f;
+        vertices[index++] = 0.5f;
+        vertices[index++] = 0.5f;
         vertices[index++] = 0.0f;
 
-        vertices[index++] = -10.0f;
-        vertices[index++] = 10.0f;
+        vertices[index++] = -0.5f;
+        vertices[index++] = 0.5f;
         vertices[index++] = 0.0f;
     }
 
@@ -78,7 +84,7 @@ namespace Fantasy {
         glUniformMatrix4fv(shader->uniformLoc("u_trans"), 1, false, &transform[0][0]);
 
         mesh->setVertices(vertices, 0, index);
-        mesh->render(shader, GL_TRIANGLES, 0, index / (4 * 3) * 6);
+        mesh->render(shader, GL_TRIANGLES, 0, index / spriteSize * 6);
         index = 0;
     }
 }

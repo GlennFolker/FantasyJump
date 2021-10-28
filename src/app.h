@@ -10,6 +10,13 @@
 #include "core/renderer.h"
 
 namespace Fantasy {
+    struct AppConfig {
+        int width;
+        int height;
+        bool fullscreen;
+        bool resizable;
+    };
+
     class App {
         public:
         static App *instance;
@@ -24,7 +31,7 @@ namespace Fantasy {
         bool exiting;
 
         public:
-        App(int *, char **[]);
+        App(int *, char **[], AppConfig);
         ~App();
 
         bool run();
