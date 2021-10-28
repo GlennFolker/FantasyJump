@@ -26,6 +26,8 @@ namespace Fantasy {
         }
 
         glGenTextures(1, &data);
+        bind();
+
         set(surface);
         setWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         setFilter(GL_NEAREST, GL_NEAREST);
@@ -62,7 +64,7 @@ namespace Fantasy {
         width = surface->w;
         height = surface->h;
 
-        bind();
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage2D(
             GL_TEXTURE_2D, 0,
             GL_RGBA,

@@ -70,10 +70,11 @@ namespace Fantasy {
     }
 
     void SpriteBatch::draw(Tex2D *texture, float x, float y, float originX, float originY, float width, float height, float rotation) {
-        if(index + spriteSize >= vertLength) flush();
         if(lastTexture != texture) {
             flush();
             lastTexture = texture;
+        } else if(index >= vertLength) {
+            flush();
         }
 
         vertices[index++] = originX;
@@ -111,7 +112,7 @@ namespace Fantasy {
         shader->bind();
         glUniformMatrix4fv(shader->uniformLoc("u_proj"), 1, false, value_ptr(projection));
         glUniform1i(shader->uniformLoc("u_texture"), lastTexture->active(0));
-
+        
         mesh->setVertices(vertices, 0, index);
         mesh->render(shader, GL_TRIANGLES, 0, index / spriteSize * 6);
         index = 0;
