@@ -5,9 +5,9 @@
 #include "shader.h"
 
 namespace Fantasy {
-    Shader::Shader(const char *vertSource, const char *fragSource): Shader((char**)&vertSource, (char**)&fragSource) {}
+    Shader::Shader(const char *vertSource, const char *fragSource): Shader(&vertSource, &fragSource) {}
 
-    Shader::Shader(char *vertSource[], char *fragSource[]) {
+    Shader::Shader(const char **vertSource, const char **fragSource) {
         vertPtr = createShader(GL_VERTEX_SHADER, vertSource);
         if(vertPtr == NULL) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create vertex shader.");
@@ -76,7 +76,7 @@ namespace Fantasy {
         char *log = new char[maxLen];
 
         glGetProgramInfoLog(progPtr, maxLen, &len, log);
-        if(len > 0) SDL_Log("%s\n", log);
+        if(len > 0) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s", log);
 
         delete[] log;
     }
@@ -97,7 +97,7 @@ namespace Fantasy {
         delete[] log;
     }
 
-    unsigned int Shader::createShader(int type, char *source[]) {
+    unsigned int Shader::createShader(int type, const char **source) {
         unsigned int shader = glCreateShader(type);
         if(shader == NULL) return NULL;
 

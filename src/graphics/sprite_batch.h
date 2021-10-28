@@ -5,46 +5,68 @@
 
 #include "mesh.h"
 #include "shader.h"
+#include "tex.h"
 
-constexpr const char *DEFAULT_VERTEX_SHADER = "\
-#version 150 core\n\
-in vec3 a_position;\n\
-\n\
-uniform mat4 u_proj;\n\
-\n\
-void main() {\n\
-    mat4 t = u_proj;\n\
-    gl_Position = u_proj * vec4(a_position.x, a_position.y, a_position.z, 1.0);\n\
-}\n\
-";
+constexpr const char *DEFAULT_VERTEX_SHADER = R"(
+#version 150 core
 
-constexpr const char *DEFAULT_FRAGMENT_SHADER = "\
-#version 150 core\n\
-out vec4 fragColor;\n\
-\n\
-void main() {\n\
-    fragColor = vec4(1.0, 1.0, 1.0, 1.0);\n\
-}\n\
-";
+in vec3 a_position;
+in vec2 a_tex_coords_0;
+
+out vec2 v_tex_coords;
+
+uniform mat4 u_proj;
+
+void main() {
+    gl_Position = u_proj * vec4(a_position, 1.0);
+    v_tex_coords = a_tex_coords_0;
+}
+)";
+
+constexpr const char *DEFAULT_FRAGMENT_SHADER = R"(
+#version 150 core
+
+out vec4 fragColor;
+
+in vec2 v_tex_coords;
+
+uniform sampler2D u_texture;
+
+void main() {
+    fragColor = texture2D(u_texture, v_tex_coords) + vec4(0.5);
+}
+)";
 
 using namespace glm;
 
 namespace Fantasy {
     class SpriteBatch {
-        private:
+        public:
+        float z;
+
+        protected:
+        Tex2D *lastTexture;
         size_t index;
         size_t spriteSize;
 
         Mesh *mesh;
         Shader *shader;
+
+        size_t vertLength;
         float *vertices;
+        mat4 projection;
 
         public:
         SpriteBatch();
         SpriteBatch(size_t, Shader *);
         ~SpriteBatch();
 
-        void flush(mat4 projection);
+        void draw(Tex2D *, float, float);
+        void draw(Tex2D *, float, float, float);
+        void draw(Tex2D *, float, float, float, float, float);
+        void draw(Tex2D *, float, float, float, float, float, float, float);
+        void proj(mat4 projection);
+        void flush();
     };
 }
 

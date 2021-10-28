@@ -16,7 +16,7 @@ namespace Fantasy {
 
         public:
         Shader(const char *, const char *);
-        Shader(char *[], char *[]);
+        Shader(const char **, const char **);
         ~Shader();
 
         unsigned int uniformLoc(const char *);
@@ -24,7 +24,7 @@ namespace Fantasy {
         void bind();
 
         private:
-        unsigned int createShader(int, char*[]);
+        unsigned int createShader(int, const char**);
         void logProgram();
         void logShader(unsigned int);
     };

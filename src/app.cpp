@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL_version.h>
+#include <SDL_image.h>
 #include <gl/glew.h>
 #include <SDL_opengl.h>
 #include <gl/GLU.h>
@@ -31,6 +32,13 @@ namespace Fantasy {
 
         if(window == NULL) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create SDL window: %s", SDL_GetError());
+            this->~App();
+            return;
+        }
+
+        int imgFlags = IMG_INIT_PNG;
+        if((IMG_Init(imgFlags) & ~imgFlags) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL_image: %s", IMG_GetError());
             this->~App();
             return;
         }
@@ -70,15 +78,22 @@ namespace Fantasy {
 
         exiting = false;
         instance = this;
-        listeners = new std::vector<AppListener *>();
 
-        renderer = new Renderer();
-        listeners->push_back(renderer);
+        listeners = new std::vector<AppListener *>();
+        listeners->push_back(renderer = new Renderer());
     }
 
     App::~App() {
+        for(auto listener : *listeners) {
+            listener->dispose();
+        }
+        listeners->clear();
+        listeners->~vector();
+
         if(window != NULL) SDL_DestroyWindow(window);
         if(context != NULL) SDL_GL_DeleteContext(context);
+
+        IMG_Quit();
         SDL_Quit();
     }
 
