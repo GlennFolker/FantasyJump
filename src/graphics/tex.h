@@ -29,7 +29,7 @@ namespace Fantasy {
         int height;
 
         public:
-        Tex2D(const char *filename): Tex2D(IMG_Load(filename)) {}
+        Tex2D(const char *filename);
         Tex2D(SDL_Surface *data);
 
         public:

@@ -6,20 +6,24 @@
 #include "mesh.h"
 #include "shader.h"
 #include "tex.h"
+#include "color.h"
 
 constexpr const char *DEFAULT_VERTEX_SHADER = R"(
 #version 150 core
 
 in vec3 a_position;
 in vec2 a_tex_coords_0;
+in vec4 a_color;
 
 out vec2 v_tex_coords;
+out vec4 v_color;
 
 uniform mat4 u_proj;
 
 void main() {
     gl_Position = u_proj * vec4(a_position, 1.0);
     v_tex_coords = a_tex_coords_0;
+    v_color = a_color;
 }
 )";
 
@@ -29,11 +33,12 @@ constexpr const char *DEFAULT_FRAGMENT_SHADER = R"(
 out vec4 fragColor;
 
 in vec2 v_tex_coords;
+in vec4 v_color;
 
 uniform sampler2D u_texture;
 
 void main() {
-    fragColor = texture2D(u_texture, v_tex_coords);
+    fragColor = texture2D(u_texture, v_tex_coords) * v_color;
 }
 )";
 
@@ -46,6 +51,9 @@ namespace Fantasy {
 
         protected:
         Tex2D *texture;
+        Color color;
+        float colorBits;
+
         size_t index;
         size_t spriteSize;
 
@@ -65,6 +73,9 @@ namespace Fantasy {
         void draw(Tex2D *, float, float, float);
         void draw(Tex2D *, float, float, float, float, float);
         void draw(Tex2D *, float, float, float, float, float, float, float);
+        void col(Color);
+        void col(float);
+
         void proj(mat4 projection);
         void flush();
     };

@@ -52,6 +52,8 @@ namespace Fantasy {
         glTexParameteri(data, GL_TEXTURE_MAG_FILTER, mag);
     }
 
+    Tex2D::Tex2D(const char *filename): Tex2D(IMG_Load(filename)) {}
+
     Tex2D::Tex2D(SDL_Surface *surface): Tex(surface) {
         width = -1;
         height = -1;

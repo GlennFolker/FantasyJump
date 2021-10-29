@@ -9,6 +9,7 @@ add_executable(Fantasy
     "src/main.cpp"
     "src/app.cpp"
     "src/core/renderer.cpp"
+    "src/graphics/color.cpp"
     "src/graphics/shader.cpp"
     "src/graphics/mesh.cpp"
     "src/graphics/sprite_batch.cpp"

@@ -17,21 +17,20 @@ namespace Fantasy {
         }
 
         z = 1.0f;
+        color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        colorBits = color.fabgr();
         index = 0;
         texture = NULL;
         projection = identity<mat4>();
 
         size_t indicesCount = size * 6;
-        mesh = new Mesh(size * 4, indicesCount, 2, new VertexAttr[]{
+        mesh = new Mesh(size * 4, indicesCount, 3, new VertexAttr[]{
             VertexAttr::position,
+            VertexAttr::color,
             VertexAttr::texCoords
         });
 
-        spriteSize = 0;
-        for(size_t i = 0; i < mesh->attrCount; i++) {
-            spriteSize += mesh->attributes[i].components;
-        }
-        spriteSize *= 4;
+        spriteSize = 4 * (3 + 1 + 2);
 
         vertLength = size * spriteSize;
         vertices = new float[vertLength];
@@ -80,26 +79,40 @@ namespace Fantasy {
         vertices[index++] = originX;
         vertices[index++] = originY;
         vertices[index++] = z;
+        vertices[index++] = colorBits;
         vertices[index++] = 0.0f;
         vertices[index++] = 1.0f;
 
         vertices[index++] = originX + width;
         vertices[index++] = originY;
         vertices[index++] = z;
+        vertices[index++] = colorBits;
         vertices[index++] = 1.0f;
         vertices[index++] = 1.0f;
 
         vertices[index++] = originX + width;
         vertices[index++] = originY + height;
         vertices[index++] = z;
+        vertices[index++] = colorBits;
         vertices[index++] = 1.0f;
         vertices[index++] = 0.0f;
 
         vertices[index++] = originX;
         vertices[index++] = originY + height;
         vertices[index++] = z;
+        vertices[index++] = colorBits;
         vertices[index++] = 0.0f;
         vertices[index++] = 0.0f;
+    }
+
+    void SpriteBatch::col(Color color) {
+        this->color = color;
+        colorBits = color.fabgr();
+    }
+
+    void SpriteBatch::col(float abgr) {
+        color.fromFagbr(abgr);
+        this->colorBits = abgr;
     }
 
     void SpriteBatch::proj(mat4 projection) {
