@@ -74,7 +74,7 @@ namespace Fantasy {
 
     void Mesh::setVertices(float *vertices, size_t offset, size_t count) {
         SDL_memcpy(this->vertices, vertices + offset, count * sizeof(float));
-
+        
         glBindBuffer(GL_ARRAY_BUFFER, verticesData);
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(float), this->vertices, GL_STATIC_DRAW);
     }

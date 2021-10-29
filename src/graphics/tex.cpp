@@ -1,5 +1,6 @@
 #include <SDL_image.h>
 #include <cmath>
+#include <string>
 
 #include "tex.h"
 
@@ -27,10 +28,9 @@ namespace Fantasy {
 
         glGenTextures(1, &data);
         bind();
-
         set(surface);
         setWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-        setFilter(GL_NEAREST, GL_NEAREST);
+        setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_NEAREST);
     }
 
     int Tex::active(int unit) {
@@ -64,7 +64,6 @@ namespace Fantasy {
         width = surface->w;
         height = surface->h;
 
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage2D(
             GL_TEXTURE_2D, 0,
             GL_RGBA,
@@ -72,5 +71,6 @@ namespace Fantasy {
             GL_RGBA,
             GL_UNSIGNED_BYTE, surface->pixels
         );
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
 }
