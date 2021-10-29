@@ -20,15 +20,26 @@ namespace Fantasy {
 
         SDL_Log("Initialized SDL v%d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
 
-        Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-        if(config.fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
+        SDL_Rect viewport = {
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            config.width, config.height
+        };
+        
+        int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+        if(config.fullscreen) {
+            flags |= SDL_WINDOW_FULLSCREEN;
+
+            SDL_DisplayMode mode;
+            SDL_GetCurrentDisplayMode(0, &mode);
+
+            viewport.w = mode.w;
+            viewport.h = mode.h;
+        }
+
+        if(config.borderless) SDL_WINDOW_BORDERLESS;
         if(config.resizable) flags |= SDL_WINDOW_RESIZABLE;
 
-        window = SDL_CreateWindow("Fantasy",
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            config.width, config.height,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
-        );
+        window = SDL_CreateWindow("Fantasy", viewport.x, viewport.y, viewport.w, viewport.h, flags);
 
         if(window == NULL) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create SDL window: %s", SDL_GetError());

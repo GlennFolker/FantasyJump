@@ -45,7 +45,7 @@ namespace Fantasy {
         float z;
 
         protected:
-        Tex2D *lastTexture;
+        Tex2D *texture;
         size_t index;
         size_t spriteSize;
 

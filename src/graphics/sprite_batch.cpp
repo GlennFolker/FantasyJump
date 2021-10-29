@@ -18,7 +18,7 @@ namespace Fantasy {
 
         z = 1.0f;
         index = 0;
-        lastTexture = NULL;
+        texture = NULL;
         projection = identity<mat4>();
 
         size_t indicesCount = size * 6;
@@ -65,14 +65,14 @@ namespace Fantasy {
         draw(texture, x, y, x - texture->width / 2.0f, y - texture->height / 2.0f, texture->width, texture->height, rotation);
     }
 
-    void SpriteBatch::draw(Tex2D *texture, float x, float y, float originX, float originY, float rotation) {
-        draw(texture, x, y, originX, originY, texture->width, texture->height, rotation);
+    void SpriteBatch::draw(Tex2D *texture, float x, float y, float width, float height, float rotation) {
+        draw(texture, x, y, x - width / 2.0f, y - height / 2.0f, width, height, rotation);
     }
 
     void SpriteBatch::draw(Tex2D *texture, float x, float y, float originX, float originY, float width, float height, float rotation) {
-        if(lastTexture != texture) {
+        if(this->texture != texture) {
             flush();
-            lastTexture = texture;
+            this->texture = texture;
         } else if(index >= vertLength) {
             flush();
         }
@@ -81,25 +81,25 @@ namespace Fantasy {
         vertices[index++] = originY;
         vertices[index++] = z;
         vertices[index++] = 0.0f;
-        vertices[index++] = 0.0f;
+        vertices[index++] = 1.0f;
 
         vertices[index++] = originX + width;
         vertices[index++] = originY;
         vertices[index++] = z;
         vertices[index++] = 1.0f;
-        vertices[index++] = 0.0f;
+        vertices[index++] = 1.0f;
 
         vertices[index++] = originX + width;
         vertices[index++] = originY + height;
         vertices[index++] = z;
         vertices[index++] = 1.0f;
-        vertices[index++] = 1.0f;
+        vertices[index++] = 0.0f;
 
         vertices[index++] = originX;
         vertices[index++] = originY + height;
         vertices[index++] = z;
         vertices[index++] = 0.0f;
-        vertices[index++] = 1.0f;
+        vertices[index++] = 0.0f;
     }
 
     void SpriteBatch::proj(mat4 projection) {
@@ -107,11 +107,11 @@ namespace Fantasy {
     }
 
     void SpriteBatch::flush() {
-        if(index == 0 || lastTexture == NULL) return;
+        if(index == 0 || texture == NULL) return;
 
         shader->bind();
         glUniformMatrix4fv(shader->uniformLoc("u_proj"), 1, false, value_ptr(projection));
-        glUniform1i(shader->uniformLoc("u_texture"), lastTexture->active(0));
+        glUniform1i(shader->uniformLoc("u_texture"), texture->active(0));
         
         mesh->setVertices(vertices, 0, index);
         mesh->render(shader, GL_TRIANGLES, 0, index / spriteSize * 6);

@@ -28,6 +28,7 @@ namespace Fantasy {
 
         glGenTextures(1, &data);
         bind();
+
         set(surface);
         setWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_NEAREST);

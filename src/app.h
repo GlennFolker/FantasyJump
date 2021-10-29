@@ -15,6 +15,7 @@ namespace Fantasy {
         int height;
         bool fullscreen;
         bool resizable;
+        bool borderless;
     };
 
     class App {

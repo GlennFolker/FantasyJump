@@ -25,11 +25,11 @@ namespace Fantasy {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float w = App::instance->getWidth() / 2.0f, h = App::instance->getHeight() / 2.0f;
-
-        batch->z = 0.0f;
-        batch->proj(ortho(-w, w, h, -h));
-
-        batch->draw(texture, 0.0f, 0.0f);
+        batch->proj(ortho(-w, w, -h, h));
+        
+        batch->draw(texture, 0.0f, 0.0f, 64.0f, 64.0f, 0.0f);
+        batch->draw(texture, 64.0f, 32.0f, 64.0f, 64.0f, 0.0f);
+        batch->draw(texture, 16.0f, 48.0f, 32.0f, 32.0f, 0.0f);
         batch->flush();
     }
 
