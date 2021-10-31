@@ -44,8 +44,8 @@ namespace Fantasy {
             return;
         }
 
-        uniforms = new std::map<const char *, unsigned int>();
-        attributes = new std::map<const char *, unsigned int>();
+        uniforms = new std::unordered_map<const char *, unsigned int>();
+        attributes = new std::unordered_map<const char *, unsigned int>();
     }
 
     Shader::~Shader() {

@@ -5,12 +5,8 @@ namespace Fantasy {
     class AppListener {
         public:
         AppListener(){}
-        ~AppListener(){}
-
+        virtual ~AppListener(){}
         virtual void update() = 0;
-        virtual void dispose() {
-            this->~AppListener();
-        }
     };
 }
 

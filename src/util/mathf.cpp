@@ -1,11 +1,11 @@
-#include <SDL.h>
+#include "mathf.h"
 
 namespace Fantasy {
-    bool near(float a, float b, float threshold) {
-        return SDL_fabs(a - b) < threshold;
+    bool Mathf::near(float a, float b) {
+        return near(a, b, 0.00001f);
     }
 
-    bool near(float a, float b) {
-        return near(a, b, 0.00001f);
+    bool Mathf::near(float a, float b, float threshold) {
+        return fabs(a - b) < threshold;
     }
 }

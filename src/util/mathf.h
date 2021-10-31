@@ -5,9 +5,11 @@
 #include <numbers>
 
 namespace Fantasy {
-    bool near(float, float);
-
-    bool near(float, float, float);
+    class Mathf {
+        public:
+        static inline bool near(float, float);
+        static inline bool near(float, float, float);
+    };
 }
 
 #endif

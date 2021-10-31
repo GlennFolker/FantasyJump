@@ -7,7 +7,9 @@
 #include <vector>
 
 #include "app_listener.h"
+#include "core/assets.h"
 #include "core/renderer.h"
+#include "core/game_controller.h"
 
 namespace Fantasy {
     struct AppConfig {
@@ -26,6 +28,8 @@ namespace Fantasy {
         SDL_Window *window = NULL;
         SDL_GLContext context;
 
+        AssetManager *assets;
+        GameController *control;
         Renderer *renderer;
 
         private:

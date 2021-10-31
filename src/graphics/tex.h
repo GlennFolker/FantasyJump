@@ -17,10 +17,10 @@ namespace Fantasy {
 
         void load();
         virtual void bind() {}
-        virtual void set(SDL_Surface *) {}
+        virtual void set(SDL_Surface *, bool bind = true) {}
         int active(int);
-        void setWrap(int, int, int);
-        void setFilter(int, int);
+        void setWrap(int, int, int, bool bind = true);
+        void setFilter(int, int, bool bind = true);
     };
 
     class Tex2D: public Tex {
@@ -34,7 +34,7 @@ namespace Fantasy {
 
         public:
         virtual void bind() override;
-        virtual void set(SDL_Surface *) override;
+        virtual void set(SDL_Surface *, bool) override;
     };
 }
 

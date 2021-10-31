@@ -4,6 +4,8 @@
 #include <gl/glew.h>
 #include <SDL_opengl.h>
 #include <gl/GLU.h>
+#include <exception>
+#include <string>
 
 #include "app.h"
 #include "core/renderer.h"
@@ -12,11 +14,7 @@ namespace Fantasy {
     App *App::instance = NULL;
 
     App::App(int argc, char *argv[], AppConfig config) {
-        if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS) != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s\n", SDL_GetError());
-            this->~App();
-            return;
-        }
+        if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) throw std::exception(std::string("Couldn't initialize SDL: ").append(SDL_GetError()).c_str());
 
         SDL_Log("Initialized SDL v%d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
 
@@ -41,18 +39,10 @@ namespace Fantasy {
 
         window = SDL_CreateWindow("Fantasy", viewport.x, viewport.y, viewport.w, viewport.h, flags);
 
-        if(window == NULL) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create SDL window: %s", SDL_GetError());
-            this->~App();
-            return;
-        }
+        if(window == NULL) throw std::exception(std::string("Couldn't create SDL window: ").append(SDL_GetError()).c_str());
 
         int imgFlags = IMG_INIT_PNG;
-        if((IMG_Init(imgFlags) & ~imgFlags) != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL_image: %s", IMG_GetError());
-            this->~App();
-            return;
-        }
+        if((IMG_Init(imgFlags) & ~imgFlags) != 0) throw std::exception(std::string("Couldn't initialize SDL_image: ").append(IMG_GetError()).c_str());
         
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -67,43 +57,34 @@ namespace Fantasy {
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
         context = SDL_GL_CreateContext(window);
-        if(context == NULL) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create GL context: %s", SDL_GetError());
-            this->~App();
-            return;
-        }
+        if(context == NULL) throw std::exception(std::string("Couldn't create OpenGL context: ").append(SDL_GetError()).c_str());
 
         SDL_Log("GL version: %s", glGetString(GL_VERSION));
 
         GLenum error = GL_NO_ERROR;
         glewExperimental = GL_TRUE;
-        if((error = glewInit()) != GL_NO_ERROR) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize GLEW: %s", glewGetErrorString(error));
-            this->~App();
-            return;
-        }
+        if((error = glewInit()) != GL_NO_ERROR) throw std::exception(std::string("Couldn't initialize GLEW").append((char *)glewGetErrorString(error)).c_str());
         
-        if(SDL_GL_SetSwapInterval(1) != 0) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "VSync disabled.");
-        }
+        if(SDL_GL_SetSwapInterval(1) != 0) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "VSync disabled.");
 
         exiting = false;
         instance = this;
 
+        assets = new AssetManager();
+        assets->defaultLoaders();
+
         listeners = new std::vector<AppListener *>();
+        listeners->push_back(control = new GameController());
         listeners->push_back(renderer = new Renderer());
     }
 
     App::~App() {
-        for(auto listener : *listeners) {
-            listener->dispose();
-        }
-        listeners->clear();
+        for(auto listener : *listeners) listener->~AppListener();
         listeners->~vector();
 
-        if(window != NULL) SDL_DestroyWindow(window);
-        if(context != NULL) SDL_GL_DeleteContext(context);
-
+        assets->~AssetManager();
+        SDL_DestroyWindow(window);
+        SDL_GL_DeleteContext(context);
         IMG_Quit();
         SDL_Quit();
     }
@@ -118,9 +99,7 @@ namespace Fantasy {
             }
 
             try {
-                for(auto it : *listeners) {
-                    it->update();
-                }
+                for(auto it : *listeners) it->update();
             } catch(std::exception &e) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, e.what());
                 e.~exception();

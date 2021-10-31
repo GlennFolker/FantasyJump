@@ -1,7 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include <map>
+#include <unordered_map>
 #include <SDL_opengl.h>
 
 namespace Fantasy {
@@ -11,8 +11,8 @@ namespace Fantasy {
         unsigned int vertPtr;
         unsigned int fragPtr;
 
-        std::map<const char *, unsigned int> *uniforms;
-        std::map<const char *, unsigned int> *attributes;
+        std::unordered_map<const char *, unsigned int> *uniforms;
+        std::unordered_map<const char *, unsigned int> *attributes;
 
         public:
         Shader(const char *, const char *);

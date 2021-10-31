@@ -76,6 +76,7 @@ namespace Fantasy {
             flush();
         }
 
+        //TODO rotation transform
         vertices[index++] = originX;
         vertices[index++] = originY;
         vertices[index++] = z;

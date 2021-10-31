@@ -8,7 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_executable(Fantasy
     "src/main.cpp"
     "src/app.cpp"
+    "src/core/assets.cpp"
+    "src/core/game_controller.cpp"
     "src/core/renderer.cpp"
+    "src/assets/tex_loader.cpp"
     "src/graphics/color.cpp"
     "src/graphics/shader.cpp"
     "src/graphics/mesh.cpp"
@@ -22,4 +25,20 @@ find_package(GLEW CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(sdl2-image CONFIG REQUIRED)
-target_link_libraries(Fantasy opengl32 GLEW::GLEW glm::glm SDL2::SDL2_image SDL2::SDL2main SDL2::SDL2)
+find_package(EnTT CONFIG REQUIRED)
+
+target_link_libraries(Fantasy
+    EnTT::EnTT
+    opengl32 GLEW::GLEW glm::glm
+    SDL2::SDL2_image SDL2::SDL2main SDL2::SDL2
+)
+
+add_custom_command(
+    TARGET Fantasy POST_BUILD
+
+    COMMAND ${CMAKE_COMMAND} -E remove_directory
+    $<TARGET_FILE_DIR:Fantasy>/assets
+
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/assets/ $<TARGET_FILE_DIR:Fantasy>/assets
+)

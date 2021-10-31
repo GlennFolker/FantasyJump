@@ -4,7 +4,6 @@
 #include <glm/mat4x4.hpp>
 
 #include "mesh.h"
-#include "shader.h"
 #include "tex.h"
 #include "color.h"
 

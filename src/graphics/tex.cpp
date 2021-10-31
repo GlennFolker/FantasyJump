@@ -27,11 +27,7 @@ namespace Fantasy {
         }
 
         glGenTextures(1, &data);
-        bind();
-
         set(surface);
-        setWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-        setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_NEAREST);
     }
 
     int Tex::active(int unit) {
@@ -41,13 +37,15 @@ namespace Fantasy {
         return unit;
     }
 
-    void Tex::setWrap(int s, int t, int r) {
+    void Tex::setWrap(int s, int t, int r, bool bind) {
+        if(bind) this->bind();
         glTexParameteri(data, GL_TEXTURE_WRAP_S, s);
         glTexParameteri(data, GL_TEXTURE_WRAP_T, t);
         glTexParameteri(data, GL_TEXTURE_WRAP_R, r);
     }
 
-    void Tex::setFilter(int min, int mag) {
+    void Tex::setFilter(int min, int mag, bool bind) {
+        if(bind) this->bind();
         glTexParameteri(data, GL_TEXTURE_MIN_FILTER, min);
         glTexParameteri(data, GL_TEXTURE_MAG_FILTER, mag);
     }
@@ -63,10 +61,11 @@ namespace Fantasy {
         glBindTexture(GL_TEXTURE_2D, data);
     }
 
-    void Tex2D::set(SDL_Surface *surface) {
+    void Tex2D::set(SDL_Surface *surface, bool bind) {
         width = surface->w;
         height = surface->h;
 
+        if(bind) this->bind();
         glTexImage2D(
             GL_TEXTURE_2D, 0,
             GL_RGBA,

@@ -8,11 +8,12 @@ namespace Fantasy {
     class Renderer: public AppListener {
         public:
         SpriteBatch *batch;
+        vec2 position;
 
         public:
         Renderer();
+        ~Renderer() override;
         void update() override;
-        void dispose() override;
     };
 }
 
