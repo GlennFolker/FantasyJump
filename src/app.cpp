@@ -40,7 +40,6 @@ namespace Fantasy {
         int imgFlags = IMG_INIT_PNG;
         if((IMG_Init(imgFlags) & ~imgFlags) != 0) throw std::exception(std::string("Couldn't initialize SDL_image: ").append(IMG_GetError()).c_str());
         
-        SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
