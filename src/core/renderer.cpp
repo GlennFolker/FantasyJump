@@ -5,9 +5,10 @@
 #include "renderer.h"
 #include "assets.h"
 #include "../app.h"
-#include "../assets/tex_loader.h"
 
 namespace Fantasy {
+    Tex2D *texture;
+
     Renderer::Renderer() {
         glEnable(GL_DEPTH_TEST);
         glDepthMask(true);
@@ -15,6 +16,13 @@ namespace Fantasy {
 
         batch = new SpriteBatch();
         position = vec2(0.0f, 0.0f);
+
+        std::function<void(AssetManager *, const char *, Tex2D *)> callback = [](AssetManager *, const char *, Tex2D *data) {
+            texture = data;
+        };
+
+        App::instance->assets->load<Tex2D>("texture.png", &callback);
+        App::instance->assets->finish();
     }
 
     Renderer::~Renderer() {
@@ -31,5 +39,8 @@ namespace Fantasy {
             position.x - w, position.x + w,
             position.y - h, position.y + h
         ));
+
+        batch->draw(texture, 0.0f, 0.0f);
+        batch->flush();
     }
 }

@@ -26,9 +26,10 @@ find_package(glm CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(sdl2-image CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
+find_package(box2d CONFIG REQUIRED)
 
 target_link_libraries(Fantasy
-    EnTT::EnTT
+    EnTT::EnTT box2d::box2d
     opengl32 GLEW::GLEW glm::glm
     SDL2::SDL2_image SDL2::SDL2main SDL2::SDL2
 )

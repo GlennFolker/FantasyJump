@@ -6,7 +6,7 @@
 
 namespace Fantasy {
     class Tex {
-        protected:
+        public:
         unsigned int data;
         SDL_Surface *surface;
 

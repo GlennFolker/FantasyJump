@@ -1,8 +1,10 @@
 #include <SDL_image.h>
 #include <cmath>
 #include <string>
+#include <exception>
 
 #include "tex.h"
+#include "../app.h"
 
 namespace Fantasy {
     Tex::Tex(const char *filename): Tex(IMG_Load(filename)) {}
@@ -20,14 +22,13 @@ namespace Fantasy {
     }
 
     void Tex::load() {
-        if(surface == NULL) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL surface data is NULL.");
-            this->~Tex();
-            return;
-        }
-
+        if(surface == NULL) throw std::exception("SDL surface data is NULL.");
+        
         glGenTextures(1, &data);
         set(surface);
+
+        SDL_FreeSurface(surface);
+        surface = NULL;
     }
 
     int Tex::active(int unit) {

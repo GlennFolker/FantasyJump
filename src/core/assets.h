@@ -39,7 +39,9 @@ namespace Fantasy {
         AssetLoader() {}
         virtual ~AssetLoader() {}
 
-        virtual T *load(AssetManager *, std::string, const char *, D *, SDL_RWops *) = 0;
+        virtual void loadAsync(AssetManager *, std::string, const char *, D *, SDL_RWops *) = 0;
+
+        virtual T *loadSync(AssetManager *, std::string, const char *, D *, SDL_RWops *) = 0;
 
         virtual void dispose(AssetManager *, T *asset) = 0;
 
@@ -56,12 +58,13 @@ namespace Fantasy {
 
         std::recursive_mutex *lock;
         std::unordered_map<const char *, std::string> *errors;
-        std::vector<std::future<void> *> *processes;
+        std::vector<std::function<void()>> *syncLoads;
         std::vector<std::function<void()>> *assetDisposal;
         std::vector<std::function<void()>> *loaderDisposal;
+        std::vector<std::future<void> *> processes;
 
         int toLoad;
-        int loaded;
+        volatile int loaded;
 
         public:
         AssetManager(std::string prefix = "assets/");
@@ -118,7 +121,7 @@ namespace Fantasy {
         template<
             typename T, typename D = AssetData<T>,
             std::enable_if<std::is_base_of<AssetData<T>, D>::value>::type *_D = nullptr
-        > void load(const char *filename, std::function<void(AssetManager *, const char *, T *)> callback, D *data = NULL) {
+        > void load(const char *filename, std::function<void(AssetManager *, const char *, T *)> *callback, D *data = NULL) {
             if(hasAsset<T>(filename)) return;
 
             toLoad++;
@@ -132,41 +135,49 @@ namespace Fantasy {
                 const char *actualName = str.c_str();
 
                 SDL_RWops *bin = SDL_RWFromFile(actualName, "r+b");
-                T *asset = NULL;
-
                 AssetLoader<T, D> *loader = getLoader<T, D>();
                 try {
-                    asset = loader->load(this, prefix, filename, data, bin);
+                    loader->loadAsync(this, prefix, filename, data, bin);
                 } catch(std::exception &e) {
-                    if(data != NULL) data->~AssetData();
-                    if(bin != NULL) SDL_RWclose(bin);
-
                     error(filename, std::string(e.what()));
                     return;
                 }
 
-                if(data != NULL) data->~AssetData();
-                if(bin != NULL) SDL_RWclose(bin);
-
-                addAsset<T>(filename, asset);
+                T *asset = NULL;
 
                 lock->lock();
-                assetDisposal->push_back([this, loader, asset]() {
-                    loader->dispose(this, asset);
+                syncLoads->push_back([&]() {
+                    try {
+                        asset = loader->loadSync(this, prefix, filename, data, bin);
+
+                        (*callback)(this, filename, asset);
+                        loaded++;
+                    } catch(std::exception &e) {
+                        if(data != NULL) data->~AssetData();
+                        if(bin != NULL) SDL_RWclose(bin);
+
+                        error(filename, std::string(e.what()));
+                        return;
+                    }
+
+                    if(data != NULL) data->~AssetData();
+                    if(bin != NULL) SDL_RWclose(bin);
                 });
 
-                callback(this, filename, asset);
+                assetDisposal->push_back([&]() {
+                    if(asset != NULL) loader->dispose(this, asset);
+                });
                 lock->unlock();
             });
 
-            processes->push_back(std::move(&process));
+            processes.push_back(std::move(&process));
         }
 
         template<
             typename T, typename D = AssetData<T>,
             std::enable_if<std::is_base_of<AssetData<T>, D>::value>::type *_D = nullptr
         > void load(const char *filename, D *data = NULL) {
-            load<T, D>(filename, [](AssetManager *, const char *, T *) {}, data);
+            load<T, D>(filename, NULL, data);
         }
 
         template<

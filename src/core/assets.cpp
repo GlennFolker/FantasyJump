@@ -13,7 +13,7 @@ namespace Fantasy {
         assets = new std::unordered_map<std::type_index, std::unordered_map<const char *, void *> *>();
         loaders = new std::unordered_map<std::type_index, void *>();
         errors = new std::unordered_map<const char *, std::string>();
-        processes = new std::vector<std::future<void> *>();
+        syncLoads = new std::vector<std::function<void()>>();
         assetDisposal = new std::vector<std::function<void()>>();
         loaderDisposal = new std::vector<std::function<void()>>();
 
@@ -24,12 +24,14 @@ namespace Fantasy {
 
     AssetManager::~AssetManager() {
         dispose();
-
+        syncLoads->~vector();
+        assetDisposal->~vector();
+        loaderDisposal->~vector();
+        assets->~unordered_map();
+        loaders->~unordered_map();
+        errors->~unordered_map();
         prefix.~basic_string();
         lock->~recursive_mutex();
-
-        errors->clear();
-        processes->~vector();
     }
     
     void AssetManager::defaultLoaders() {
@@ -48,7 +50,6 @@ namespace Fantasy {
 
     bool AssetManager::update() {
         lock->lock();
-        
         if(!errors->empty()) {
             std::string msg;
             for(auto e = errors->begin(); e != errors->end(); ++e) {
@@ -58,36 +59,29 @@ namespace Fantasy {
 
             errors->clear();
             lock->unlock();
+
             throw std::exception(msg.c_str());
         }
 
-        lock->unlock();
-
-        if(processes->empty()) return true;
-
-        processes->erase(std::remove_if(
-            processes->begin(), processes->end(),
-            [this](std::future<void> *process) {
-                if(!process->valid()) {
-                    loaded++;
-                    return true;
-                } else {
-                    return false;
-                }
+        syncLoads->erase(std::remove_if(
+            syncLoads->begin(), syncLoads->end(),
+            [](std::function<void()> &func) {
+                func();
+                return true;
             }
-        ), processes->end());
+        ), syncLoads->end());
 
-        return processes->empty();
+        lock->unlock();
+        return errors->empty() && loaded >= toLoad;
     }
 
     void AssetManager::dispose() {
         for(auto f : *assetDisposal) f();
         for(auto f : *loaderDisposal) f();
         for(auto map : *assets) map.second->~unordered_map();
-        assetDisposal->~vector();
-        loaderDisposal->~vector();
-        assets->~unordered_map();
-        loaders->~unordered_map();
+        loaders->clear();
+        assets->clear();
+        errors->clear();
     }
 
     void AssetManager::finish() {
