@@ -50,6 +50,6 @@ namespace Fantasy {
     }
 
     void Tex2DLoader::dispose(AssetManager *, Tex2D *asset) {
-        asset->~Tex2D();
+        delete asset;
     }
 }

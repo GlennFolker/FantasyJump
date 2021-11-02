@@ -61,7 +61,7 @@ namespace Fantasy {
         std::vector<std::function<void()>> *syncLoads;
         std::vector<std::function<void()>> *assetDisposal;
         std::vector<std::function<void()>> *loaderDisposal;
-        std::vector<std::future<void> *> processes;
+        std::vector<std::future<void> *> *processes;
 
         int toLoad;
         volatile int loaded;
@@ -91,7 +91,7 @@ namespace Fantasy {
             } else {
                 loaders->emplace(info, loader);
                 loaderDisposal->push_back([loader]() {
-                    loader->~AssetLoader();
+                    delete loader;
                 });
             }
 
@@ -170,7 +170,7 @@ namespace Fantasy {
                 lock->unlock();
             });
 
-            processes.push_back(std::move(&process));
+            processes->push_back(std::move(&process));
         }
 
         template<

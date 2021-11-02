@@ -51,8 +51,8 @@ namespace Fantasy {
     }
 
     SpriteBatch::~SpriteBatch() {
-        if(shader != NULL) shader->~Shader();
-        if(mesh != NULL) mesh->~Mesh();
+        if(shader != NULL) delete shader;
+        if(mesh != NULL) delete mesh;
         if(vertices != NULL) delete[] vertices;
     }
 

@@ -17,16 +17,18 @@ int main(int argc, char *argv[]) {
         app = new App(argc, argv, config);
     } catch(std::exception &e) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, e.what());
+
+        delete app;
         app = NULL;
     }
 
     if(app != NULL && app->run()) {
-        app->~App();
+        delete app;
 
         SDL_Log("Ended successful launch, program exited with code 0.");
         return 0;
     } else {
-        if(app != NULL) app->~App();
+        if(app != NULL) delete app;
 
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Program exited with code 1.");
         return 1;

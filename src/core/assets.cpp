@@ -16,6 +16,7 @@ namespace Fantasy {
         syncLoads = new std::vector<std::function<void()>>();
         assetDisposal = new std::vector<std::function<void()>>();
         loaderDisposal = new std::vector<std::function<void()>>();
+        processes = new std::vector<std::future<void> *>();
 
         loaded = 0;
         toLoad = 0;
@@ -24,14 +25,14 @@ namespace Fantasy {
 
     AssetManager::~AssetManager() {
         dispose();
-        syncLoads->~vector();
-        assetDisposal->~vector();
-        loaderDisposal->~vector();
-        assets->~unordered_map();
-        loaders->~unordered_map();
-        errors->~unordered_map();
-        prefix.~basic_string();
-        lock->~recursive_mutex();
+        delete syncLoads;
+        delete assetDisposal;
+        delete loaderDisposal;
+        delete processes;
+        delete assets;
+        delete loaders;
+        delete errors;
+        delete lock;
     }
     
     void AssetManager::defaultLoaders() {
@@ -72,13 +73,21 @@ namespace Fantasy {
         ), syncLoads->end());
 
         lock->unlock();
+
+        processes->erase(std::remove_if(
+            processes->begin(), processes->end(),
+            [](std::future<void> *process) {
+                return !process->valid();
+            }
+        ), processes->end());
+
         return errors->empty() && loaded >= toLoad;
     }
 
     void AssetManager::dispose() {
         for(auto f : *assetDisposal) f();
         for(auto f : *loaderDisposal) f();
-        for(auto map : *assets) map.second->~unordered_map();
+        for(auto map : *assets) delete map.second;
         loaders->clear();
         assets->clear();
         errors->clear();

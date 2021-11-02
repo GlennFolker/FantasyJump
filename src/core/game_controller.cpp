@@ -6,7 +6,7 @@ namespace Fantasy {
     }
 
     GameController::~GameController() {
-        regist->~basic_registry();
+        delete regist;
     }
 
     void GameController::update() {

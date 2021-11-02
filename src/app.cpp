@@ -78,10 +78,10 @@ namespace Fantasy {
     }
 
     App::~App() {
-        for(auto listener : *listeners) listener->~AppListener();
-        listeners->~vector();
+        for(auto listener : *listeners) delete listener;
+        delete listeners;
+        delete assets;
 
-        assets->~AssetManager();
         SDL_DestroyWindow(window);
         SDL_GL_DeleteContext(context);
         IMG_Quit();
@@ -101,8 +101,6 @@ namespace Fantasy {
                 for(auto it : *listeners) it->update();
             } catch(std::exception &e) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, e.what());
-                e.~exception();
-
                 return false;
             }
 

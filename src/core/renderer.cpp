@@ -17,7 +17,7 @@ namespace Fantasy {
     }
 
     Renderer::~Renderer() {
-        batch->~SpriteBatch();
+        delete batch;
     }
 
     void Renderer::update() {
