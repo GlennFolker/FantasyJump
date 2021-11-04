@@ -1,13 +1,20 @@
+#include <glm/gtx/transform.hpp>
+
 #include "content.h"
 #include "entity.h"
 #include "../app.h"
 
 namespace Fantasy {
-    Tex2D *texture = new Tex2D("assets/texture.png");
+    Tex2D *jumpTexture = new Tex2D("assets/jumper.png");
+    Tex2D *spikeTexture = new Tex2D("assets/spike.png");
 
     Contents::Contents() {
         contents = new std::vector<std::unordered_map<const char *, Content *> *>((int)CType::ALL);
-        texture->load();
+        jumpTexture->load();
+        jumpTexture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
+
+        spikeTexture->load();
+        spikeTexture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
 
         jumper = create<EntityType>("jumper", [&](entt::registry &registry, b2World &world, entt::entity e) {
             b2BodyDef bodyDef;
@@ -25,14 +32,35 @@ namespace Fantasy {
             body->CreateFixture(&fixt);
 
             registry.emplace<RigidComp>(e, e, body);
-            registry.emplace<SpriteComp>(e, e, texture);
+            registry.emplace<SpriteComp>(e, e, jumpTexture, 1.0f, 1.0f);
             registry.emplace<JumpComp>(e, e, 20.0f, 1.0f);
+        });
+
+        spike = create<EntityType>("spike", [&](entt::registry &registry, b2World &world, entt::entity e) {
+            b2BodyDef bodyDef;
+            bodyDef.type = b2_kinematicBody;
+            bodyDef.position.SetZero();
+
+            b2CircleShape shape;
+            shape.m_radius = 0.9f;
+
+            b2FixtureDef fixt;
+            fixt.shape = &shape;
+
+            b2Body *body = world.CreateBody(&bodyDef);
+            body->CreateFixture(&fixt);
+
+            registry.emplace<RigidComp>(e, e, body);
+            registry.emplace<SpriteComp>(e, e, spikeTexture, 2.0f, 2.0f);
         });
     }
 
     Contents::~Contents() {
         for(auto arr : *contents) delete arr;
         delete contents;
+
+        delete jumpTexture;
+        delete spikeTexture;
     }
 
     std::unordered_map<const char *, Content *> *Contents::getBy(CType type) {

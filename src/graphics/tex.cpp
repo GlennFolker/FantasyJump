@@ -38,19 +38,6 @@ namespace Fantasy {
         return unit;
     }
 
-    void Tex::setWrap(int s, int t, int r, bool bind) {
-        if(bind) this->bind();
-        glTexParameteri(data, GL_TEXTURE_WRAP_S, s);
-        glTexParameteri(data, GL_TEXTURE_WRAP_T, t);
-        glTexParameteri(data, GL_TEXTURE_WRAP_R, r);
-    }
-
-    void Tex::setFilter(int min, int mag, bool bind) {
-        if(bind) this->bind();
-        glTexParameteri(data, GL_TEXTURE_MIN_FILTER, min);
-        glTexParameteri(data, GL_TEXTURE_MAG_FILTER, mag);
-    }
-
     Tex2D::Tex2D(const char *filename): Tex2D(IMG_Load(filename)) {}
 
     Tex2D::Tex2D(SDL_Surface *surface): Tex(surface) {
@@ -75,5 +62,18 @@ namespace Fantasy {
             GL_UNSIGNED_BYTE, surface->pixels
         );
         glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    void Tex2D::setWrap(int s, int t, int r, bool bind) {
+        if(bind) this->bind();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, s);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, r);
+    }
+
+    void Tex2D::setFilter(int min, int mag, bool bind) {
+        if(bind) this->bind();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag);
     }
 }

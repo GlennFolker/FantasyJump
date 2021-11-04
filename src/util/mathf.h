@@ -9,6 +9,9 @@ namespace Fantasy {
         public:
         static bool near(float, float);
         static bool near(float, float, float);
+        static float random();
+        static float random(float);
+        static float random(float, float);
     };
 }
 

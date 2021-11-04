@@ -1,18 +1,24 @@
 #ifndef ENTITY_H
 #define ENTITY_H
+
 #include <box2d/box2d.h>
 #include <entt/entity/registry.hpp>
+#include <functional>
 
 #include "../graphics/tex.h"
 
 namespace Fantasy {
     class Component {
+        public:
+        std::function<void(entt::entity)> listener;
+
         protected:
         entt::entity ref;
 
         public:
         Component(entt::entity);
-        virtual void update() = 0;
+
+        virtual void update();
     };
 
     class RigidComp: public Component {
@@ -29,9 +35,10 @@ namespace Fantasy {
     class SpriteComp: public Component {
         public:
         Tex2D *texture;
+        float width, height;
 
         public:
-        SpriteComp(entt::entity, Tex2D *);
+        SpriteComp(entt::entity, Tex2D *, float, float);
 
         void update() override;
     };
