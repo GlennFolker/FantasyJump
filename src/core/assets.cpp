@@ -16,7 +16,7 @@ namespace Fantasy {
         syncLoads = new std::vector<std::function<void()>>();
         assetDisposal = new std::vector<std::function<void()>>();
         loaderDisposal = new std::vector<std::function<void()>>();
-        processes = new std::vector<std::future<void> *>();
+        processes = new std::vector<std::future<void>>();
 
         loaded = 0;
         toLoad = 0;
@@ -76,12 +76,15 @@ namespace Fantasy {
 
         processes->erase(std::remove_if(
             processes->begin(), processes->end(),
-            [](std::future<void> *process) {
-                return !process->valid();
+            [this](std::future<void> &process) {
+                bool ready = process.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+                if(ready) loaded++;
+
+                return ready;
             }
         ), processes->end());
 
-        return errors->empty() && loaded >= toLoad;
+        return errors->empty() && syncLoads->empty() && loaded >= toLoad;
     }
 
     void AssetManager::dispose() {

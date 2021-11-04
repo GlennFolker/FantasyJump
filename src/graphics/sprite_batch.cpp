@@ -10,11 +10,7 @@ namespace Fantasy {
     SpriteBatch::SpriteBatch(): SpriteBatch(4096, NULL) {}
     
     SpriteBatch::SpriteBatch(size_t size, Shader *shader) {
-        if(size > 8191) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Max vertices must not be greater than 8191.");
-            this->~SpriteBatch();
-            return;
-        }
+        if(size > 8191) throw std::exception("Max vertices is 8191");
 
         z = 1.0f;
         color = Color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -76,30 +72,36 @@ namespace Fantasy {
             flush();
         }
 
-        //TODO rotation transform
-        vertices[index++] = originX;
-        vertices[index++] = originY;
+        mat4 trns = rotate(identity<mat4>(), radians(rotation), vec3(0.0f, 0.0f, 1.0f));
+        vec2
+            pos1 = trns * vec4(originX - x, originY - y, 0.0f, 1.0f),
+            pos2 = trns * vec4(originX - x + width, originY - y, 0.0f, 1.0f),
+            pos3 = trns * vec4(originX - x + width, originY - y + height, 0.0f, 1.0f),
+            pos4 = trns * vec4(originX - x, originY - y + height, 0.0f, 1.0f);
+
+        vertices[index++] = pos1.x + x;
+        vertices[index++] = pos1.y + y;
         vertices[index++] = z;
         vertices[index++] = colorBits;
         vertices[index++] = 0.0f;
         vertices[index++] = 1.0f;
 
-        vertices[index++] = originX + width;
-        vertices[index++] = originY;
+        vertices[index++] = pos2.x + x;
+        vertices[index++] = pos2.y + y;
         vertices[index++] = z;
         vertices[index++] = colorBits;
         vertices[index++] = 1.0f;
         vertices[index++] = 1.0f;
 
-        vertices[index++] = originX + width;
-        vertices[index++] = originY + height;
+        vertices[index++] = pos3.x + x;
+        vertices[index++] = pos3.y + y;
         vertices[index++] = z;
         vertices[index++] = colorBits;
         vertices[index++] = 1.0f;
         vertices[index++] = 0.0f;
 
-        vertices[index++] = originX;
-        vertices[index++] = originY + height;
+        vertices[index++] = pos4.x + x;
+        vertices[index++] = pos4.y + y;
         vertices[index++] = z;
         vertices[index++] = colorBits;
         vertices[index++] = 0.0f;

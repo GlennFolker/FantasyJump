@@ -7,8 +7,8 @@
 namespace Fantasy {
     class Mathf {
         public:
-        static inline bool near(float, float);
-        static inline bool near(float, float, float);
+        static bool near(float, float);
+        static bool near(float, float, float);
     };
 }
 

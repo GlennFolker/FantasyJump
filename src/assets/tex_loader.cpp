@@ -34,10 +34,8 @@ namespace Fantasy {
 
     Tex2D *Tex2DLoader::loadSync(AssetManager *assets, std::string prefix, const char *filename, Tex2DData *data, SDL_RWops *file) {
         lock->lock();
-
         Tex2D *tex = datas->at(filename);
         datas->erase(datas->find(filename));
-
         lock->unlock();
 
         tex->load();

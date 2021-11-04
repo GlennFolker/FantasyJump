@@ -17,8 +17,6 @@ int main(int argc, char *argv[]) {
         app = new App(argc, argv, config);
     } catch(std::exception &e) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, e.what());
-
-        delete app;
         app = NULL;
     }
 

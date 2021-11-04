@@ -61,10 +61,10 @@ namespace Fantasy {
         std::vector<std::function<void()>> *syncLoads;
         std::vector<std::function<void()>> *assetDisposal;
         std::vector<std::function<void()>> *loaderDisposal;
-        std::vector<std::future<void> *> *processes;
+        std::vector<std::future<void>> *processes;
 
         int toLoad;
-        volatile int loaded;
+        int loaded;
 
         public:
         AssetManager(std::string prefix = "assets/");
@@ -103,7 +103,7 @@ namespace Fantasy {
             std::enable_if<std::is_base_of<AssetData<T>, D>::value>::type *_D = nullptr
         > AssetLoader<T, D> *getLoader() {
             lock->lock();
-            auto loader = (AssetLoader<T, D> *)loaders->at(typeid(T));
+            AssetLoader<T, D> *loader = (AssetLoader<T, D> *)loaders->at(typeid(T));
             lock->unlock();
 
             return loader;
@@ -123,9 +123,13 @@ namespace Fantasy {
             std::enable_if<std::is_base_of<AssetData<T>, D>::value>::type *_D = nullptr
         > void load(const char *filename, std::function<void(AssetManager *, const char *, T *)> *callback, D *data = NULL) {
             if(hasAsset<T>(filename)) return;
+            addAsset<T>(filename, NULL);
 
             toLoad++;
-            std::future<void> process = std::async(std::launch::async, [&]() {
+            SDL_Log("before: %p", filename);
+
+            processes->push_back(std::async(std::launch::async, [&]() {
+                SDL_Log("after: %p", filename);
                 if(!hasLoader<T>()) {
                     error(filename, std::string("No loader setup for '").append(typeid(T).name()).append("'.").c_str());
                     return;
@@ -134,11 +138,13 @@ namespace Fantasy {
                 std::string str = prefix + filename;
                 const char *actualName = str.c_str();
 
-                SDL_RWops *bin = SDL_RWFromFile(actualName, "r+b");
                 AssetLoader<T, D> *loader = getLoader<T, D>();
+
+                SDL_RWops *bin = SDL_RWFromFile(actualName, "r+b");
                 try {
                     loader->loadAsync(this, prefix, filename, data, bin);
                 } catch(std::exception &e) {
+                    removeAsset<T>(filename);
                     error(filename, std::string(e.what()));
                     return;
                 }
@@ -149,28 +155,28 @@ namespace Fantasy {
                 syncLoads->push_back([&]() {
                     try {
                         asset = loader->loadSync(this, prefix, filename, data, bin);
+                        addAsset<T>(filename, asset);
 
-                        (*callback)(this, filename, asset);
-                        loaded++;
+                        if(callback != NULL) (*callback)(this, filename, asset);
                     } catch(std::exception &e) {
-                        if(data != NULL) data->~AssetData();
+                        if(data != NULL) delete data;
                         if(bin != NULL) SDL_RWclose(bin);
 
+                        removeAsset<T>(filename);
                         error(filename, std::string(e.what()));
                         return;
                     }
 
-                    if(data != NULL) data->~AssetData();
+                    if(data != NULL) delete data;
                     if(bin != NULL) SDL_RWclose(bin);
                 });
 
                 assetDisposal->push_back([&]() {
                     if(asset != NULL) loader->dispose(this, asset);
+                    removeAsset<T>(filename);
                 });
                 lock->unlock();
-            });
-
-            processes->push_back(std::move(&process));
+            }));
         }
 
         template<
@@ -198,6 +204,7 @@ namespace Fantasy {
         template<typename T>
         bool hasAsset(const char *name) {
             lock->lock();
+            SDL_Log("%p", name);
             bool has = getAssets<T>()->contains(name);
             lock->unlock();
 
@@ -206,6 +213,8 @@ namespace Fantasy {
 
         template<typename T>
         T *getAsset(const char *name) {
+            if(!hasAsset<T>(name)) throw std::exception(std::string("'").append(typeid(T).name()).append("' with name '").append(name).append("' is not loaded.").c_str());
+
             lock->lock();
             T *asset = (T *)getAssets<T>()->at(name);
             lock->unlock();
@@ -238,10 +247,10 @@ namespace Fantasy {
         }
 
         template<typename T>
-        void removeAsset(const char *name, T *asset) {
+        void removeAsset(const char *name) {
             lock->lock();
 
-            std::unordered_map<const char *, T *> *map = getAssets<T>();
+            std::unordered_map<const char *, void *> *map = getAssets<T>();
             if(map->contains(name)) map->erase(map->find(name));
 
             lock->unlock();

@@ -4,6 +4,8 @@
 #include <gl/glew.h>
 #include <SDL_opengl.h>
 #include <gl/GLU.h>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <exception>
 #include <string>
 
@@ -68,9 +70,13 @@ namespace Fantasy {
 
         exiting = false;
         instance = this;
+        pos = dvec2(0.0, 0.0);
+        proj = identity<dmat4>();
+        flipProj = identity<fmat4>();
 
         assets = new AssetManager();
         assets->defaultLoaders();
+        input = new Input();
 
         listeners = new std::vector<AppListener *>();
         listeners->push_back(control = new GameController());
@@ -81,6 +87,7 @@ namespace Fantasy {
         for(auto listener : *listeners) delete listener;
         delete listeners;
         delete assets;
+        delete input;
 
         SDL_DestroyWindow(window);
         SDL_GL_DeleteContext(context);
@@ -91,12 +98,26 @@ namespace Fantasy {
     bool App::run() {
         SDL_Event e;
         while(!exiting) {
+            double w = getWidth() / 64.0, h = getHeight() / 64.0;
+            proj = ortho(
+                pos.x - w, pos.x + w,
+                pos.y - h, pos.y + h
+            );
+            flipProj = ortho(
+                pos.x - w, pos.x + w,
+                pos.y + h, pos.y - h
+            );
+
             while(SDL_PollEvent(&e) != 0) {
-                if(e.type == SDL_QUIT) {
-                    exiting = true;
+                switch(e.type) {
+                    case SDL_QUIT:
+                        exiting = true;
+                        break;
+                    default:
+                        input->read(e);
                 }
             }
-
+            
             try {
                 for(auto it : *listeners) it->update();
             } catch(std::exception &e) {
@@ -114,21 +135,56 @@ namespace Fantasy {
         exiting = true;
     }
 
+    void App::getViewport(int *w, int *h) {
+        SDL_GetWindowSize(window, w, h);
+    }
+
     int App::getWidth() {
         int w;
-        SDL_GetWindowSize(window, &w, NULL);
+        getViewport(&w, NULL);
 
         return w;
     }
 
     int App::getHeight() {
         int h;
-        SDL_GetWindowSize(window, NULL, &h);
+        getViewport(NULL, &h);
 
         return h;
     }
 
+    void App::getMouse(int *x, int *y) {
+        SDL_GetMouseState(x, y);
+    }
+
+    int App::getMouseX() {
+        int x;
+        getMouse(&x, NULL);
+
+        return x;
+    }
+    
+    int App::getMouseY() {
+        int y;
+        getMouse(NULL, &y);
+
+        return y;
+    }
+
     float App::getAspect() {
         return (float)getWidth() / (float)getHeight();
+    }
+
+    void App::unproject(double x, double y, double *newX, double *newY) {
+        double unusedX, unusedY, unusedZ;
+        int viewport[4];
+        viewport[0] = viewport[1] = 0;
+        getViewport(&viewport[2], &viewport[3]);
+
+        gluUnProject(
+            x, y, 0.0,
+            value_ptr(identity<dmat4>()), value_ptr(flipProj), viewport,
+            newX == NULL ? &unusedX : newX, newY == NULL ? &unusedY : newY, &unusedZ
+        );
     }
 }

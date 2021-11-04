@@ -8,7 +8,6 @@ namespace Fantasy {
     class Renderer: public AppListener {
         public:
         SpriteBatch *batch;
-        vec2 position;
 
         public:
         Renderer();
