@@ -86,15 +86,11 @@ namespace Fantasy {
     }
 
     void GameController::scheduleRemoval(entt::entity e) {
-        SDL_Log("Removing...");
         removal->insert(e);
     }
 
     void GameController::removeEntities() {
-        for(entt::entity e : *removal) {
-            SDL_Log("Removed.");
-            regist->destroy(e);
-        }
+        for(entt::entity e : *removal) regist->destroy(e);
         removal->clear();
     }
 }

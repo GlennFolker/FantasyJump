@@ -53,8 +53,6 @@ namespace Fantasy {
     void RigidComp::onDestroy(entt::registry &registry, entt::entity entity) {
         RigidComp &comp = registry.get<RigidComp>(entity);
         comp.getWorld().DestroyBody(comp.body);
-
-        SDL_Log("ngentot");
     }
 
     SpriteComp::SpriteComp(entt::entity e, Tex2D *texture): SpriteComp(e, texture, 1.0f, 1.0f) {}
