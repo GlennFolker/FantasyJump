@@ -9,9 +9,6 @@
 
 namespace Fantasy {
     class Component {
-        public:
-        std::function<void(entt::entity)> listener;
-
         protected:
         entt::entity ref;
 
@@ -19,15 +16,23 @@ namespace Fantasy {
         Component(entt::entity);
 
         virtual void update();
+
+        entt::entity getRef();
+        entt::registry &getRegistry();
+        b2World &getWorld();
     };
 
     class RigidComp: public Component {
         public:
         b2Body *body;
+        float rotateSpeed;
 
         public:
         RigidComp(entt::entity, b2Body *);
         void update() override;
+
+        void beginCollide(RigidComp &);
+        void endCollide(RigidComp &);
 
         static void onDestroy(entt::registry &, entt::entity);
     };
@@ -38,6 +43,8 @@ namespace Fantasy {
         float width, height;
 
         public:
+        SpriteComp(entt::entity, Tex2D *);
+        SpriteComp(entt::entity, Tex2D *, float);
         SpriteComp(entt::entity, Tex2D *, float, float);
 
         void update() override;
@@ -58,6 +65,26 @@ namespace Fantasy {
         void hold();
         void release(float, float);
         void update() override;
+    };
+
+    class HealthComp: public Component {
+        protected:
+        float health, maxHealth, damage;
+
+        public:
+        HealthComp(entt::entity, float);
+        HealthComp(entt::entity, float, float);
+
+        public:
+        void update() override;
+        void kill();
+        void killed();
+        void heal(float);
+        void hurt(float);
+        bool canHurt();
+
+        float getHealth();
+        float getDamage();
     };
 }
 

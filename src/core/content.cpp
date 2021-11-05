@@ -2,7 +2,8 @@
 
 #include "content.h"
 #include "entity.h"
-#include "../app.h"
+#include "../graphics/tex.h"
+#include "../util/mathf.h"
 
 namespace Fantasy {
     Tex2D *jumpTexture = new Tex2D("assets/jumper.png");
@@ -21,8 +22,8 @@ namespace Fantasy {
             bodyDef.type = b2_dynamicBody;
             bodyDef.position.SetZero();
 
-            b2PolygonShape shape;
-            shape.SetAsBox(0.5f, 0.5f);
+            b2CircleShape shape;
+            shape.m_radius = 0.5f;
 
             b2FixtureDef fixt;
             fixt.shape = &shape;
@@ -32,8 +33,9 @@ namespace Fantasy {
             body->CreateFixture(&fixt);
 
             registry.emplace<RigidComp>(e, e, body);
-            registry.emplace<SpriteComp>(e, e, jumpTexture, 1.0f, 1.0f);
+            registry.emplace<SpriteComp>(e, e, jumpTexture);
             registry.emplace<JumpComp>(e, e, 20.0f, 1.0f);
+            registry.emplace<HealthComp>(e, e, 100.0f);
         });
 
         spike = create<EntityType>("spike", [&](entt::registry &registry, b2World &world, entt::entity e) {
@@ -49,9 +51,10 @@ namespace Fantasy {
 
             b2Body *body = world.CreateBody(&bodyDef);
             body->CreateFixture(&fixt);
-
-            registry.emplace<RigidComp>(e, e, body);
-            registry.emplace<SpriteComp>(e, e, spikeTexture, 2.0f, 2.0f);
+            
+            registry.emplace<RigidComp>(e, e, body).rotateSpeed = glm::radians(Mathf::random() > 0.5f ? 1.0f : -1.0f);
+            registry.emplace<SpriteComp>(e, e, spikeTexture, 2.0f);
+            registry.emplace<HealthComp>(e, e, -1.0f, 1000.0f);
         });
     }
 

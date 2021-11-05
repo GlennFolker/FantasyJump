@@ -27,8 +27,10 @@ namespace Fantasy {
 
         batch->proj(App::instance->proj);
 
-        App::instance->control->regist->each([this](const entt::entity e) {
-            if(App::instance->control->regist->any_of<SpriteComp>(e)) App::instance->control->regist->get<SpriteComp>(e).update();
+        auto regist = App::instance->control->regist;
+        regist->each([&](const entt::entity e) {
+            if(!regist->valid(e)) return;
+            if(regist->any_of<SpriteComp>(e)) regist->get<SpriteComp>(e).update();
         });
 
         batch->flush();
