@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "app_listener.h"
-#include "core/assets.h"
 #include "core/renderer.h"
 #include "core/input.h"
 #include "core/game_controller.h"
@@ -33,7 +32,6 @@ namespace Fantasy {
         dmat4 proj;
         dmat4 flipProj;
         dvec2 pos;
-        AssetManager *assets;
         Input *input;
         GameController *control;
         Renderer *renderer;

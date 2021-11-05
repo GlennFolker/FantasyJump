@@ -74,10 +74,7 @@ namespace Fantasy {
         proj = identity<dmat4>();
         flipProj = identity<fmat4>();
 
-        assets = new AssetManager();
-        assets->defaultLoaders();
         input = new Input();
-
         listeners = new std::vector<AppListener *>();
         listeners->push_back(control = new GameController());
         listeners->push_back(renderer = new Renderer());
@@ -86,7 +83,6 @@ namespace Fantasy {
     App::~App() {
         for(auto listener : *listeners) delete listener;
         delete listeners;
-        delete assets;
         delete input;
 
         SDL_DestroyWindow(window);
