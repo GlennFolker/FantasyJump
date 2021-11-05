@@ -12,6 +12,7 @@ namespace Fantasy {
         static const VertexAttr position;
         static const VertexAttr texCoords;
         static const VertexAttr color;
+        static const VertexAttr tint;
 
         int components;
         int type;

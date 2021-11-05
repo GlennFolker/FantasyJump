@@ -6,8 +6,6 @@
 #include "../app.h"
 
 namespace Fantasy {
-    entt::entity player;
-
     GameController::GameController() {
         regist = new entt::registry();
         regist->on_destroy<RigidComp>().connect<&RigidComp::onDestroy>();

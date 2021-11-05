@@ -31,7 +31,6 @@ namespace Fantasy {
     }
 
     void RigidComp::update() {
-        Component::update();
         if(!Mathf::near(rotateSpeed, 0.0f)) body->SetTransform(body->GetPosition(), body->GetAngle() + rotateSpeed);
     }
 
@@ -64,10 +63,17 @@ namespace Fantasy {
     }
 
     void SpriteComp::update() {
-        Component::update();
+        entt::registry &registry = getRegistry();
+        b2Transform trns = registry.get<RigidComp>(ref).body->GetTransform();
+        SpriteBatch *batch = App::instance->renderer->batch;
 
-        b2Transform trns = getRegistry().get<RigidComp>(ref).body->GetTransform();
-        App::instance->renderer->batch->draw(texture, trns.p.x, trns.p.y, width, height, degrees(trns.q.GetAngle()));
+        if(registry.any_of<HealthComp>(ref)) {
+            float alpha = fmaxf(1.0f - (Time::time() - registry.get<HealthComp>(ref).getHitTime()) / 0.5f, 0.0f);
+            batch->tint(Color(1.0f, 0.0f, 0.3f, alpha));
+        }
+
+        batch->draw(texture, trns.p.x, trns.p.y, width, height, degrees(trns.q.GetAngle()));
+        batch->tint(Color());
     }
 
     JumpComp::JumpComp(entt::entity e, float force, float timeout): Component(e) {
@@ -91,14 +97,12 @@ namespace Fantasy {
     }
 
     void JumpComp::update() {
-        Component::update();
-
         b2Body *body = getRegistry().get<RigidComp>(ref).body;
         float now = Time::time();
 
         if(holding) {
             b2Vec2 vel = body->GetLinearVelocity();
-            vel *= (-1.0f * fminf((now - time) / 0.1f, 1.0f)) * vel.Length();
+            vel *= (-1.0f * fminf((now - time) / 0.05f, 1.0f)) * vel.Length();
 
             body->ApplyForceToCenter(vel, true);
             if(!Mathf::near(body->GetAngularVelocity(), 1.0f)) {
@@ -122,6 +126,7 @@ namespace Fantasy {
     HealthComp::HealthComp(entt::entity e, float health, float damage): Component(e) {
         this->health = maxHealth = health;
         this->damage = damage;
+        hitTime = 0.0f;
     }
 
     void HealthComp::update() {
@@ -141,7 +146,12 @@ namespace Fantasy {
     }
 
     void HealthComp::hurt(float damage) {
-        if(canHurt()) health = fmaxf(health - damage, 0.0f);
+        if(canHurt()) {
+            float prev = health;
+            health = fmaxf(health - damage, 0.0f);
+
+            if(!Mathf::near(prev, health)) hitTime = Time::time();
+        }
     }
 
     bool HealthComp::canHurt() {
@@ -152,7 +162,15 @@ namespace Fantasy {
         return health;
     }
 
+    float HealthComp::getMaxHealth() {
+        return maxHealth;
+    }
+
     float HealthComp::getDamage() {
         return damage;
+    }
+
+    float HealthComp::getHitTime() {
+        return hitTime;
     }
 }

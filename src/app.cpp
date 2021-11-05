@@ -98,7 +98,7 @@ namespace Fantasy {
     bool App::run() {
         SDL_Event e;
         while(!exiting) {
-            double w = getWidth() / 64.0, h = getHeight() / 64.0;
+            double w = getWidth() / 48.0, h = getHeight() / 48.0;
             proj = ortho(
                 pos.x - w, pos.x + w,
                 pos.y - h, pos.y + h

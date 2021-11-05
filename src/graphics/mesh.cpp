@@ -10,6 +10,7 @@ namespace Fantasy {
     const VertexAttr VertexAttr::position = VertexAttr(3, GL_FLOAT, "a_position");
     const VertexAttr VertexAttr::texCoords = VertexAttr(2, GL_FLOAT, "a_tex_coords_0");
     const VertexAttr VertexAttr::color = VertexAttr(4, GL_UNSIGNED_BYTE, true, "a_color");
+    const VertexAttr VertexAttr::tint = VertexAttr(4, GL_UNSIGNED_BYTE, true, "a_tint");
 
     VertexAttr::VertexAttr(int components, int type, bool normalized, const char *alias) {
         this->components = components;

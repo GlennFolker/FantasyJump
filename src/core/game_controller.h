@@ -17,6 +17,7 @@ namespace Fantasy {
         Contents *content;
         entt::registry *regist;
         b2World *world;
+        entt::entity player;
 
         public:
         GameController();

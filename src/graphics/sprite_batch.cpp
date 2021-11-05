@@ -8,25 +8,32 @@
 
 namespace Fantasy {
     SpriteBatch::SpriteBatch(): SpriteBatch(4096, NULL) {}
-    
     SpriteBatch::SpriteBatch(size_t size, Shader *shader) {
         if(size > 8191) throw std::exception("Max vertices is 8191");
 
         z = 1.0f;
-        color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+        color = Color::white;
         colorBits = color.fabgr();
+        tinted = Color();
+        tintBits = tinted.fabgr();
         index = 0;
         texture = NULL;
         projection = identity<mat4>();
 
         size_t indicesCount = size * 6;
-        mesh = new Mesh(size * 4, indicesCount, 3, new VertexAttr[]{
+        mesh = new Mesh(size * 4, indicesCount, 4, new VertexAttr[]{
             VertexAttr::position,
             VertexAttr::color,
+            VertexAttr::tint,
             VertexAttr::texCoords
         });
 
-        spriteSize = 4 * (3 + 1 + 2);
+        spriteSize = 4 * ( // Vertex size.
+            3 + // Position.
+            1 + // Base color.
+            1 + // Tint color.
+            2   // Texture coordinates.
+        );
 
         vertLength = size * spriteSize;
         vertices = new float[vertLength];
@@ -83,6 +90,7 @@ namespace Fantasy {
         vertices[index++] = pos1.y + y;
         vertices[index++] = z;
         vertices[index++] = colorBits;
+        vertices[index++] = tintBits;
         vertices[index++] = 0.0f;
         vertices[index++] = 1.0f;
 
@@ -90,6 +98,7 @@ namespace Fantasy {
         vertices[index++] = pos2.y + y;
         vertices[index++] = z;
         vertices[index++] = colorBits;
+        vertices[index++] = tintBits;
         vertices[index++] = 1.0f;
         vertices[index++] = 1.0f;
 
@@ -97,6 +106,7 @@ namespace Fantasy {
         vertices[index++] = pos3.y + y;
         vertices[index++] = z;
         vertices[index++] = colorBits;
+        vertices[index++] = tintBits;
         vertices[index++] = 1.0f;
         vertices[index++] = 0.0f;
 
@@ -104,6 +114,7 @@ namespace Fantasy {
         vertices[index++] = pos4.y + y;
         vertices[index++] = z;
         vertices[index++] = colorBits;
+        vertices[index++] = tintBits;
         vertices[index++] = 0.0f;
         vertices[index++] = 0.0f;
     }
@@ -116,6 +127,16 @@ namespace Fantasy {
     void SpriteBatch::col(float abgr) {
         color.fromFagbr(abgr);
         this->colorBits = abgr;
+    }
+
+    void SpriteBatch::tint(Color color) {
+        this->tinted = color;
+        tintBits = color.fabgr();
+    }
+
+    void SpriteBatch::tint(float abgr) {
+        tinted.fromFagbr(abgr);
+        this->tintBits = abgr;
     }
 
     void SpriteBatch::proj(mat4 projection) {

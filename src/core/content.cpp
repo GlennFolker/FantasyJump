@@ -34,7 +34,7 @@ namespace Fantasy {
 
             registry.emplace<RigidComp>(e, e, body);
             registry.emplace<SpriteComp>(e, e, jumpTexture);
-            registry.emplace<JumpComp>(e, e, 20.0f, 1.0f);
+            registry.emplace<JumpComp>(e, e, 20.0f, 0.7f);
             registry.emplace<HealthComp>(e, e, 100.0f);
         });
 
@@ -47,6 +47,8 @@ namespace Fantasy {
             shape.m_radius = 0.9f;
 
             b2FixtureDef fixt;
+            fixt.restitution = 1.6f;
+            fixt.restitutionThreshold = 0.0f;
             fixt.shape = &shape;
 
             b2Body *body = world.CreateBody(&bodyDef);
@@ -54,7 +56,7 @@ namespace Fantasy {
             
             registry.emplace<RigidComp>(e, e, body).rotateSpeed = glm::radians(Mathf::random() > 0.5f ? 1.0f : -1.0f);
             registry.emplace<SpriteComp>(e, e, spikeTexture, 2.0f);
-            registry.emplace<HealthComp>(e, e, -1.0f, 1000.0f);
+            registry.emplace<HealthComp>(e, e, -1.0f, 10.0f);
         });
     }
 

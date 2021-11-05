@@ -1,10 +1,11 @@
 #include "color.h"
 
 namespace Fantasy {
+    const Color Color::white = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    const Color Color::red = Color(1.0f, 0.0f, 0.0f, 1.0f);
+
     Color::Color(): Color(0.0f, 0.0f, 0.0f, 0.0f) {}
-
     Color::Color(float r, float g, float b): Color(r, g, b, 1.0f) {}
-
     Color::Color(float r, float g, float b, float a) {
         this->r = r;
         this->g = g;

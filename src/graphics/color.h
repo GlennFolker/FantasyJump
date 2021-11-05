@@ -4,6 +4,9 @@
 namespace Fantasy {
     struct Color {
         public:
+        static const Color white;
+        static const Color red;
+
         float r;
         float g;
         float b;
