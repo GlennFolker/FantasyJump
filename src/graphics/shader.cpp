@@ -6,7 +6,6 @@
 
 namespace Fantasy {
     Shader::Shader(const char *vertSource, const char *fragSource): Shader(&vertSource, &fragSource) {}
-
     Shader::Shader(const char **vertSource, const char **fragSource) {
         vertPtr = createShader(GL_VERTEX_SHADER, vertSource);
         if(vertPtr == NULL) throw std::exception("Couldn't create vertex shader.");

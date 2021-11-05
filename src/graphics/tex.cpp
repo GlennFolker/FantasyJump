@@ -8,7 +8,6 @@
 
 namespace Fantasy {
     Tex::Tex(const char *filename): Tex(IMG_Load(filename)) {}
-
     Tex::Tex(SDL_Surface *surface) {
         this->surface = surface;
         data = NULL;
@@ -39,7 +38,6 @@ namespace Fantasy {
     }
 
     Tex2D::Tex2D(const char *filename): Tex2D(IMG_Load(filename)) {}
-
     Tex2D::Tex2D(SDL_Surface *surface): Tex(surface) {
         width = -1;
         height = -1;
