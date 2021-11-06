@@ -17,6 +17,7 @@ namespace Fantasy {
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
                 ctx.performed = e.type == SDL_MOUSEBUTTONDOWN;
+                ctx.set(e.button.button);
                 for(std::function<void(InputContext &)> &func : *mouse) {
                     func(ctx);
                 }

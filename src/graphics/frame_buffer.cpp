@@ -22,7 +22,7 @@ namespace Fantasy {
         if(color) {
             texture = new Tex2D(width, height, NULL);
             texture->load();
-            texture->setFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+            texture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
             texture->setWrap(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
 
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->data, 0);

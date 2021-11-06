@@ -14,10 +14,15 @@ namespace Fantasy {
         std::unordered_set<entt::entity> *removal;
 
         public:
+        static const float worldWidth;
+        static const float worldHeight;
+        static const float borderThickness;
+
         Contents *content;
-        entt::registry *regist;
         b2World *world;
+        entt::registry *regist;
         entt::entity player;
+        Tex2D *borderTex;
 
         public:
         GameController();

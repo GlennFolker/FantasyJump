@@ -33,48 +33,7 @@ namespace Fantasy {
         quad->setVertices(vertices, 0, sizeof(vertices) / sizeof(float));
         quad->setIndices(indices, 0, sizeof(indices) / sizeof(unsigned short));
 
-        bloom = new Shader(R"(
-#version 150 core
-in vec2 a_position;
-in vec2 a_tex_coords_0;
-
-out vec2 v_tex_coords;
-
-void main() {
-    gl_Position = vec4(a_position, 1.0, 1.0);
-    v_tex_coords = a_tex_coords_0;
-}
-        )", R"(
-#version 150 core
-out vec4 fragColor;
-
-in vec2 v_tex_coords;
-
-uniform sampler2D u_texture;
-uniform vec2 u_resolution;
-uniform int u_range;
-uniform float u_threshold;
-uniform float u_suppress;
-
-void main() {
-    float thres = u_threshold * 3.0;
-    float range2 = pow(u_range, 2.0);
-    vec2 step = vec2(1.0) / u_resolution;
-
-    vec4 sum = vec4(0.0);
-    for(int x = -u_range; x <= u_range; x++) {
-        for(int y = -u_range; y <= u_range; y++) {
-            float distance = x * x + y * y;
-            if(distance > range2) continue;
-
-            vec4 col = texture2D(u_texture, v_tex_coords + vec2(x * step.x, y * step.y));
-            if((col.r + col.g + col.b) >= thres) sum += col;
-        }
-    }
-
-    fragColor = texture2D(u_texture, v_tex_coords) + sum / pow(2 * u_range + 1, 2) / u_suppress;
-}
-        )");
+        bloom = new Shader(BLOOM_VERTEX_SHADER, BLOOM_FRAGMENT_SHADER);
     }
 
     Renderer::~Renderer() {
@@ -92,9 +51,14 @@ void main() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        batch->proj(App::instance->proj);
-
         entt::registry *regist = App::instance->control->regist;
+        entt::entity player = App::instance->control->player;
+        if(regist->valid(player)) {
+            b2Vec2 pos = regist->get<RigidComp>(player).body->GetPosition();
+            App::instance->pos = vec2(pos.x, pos.y);
+        }
+
+        batch->proj(App::instance->proj);
         regist->each([&](const entt::entity e) {
             if(!regist->valid(e)) return;
             if(regist->any_of<SpriteComp>(e)) regist->get<SpriteComp>(e).update();

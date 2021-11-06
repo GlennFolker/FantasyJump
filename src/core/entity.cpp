@@ -102,7 +102,7 @@ namespace Fantasy {
 
         if(holding) {
             b2Vec2 vel = body->GetLinearVelocity();
-            vel *= (-1.0f * fminf((now - time) / 0.05f, 1.0f)) * vel.Length();
+            vel *= (-1.0f * fminf((now - time) / 0.1f, 1.0f)) * vel.Length();
 
             body->ApplyForceToCenter(vel, true);
             if(!Mathf::near(body->GetAngularVelocity(), 1.0f)) {
