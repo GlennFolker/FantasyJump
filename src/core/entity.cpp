@@ -40,8 +40,8 @@ namespace Fantasy {
             HealthComp &self = registry.get<HealthComp>(ref);
             HealthComp &otherh = registry.get<HealthComp>(other.ref);
 
-            if(!Mathf::near(otherh.getDamage(), 0.0f) && self.canHurt()) self.hurt(otherh.getDamage());
-            if(!Mathf::near(self.getDamage(), 0.0f) && otherh.canHurt()) otherh.hurt(self.getDamage());
+            if(!Mathf::near(otherh.damage, 0.0f) && self.canHurt()) self.hurt(otherh.damage);
+            if(!Mathf::near(self.damage, 0.0f) && otherh.canHurt()) otherh.hurt(self.damage);
         }
     }
 
@@ -68,7 +68,7 @@ namespace Fantasy {
         SpriteBatch *batch = App::instance->renderer->batch;
 
         if(registry.any_of<HealthComp>(ref)) {
-            float alpha = fmaxf(1.0f - (Time::time() - registry.get<HealthComp>(ref).getHitTime()) / 0.5f, 0.0f);
+            float alpha = fmaxf(1.0f - (Time::time() - registry.get<HealthComp>(ref).hitTime) / 0.5f, 0.0f);
             batch->tint(Color(1.0f, 0.0f, 0.3f, alpha));
         }
 
@@ -126,7 +126,7 @@ namespace Fantasy {
     HealthComp::HealthComp(entt::entity e, float health, float damage): Component(e) {
         this->health = maxHealth = health;
         this->damage = damage;
-        hitTime = 0.0f;
+        hitTime = -1000.0f;
     }
 
     void HealthComp::update() {
@@ -156,21 +156,5 @@ namespace Fantasy {
 
     bool HealthComp::canHurt() {
         return health != -1.0f;
-    }
-
-    float HealthComp::getHealth() {
-        return health;
-    }
-
-    float HealthComp::getMaxHealth() {
-        return maxHealth;
-    }
-
-    float HealthComp::getDamage() {
-        return damage;
-    }
-
-    float HealthComp::getHitTime() {
-        return hitTime;
     }
 }

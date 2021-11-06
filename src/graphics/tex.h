@@ -29,12 +29,13 @@ namespace Fantasy {
         int height;
 
         public:
-        Tex2D(const char *filename);
-        Tex2D(SDL_Surface *data);
+        Tex2D(const char *);
+        Tex2D(SDL_Surface *);
+        Tex2D(int, int, SDL_Surface *);
 
         public:
         virtual void bind() override;
-        virtual void set(SDL_Surface *, bool) override;
+        virtual void set(SDL_Surface *, bool bind = true) override;
         void setWrap(int, int, int, bool bind = true) override;
         void setFilter(int, int, bool bind = true) override;
     };

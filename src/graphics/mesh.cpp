@@ -8,6 +8,7 @@ using namespace std;
 
 namespace Fantasy {
     const VertexAttr VertexAttr::position = VertexAttr(3, GL_FLOAT, "a_position");
+    const VertexAttr VertexAttr::position2D = VertexAttr(2, GL_FLOAT, "a_position");
     const VertexAttr VertexAttr::texCoords = VertexAttr(2, GL_FLOAT, "a_tex_coords_0");
     const VertexAttr VertexAttr::color = VertexAttr(4, GL_UNSIGNED_BYTE, true, "a_color");
     const VertexAttr VertexAttr::tint = VertexAttr(4, GL_UNSIGNED_BYTE, true, "a_tint");
@@ -66,11 +67,9 @@ namespace Fantasy {
         delete[] attributes;
 
         glDeleteBuffers(1, &verticesData);
-        verticesData = NULL;
         delete[] vertices;
 
         glDeleteBuffers(1, &indicesData);
-        indicesData = NULL;
         delete[] indices;
     }
 

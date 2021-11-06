@@ -18,6 +18,7 @@ add_executable(Fantasy
     "src/graphics/shader.cpp"
     "src/graphics/mesh.cpp"
     "src/graphics/sprite_batch.cpp"
+    "src/graphics/frame_buffer.cpp"
     "src/graphics/tex.cpp"
     "src/util/mathf.cpp"
 )

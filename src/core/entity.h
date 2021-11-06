@@ -68,7 +68,7 @@ namespace Fantasy {
     };
 
     class HealthComp: public Component {
-        protected:
+        public:
         float health, maxHealth, damage, hitTime;
 
         public:
@@ -82,11 +82,6 @@ namespace Fantasy {
         void heal(float);
         void hurt(float);
         bool canHurt();
-
-        float getHealth();
-        float getMaxHealth();
-        float getDamage();
-        float getHitTime();
     };
 }
 

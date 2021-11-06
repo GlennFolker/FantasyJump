@@ -10,6 +10,7 @@ namespace Fantasy {
     struct VertexAttr {
         public:
         static const VertexAttr position;
+        static const VertexAttr position2D;
         static const VertexAttr texCoords;
         static const VertexAttr color;
         static const VertexAttr tint;

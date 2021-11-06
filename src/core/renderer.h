@@ -3,11 +3,15 @@
 
 #include "../app_listener.h"
 #include "../graphics/sprite_batch.h"
+#include "../graphics/frame_buffer.h"
 
 namespace Fantasy {
     class Renderer: public AppListener {
         public:
         SpriteBatch *batch;
+        FrameBuffer *buffer;
+        Mesh *quad;
+        Shader *bloom;
 
         public:
         Renderer();

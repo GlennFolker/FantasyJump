@@ -2,18 +2,17 @@
 
 #include "content.h"
 #include "entity.h"
-#include "../graphics/tex.h"
 #include "../util/mathf.h"
 
 namespace Fantasy {
-    Tex2D *jumpTexture = new Tex2D("assets/jumper.png");
-    Tex2D *spikeTexture = new Tex2D("assets/spike.png");
-
     Contents::Contents() {
         contents = new std::vector<std::unordered_map<const char *, Content *> *>((int)CType::ALL);
+
+        jumpTexture = new Tex2D("assets/jumper.png");
         jumpTexture->load();
         jumpTexture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
 
+        spikeTexture = new Tex2D("assets/spike.png");
         spikeTexture->load();
         spikeTexture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
 
@@ -63,7 +62,6 @@ namespace Fantasy {
     Contents::~Contents() {
         for(auto arr : *contents) delete arr;
         delete contents;
-
         delete jumpTexture;
         delete spikeTexture;
     }

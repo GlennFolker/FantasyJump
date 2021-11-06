@@ -7,6 +7,8 @@
 #include <entt/entity/registry.hpp>
 #include <box2d/box2d.h>
 
+#include "../graphics/tex.h"
+
 namespace Fantasy {
     enum class CType {
         ENTITY,
@@ -35,6 +37,8 @@ namespace Fantasy {
     class Contents {
         private:
         std::vector<std::unordered_map<const char *, Content *> *> *contents;
+        Tex2D *jumpTexture;
+        Tex2D *spikeTexture;
 
         public:
         EntityType *jumper, *spike;
