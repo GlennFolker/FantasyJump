@@ -4,6 +4,7 @@
 #include "game_controller.h"
 #include "entity.h"
 #include "../app.h"
+#include "../util/mathf.h"
 
 namespace Fantasy {
     const float GameController::worldWidth = 800.0f;
@@ -43,7 +44,7 @@ namespace Fantasy {
             entt::entity borderA = regist->create();
             regist->emplace<RigidComp>(borderA, borderA, bodyA);
             regist->emplace<SpriteComp>(borderA, borderA, borderTex, worldWidth, borderThickness);
-            regist->emplace<HealthComp>(borderA, borderA, -1.0f);
+            regist->emplace<HealthComp>(borderA, borderA, -1.0f, 10.0f);
 
             bodyDef.position.Set(i * worldWidth / 2.0f - borderThickness / 2.0f * i, 0.0f);
             shape.SetAsBox(borderThickness / 2.0f, worldHeight / 2.0f);
@@ -54,7 +55,7 @@ namespace Fantasy {
             entt::entity borderB = regist->create();
             regist->emplace<RigidComp>(borderB, borderB, bodyB);
             regist->emplace<SpriteComp>(borderB, borderB, borderTex, borderThickness, worldHeight);
-            regist->emplace<HealthComp>(borderB, borderB, -1.0f);
+            regist->emplace<HealthComp>(borderB, borderB, -1.0f, 10.0f);
         }
 
         player = content->jumper->create(*regist, *world);
@@ -72,10 +73,52 @@ namespace Fantasy {
             }
         });
 
-        regist->get<RigidComp>(content->spike->create(*regist, *world)).body->SetTransform(b2Vec2(-6.0f, -6.0f), 0.0f);
-        regist->get<RigidComp>(content->spike->create(*regist, *world)).body->SetTransform(b2Vec2(6.0f, -6.0f), 0.0f);
-        regist->get<RigidComp>(content->spike->create(*regist, *world)).body->SetTransform(b2Vec2(6.0f, 6.0f), 0.0f);
-        regist->get<RigidComp>(content->spike->create(*regist, *world)).body->SetTransform(b2Vec2(-6.0f, 6.0f), 0.0f);
+        for(int c = 0; c < 1000; c++) {
+            b2Body *body = regist->get<RigidComp>(content->spike->create(*regist, *world)).body;
+            do {
+                body->SetTransform(b2Vec2(
+                    Mathf::random(-worldWidth, worldWidth) / 2.0f,
+                    Mathf::random(-worldHeight, worldHeight) / 2.0f
+                ), 0.0f);
+            } while([&]() {
+                const b2Transform &trns = body->GetTransform();
+                if(trns.p.LengthSquared() < 25.0f) return true;
+
+                b2Fixture *fixtures = body->GetFixtureList();
+                int count = sizeof(fixtures) / sizeof(b2Fixture);
+
+                class Report: public b2QueryCallback {
+                    private:
+                    bool found = false;
+
+                    public:
+                    bool ReportFixture(b2Fixture *fixture) override {
+                        found = true;
+                        return false;
+                    }
+
+                    bool isFound() {
+                        return found;
+                    }
+                };
+
+                Report report;
+                for(int i = 0; i < count; i++) {
+                    b2AABB bound;
+
+                    b2Shape *shape = fixtures[i].GetShape();
+                    int count = shape->GetChildCount();
+                    for(int j = 0; j < count; j++) {
+                        shape->ComputeAABB(&bound, trns, j);
+
+                        world->QueryAABB(&report, bound);
+                        if(report.isFound()) return true;
+                    }
+                }
+
+                return false;
+            }());
+        }
     }
 
     GameController::~GameController() {

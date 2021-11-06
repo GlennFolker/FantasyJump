@@ -40,12 +40,13 @@ namespace Fantasy {
     class SpriteComp: public Component {
         public:
         Tex2D *texture;
-        float width, height;
+        float width, height, z;
 
         public:
         SpriteComp(entt::entity, Tex2D *);
         SpriteComp(entt::entity, Tex2D *, float);
         SpriteComp(entt::entity, Tex2D *, float, float);
+        SpriteComp(entt::entity, Tex2D *, float, float, float);
 
         void update() override;
     };

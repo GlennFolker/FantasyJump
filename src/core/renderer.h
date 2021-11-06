@@ -1,6 +1,8 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <box2d/box2d.h>
+
 #include "../app_listener.h"
 #include "../graphics/sprite_batch.h"
 #include "../graphics/frame_buffer.h"
@@ -50,11 +52,20 @@ void main() {
 
 namespace Fantasy {
     class Renderer: public AppListener {
+        private:
+        bool press;
+        float lastPressed;
+        float progress;
+        b2Vec2 lastPos;
+        float lastAngle;
+
         public:
         SpriteBatch *batch;
         FrameBuffer *buffer;
         Mesh *quad;
         Shader *bloom;
+        Tex2D *ringTexture;
+        Tex2D *pixelTexture;
 
         public:
         Renderer();

@@ -7,7 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Fantasy {
-    SpriteBatch::SpriteBatch(): SpriteBatch(4096, NULL) {}
+    SpriteBatch::SpriteBatch(): SpriteBatch(8191, NULL) {}
     SpriteBatch::SpriteBatch(size_t size, Shader *shader) {
         if(size > 8191) throw std::exception("Max vertices is 8191");
 

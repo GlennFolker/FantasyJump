@@ -41,7 +41,6 @@ namespace Fantasy {
             HealthComp &otherh = registry.get<HealthComp>(other.ref);
 
             if(!Mathf::near(otherh.damage, 0.0f) && self.canHurt()) self.hurt(otherh.damage);
-            if(!Mathf::near(self.damage, 0.0f) && otherh.canHurt()) otherh.hurt(self.damage);
         }
     }
 
@@ -56,10 +55,12 @@ namespace Fantasy {
 
     SpriteComp::SpriteComp(entt::entity e, Tex2D *texture): SpriteComp(e, texture, 1.0f, 1.0f) {}
     SpriteComp::SpriteComp(entt::entity e, Tex2D *texture, float size): SpriteComp(e, texture, size, size) {}
-    SpriteComp::SpriteComp(entt::entity e, Tex2D *texture, float width, float height): Component(e) {
+    SpriteComp::SpriteComp(entt::entity e, Tex2D *texture, float width, float height): SpriteComp(e, texture, width, height, 0.0f) {}
+    SpriteComp::SpriteComp(entt::entity e, Tex2D *texture, float width, float height, float z): Component(e) {
         this->texture = texture;
         this->width = width;
         this->height = height;
+        this->z = z;
     }
 
     void SpriteComp::update() {
@@ -72,6 +73,7 @@ namespace Fantasy {
             batch->tint(Color(1.0f, 0.0f, 0.3f, alpha));
         }
 
+        batch->z = z;
         batch->draw(texture, trns.p.x, trns.p.y, width, height, degrees(trns.q.GetAngle()));
         batch->tint(Color());
     }
