@@ -64,13 +64,14 @@ namespace Fantasy {
 
         GLenum error = GL_NO_ERROR;
         glewExperimental = GL_TRUE;
-        if((error = glewInit()) != GL_NO_ERROR) throw std::exception(std::string("Couldn't initialize GLEW").append((char *)glewGetErrorString(error)).c_str());
+        if((error = glewInit()) != GL_NO_ERROR) throw std::exception(std::string("Couldn't initialize GLEW").append((const char *)glewGetErrorString(error)).c_str());
         
         if(SDL_GL_SetSwapInterval(1) != 0) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "VSync disabled.");
 
         exiting = false;
         instance = this;
         pos = dvec2(0.0, 0.0);
+        scl = dvec2(48.0, 48.0);
         proj = identity<dmat4>();
         flipProj = identity<fmat4>();
 
@@ -94,7 +95,7 @@ namespace Fantasy {
     bool App::run() {
         SDL_Event e;
         while(!exiting) {
-            double w = getWidth() / 48.0, h = getHeight() / 48.0;
+            double w = getWidth() / scl.x, h = getHeight() / scl.y;
             proj = orthoLH_ZO(
                 pos.x - w, pos.x + w,
                 pos.y - h, pos.y + h,

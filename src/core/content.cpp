@@ -16,6 +16,10 @@ namespace Fantasy {
         spikeTexture->load();
         spikeTexture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
 
+        bulletSmallTexture = new Tex2D("assets/bullet-small.png");
+        bulletSmallTexture->load();
+        bulletSmallTexture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
+
         jumper = create<EntityType>("jumper", [&](entt::registry &registry, b2World &world, entt::entity e) {
             b2BodyDef bodyDef;
             bodyDef.type = b2_dynamicBody;
@@ -49,21 +53,43 @@ namespace Fantasy {
             fixt.restitution = 1.0f;
             fixt.restitutionThreshold = 0.0f;
             fixt.shape = &shape;
+            fixt.density = 2.0f;
 
             b2Body *body = world.CreateBody(&bodyDef);
             body->CreateFixture(&fixt);
             
             registry.emplace<RigidComp>(e, e, body).rotateSpeed = glm::radians(Mathf::random(1.0f, 2.5f) * (Mathf::random() >= 0.5f ? 1.0f : -1.0f));
             registry.emplace<SpriteComp>(e, e, spikeTexture, 2.0f, 2.0f, 1.0f);
-            registry.emplace<HealthComp>(e, e, -1.0f, 10.0f);
+            registry.emplace<HealthComp>(e, e, 100.0f, 10.0f);
+        });
+
+        bulletSmall = create<EntityType>("bullet-small", [&](entt::registry &registry, b2World &world, entt::entity e) {
+            b2BodyDef bodyDef;
+            bodyDef.type = b2_dynamicBody;
+            bodyDef.position.SetZero();
+            bodyDef.bullet = true;
+
+            b2CircleShape shape;
+            shape.m_radius = 0.25f;
+
+            b2FixtureDef fixt;
+            fixt.density = 0.1f;
+            fixt.shape = &shape;
+
+            b2Body *body = world.CreateBody(&bodyDef);
+            body->CreateFixture(&fixt);
+
+            registry.emplace<RigidComp>(e, e, body);
+            registry.emplace<SpriteComp>(e, e, bulletSmallTexture, 0.5f, 0.5f, 3.0f);
+            registry.emplace<HealthComp>(e, e, 10.0f, 20.0f).selfDamage = true;
         });
     }
 
     Contents::~Contents() {
-        for(auto arr : *contents) delete arr;
         delete contents;
         delete jumpTexture;
         delete spikeTexture;
+        delete bulletSmallTexture;
     }
 
     std::unordered_map<const char *, Content *> *Contents::getBy(CType type) {

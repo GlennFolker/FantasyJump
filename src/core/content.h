@@ -39,9 +39,10 @@ namespace Fantasy {
         std::vector<std::unordered_map<const char *, Content *> *> *contents;
         Tex2D *jumpTexture;
         Tex2D *spikeTexture;
+        Tex2D *bulletSmallTexture;
 
         public:
-        EntityType *jumper, *spike;
+        EntityType *jumper, *spike, *bulletSmall;
 
         public:
         Contents();

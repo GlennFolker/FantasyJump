@@ -71,6 +71,7 @@ namespace Fantasy {
     class HealthComp: public Component {
         public:
         float health, maxHealth, damage, hitTime;
+        bool selfDamage;
 
         public:
         HealthComp(entt::entity, float);

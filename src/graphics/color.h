@@ -18,9 +18,9 @@ namespace Fantasy {
         Color(float, float, float, float);
 
         unsigned int abgr();
-        Color fromAbgr(unsigned int);
+        Color &fromAbgr(unsigned int);
         float fabgr();
-        Color fromFagbr(float);
+        Color &fromFagbr(float);
     };
 }
 

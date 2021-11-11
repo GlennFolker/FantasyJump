@@ -17,12 +17,6 @@ namespace Fantasy {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        press = false;
-        lastPressed = -1000.0f;
-        progress = 0.0f;
-        lastPos = b2Vec2();
-        lastAngle = 0.0f;
-
         batch = new SpriteBatch();
         buffer = new FrameBuffer(App::instance->getWidth(), App::instance->getHeight(), true, true);
         quad = new Mesh(4, 6, 2, new VertexAttr[]{
@@ -51,12 +45,6 @@ namespace Fantasy {
         quad->setIndices(indices, 0, sizeof(indices) / sizeof(unsigned short));
 
         bloom = new Shader(BLOOM_VERTEX_SHADER, BLOOM_FRAGMENT_SHADER);
-
-        App::instance->input->attach(SDL_MOUSEBUTTONDOWN, [&](InputContext &ctx) {
-            if(ctx.read<char>() != SDL_BUTTON_LEFT || !App::instance->control->regist->valid(App::instance->control->player)) return;
-            press = ctx.performed;
-            lastPressed = Time::time();
-        });
     }
 
     Renderer::~Renderer() {
@@ -69,27 +57,6 @@ namespace Fantasy {
     }
 
     void Renderer::update() {
-        float time = Time::time();
-        entt::registry *regist = App::instance->control->regist;
-        entt::entity player = App::instance->control->player;
-
-        if(regist->valid(player)) {
-            JumpComp &comp = App::instance->control->regist->get<JumpComp>(player);
-            progress = fminf((time - lastPressed) / comp.timeout, 1.0f);
-            if(!press) progress = fmaxf(1.0f - progress * 5.0f, 0.0f);
-
-            b2Vec2 pos = regist->get<RigidComp>(player).body->GetPosition();
-            App::instance->pos = vec2(pos.x, pos.y);
-
-            if(press) {
-                double x, y;
-                App::instance->unproject(App::instance->getMouseX(), App::instance->getMouseY(), &x, &y);
-
-                lastPos = pos;
-                lastAngle = degrees(orientedAngle(normalize(vec2(-1.0f, -1.0f)), normalize(vec2(x, y) + vec2(1.0f, 1.0f) - vec2(pos.x, pos.y))));
-            }
-        }
-
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -97,22 +64,50 @@ namespace Fantasy {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        float time = Time::time();
+        b2World *world = App::instance->control->world;
+        entt::registry *regist = App::instance->control->regist;
+        entt::entity player = App::instance->control->player;
+
+        if(regist->valid(player)) {
+            b2Vec2 pos = regist->get<RigidComp>(player).body->GetTransform().p;
+            App::instance->pos = vec2(pos.x, pos.y);
+        }
+
         batch->proj(App::instance->proj);
         batch->col(Color::white);
         batch->tint(Color());
 
-        regist->each([&](const entt::entity e) {
-            if(!regist->valid(e)) return;
-            if(regist->any_of<SpriteComp>(e)) regist->get<SpriteComp>(e).update();
-        });
+        class: public b2QueryCallback {
+            public:
+            entt::registry *regist = NULL;
+
+            public:
+            bool ReportFixture(b2Fixture *fixture) override {
+                if(regist == NULL) return false;
+
+                entt::entity e = (entt::entity)fixture->GetBody()->GetUserData().pointer;
+                if(regist->valid(e) && regist->any_of<SpriteComp>(e)) regist->get<SpriteComp>(e).update();
+
+                return true;
+            }
+        } callback;
+        callback.regist = regist;
+
+        float x = App::instance->pos.x, y = App::instance->pos.y, w = App::instance->getWidth() / App::instance->scl.x, h = App::instance->getHeight() / App::instance->scl.y;
+        b2AABB bound;
+        bound.lowerBound = b2Vec2(x - w, y - h);
+        bound.upperBound = b2Vec2(x + w, y + h);
+
+        world->QueryAABB(&callback, bound);
 
         batch->flush();
         buffer->end();
 
         bloom->bind();
         glUniform1i(bloom->uniformLoc("u_texture"), buffer->texture->active(0));
-        glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 2.4f, App::instance->getHeight() / 2.4f);
-        glUniform1i(bloom->uniformLoc("u_range"), 7);
+        glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 2.5f, App::instance->getHeight() / 2.5f);
+        glUniform1i(bloom->uniformLoc("u_range"), 6);
         glUniform1f(bloom->uniformLoc("u_threshold"), 0.3f);
         glUniform1f(bloom->uniformLoc("u_suppress"), 1.6f);
 

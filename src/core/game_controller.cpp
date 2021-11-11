@@ -3,6 +3,8 @@
 
 #include "game_controller.h"
 #include "entity.h"
+#include "events.h"
+#include "time.h"
 #include "../app.h"
 #include "../util/mathf.h"
 
@@ -24,6 +26,44 @@ namespace Fantasy {
         borderTex = new Tex2D("assets/red-box.png");
         borderTex->load();
         borderTex->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
+
+        restartTime = -1.0f;
+        player = entt::entity();
+        App::instance->input->attach(SDL_MOUSEBUTTONDOWN, [&](InputContext &ctx) {
+            if(ctx.read<char>() != SDL_BUTTON_LEFT || !regist->valid(player)) return;
+
+            JumpComp &comp = regist->get<JumpComp>(player);
+            if(!ctx.performed) {
+                double x, y;
+                App::instance->unproject(App::instance->getMouseX(), App::instance->getMouseY(), &x, &y);
+
+                comp.release(x, y);
+            } else {
+                comp.hold();
+            }
+        });
+
+        Events::on<EntDeathEvent>([this](Event &e) {
+            EntDeathEvent &ent = (EntDeathEvent &)e;
+            if(ent.entity == player) restartTime = Time::time();
+        });
+
+        resetGame();
+    }
+
+    GameController::~GameController() {
+        removeEntities();
+        delete removal;
+        delete borderTex;
+
+        delete regist;
+        delete world;
+        delete content;
+    }
+
+    void GameController::resetGame() {
+        removeEntities();
+        regist->clear();
 
         for(int i = -1; i <= 1; i += 2) {
             b2BodyDef bodyDef;
@@ -58,22 +98,10 @@ namespace Fantasy {
             regist->emplace<HealthComp>(borderB, borderB, -1.0f, 10.0f);
         }
 
+        restartTime = -1.0f;
         player = content->jumper->create(*regist, *world);
 
-        JumpComp &comp = regist->get<JumpComp>(player);
-        App::instance->input->attach(SDL_MOUSEBUTTONDOWN, [&](InputContext &ctx) {
-            if(ctx.read<char>() != SDL_BUTTON_LEFT || !regist->valid(comp.getRef())) return;
-            if(!ctx.performed) {
-                double x, y;
-                App::instance->unproject(App::instance->getMouseX(), App::instance->getMouseY(), &x, &y);
-
-                comp.release(x, y);
-            } else {
-                comp.hold();
-            }
-        });
-
-        for(int c = 0; c < 1000; c++) {
+        for(int c = 0; c < 2000; c++) {
             b2Body *body = regist->get<RigidComp>(content->spike->create(*regist, *world)).body;
             do {
                 body->SetTransform(b2Vec2(
@@ -85,9 +113,9 @@ namespace Fantasy {
                 if(trns.p.LengthSquared() < 25.0f) return true;
 
                 b2Fixture *fixtures = body->GetFixtureList();
-                int count = sizeof(fixtures) / sizeof(b2Fixture);
+                int fcount = sizeof(fixtures) / sizeof(b2Fixture);
 
-                class Report: public b2QueryCallback {
+                class: public b2QueryCallback {
                     private:
                     bool found = false;
 
@@ -100,16 +128,17 @@ namespace Fantasy {
                     bool isFound() {
                         return found;
                     }
-                };
-
-                Report report;
-                for(int i = 0; i < count; i++) {
+                } report;
+                
+                for(int i = 0; i < fcount; i++) {
                     b2AABB bound;
 
                     b2Shape *shape = fixtures[i].GetShape();
-                    int count = shape->GetChildCount();
-                    for(int j = 0; j < count; j++) {
+                    int scount = shape->GetChildCount();
+                    for(int j = 0; j < scount; j++) {
                         shape->ComputeAABB(&bound, trns, j);
+                        bound.lowerBound *= 2.0f;
+                        bound.upperBound *= 2.0f;
 
                         world->QueryAABB(&report, bound);
                         if(report.isFound()) return true;
@@ -121,17 +150,8 @@ namespace Fantasy {
         }
     }
 
-    GameController::~GameController() {
-        delete regist;
-        delete world;
-        delete content;
-
-        removeEntities();
-        delete removal;
-        delete borderTex;
-    }
-
     void GameController::update() {
+        if(restartTime != -1.0f && Time::time() - restartTime > 3.0f) resetGame();
         removeEntities();
 
         world->Step(1.0f / 60.0f, 8, 3);

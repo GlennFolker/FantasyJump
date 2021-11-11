@@ -52,13 +52,6 @@ void main() {
 
 namespace Fantasy {
     class Renderer: public AppListener {
-        private:
-        bool press;
-        float lastPressed;
-        float progress;
-        b2Vec2 lastPos;
-        float lastAngle;
-
         public:
         SpriteBatch *batch;
         FrameBuffer *buffer;

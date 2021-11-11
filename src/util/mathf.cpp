@@ -18,6 +18,6 @@ namespace Fantasy {
     }
 
     float Mathf::random(float from, float to) {
-        return from + ((float)rand() / (float)RAND_MAX) * to;
+        return from + ((float)rand() / (float)RAND_MAX) * (to - from);
     }
 }

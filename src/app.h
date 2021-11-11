@@ -32,6 +32,7 @@ namespace Fantasy {
         dmat4 proj;
         dmat4 flipProj;
         dvec2 pos;
+        dvec2 scl;
         Input *input;
         GameController *control;
         Renderer *renderer;

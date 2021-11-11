@@ -1,6 +1,7 @@
 #include <glm/gtx/transform.hpp>
 
 #include "entity.h"
+#include "events.h"
 #include "time.h"
 #include "../app.h"
 #include "../util/mathf.h"
@@ -40,7 +41,10 @@ namespace Fantasy {
             HealthComp &self = registry.get<HealthComp>(ref);
             HealthComp &otherh = registry.get<HealthComp>(other.ref);
 
-            if(!Mathf::near(otherh.damage, 0.0f) && self.canHurt()) self.hurt(otherh.damage);
+            if(!Mathf::near(otherh.damage, 0.0f) && self.canHurt()) {
+                self.hurt(otherh.damage);
+                if(otherh.selfDamage) otherh.hurt(otherh.damage);
+            }
         }
     }
 
@@ -129,6 +133,7 @@ namespace Fantasy {
         this->health = maxHealth = health;
         this->damage = damage;
         hitTime = -1000.0f;
+        selfDamage = false;
     }
 
     void HealthComp::update() {
@@ -140,6 +145,7 @@ namespace Fantasy {
     }
 
     void HealthComp::killed() {
+        Events::fire<EntDeathEvent>(EntDeathEvent(ref));
         App::instance->control->scheduleRemoval(ref);
     }
 

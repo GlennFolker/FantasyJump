@@ -21,7 +21,7 @@ namespace Fantasy {
         return a | b | g | r;
     }
 
-    Color Color::fromAbgr(unsigned int abgr) {
+    Color &Color::fromAbgr(unsigned int abgr) {
         a = ((abgr & 0xff000000) >> 24) / 255.0f;
         b = ((abgr & 0x00ff0000) >> 16) / 255.0f;
         g = ((abgr & 0x0000ff00) >> 8) / 255.0f;
@@ -34,7 +34,7 @@ namespace Fantasy {
         return *(float *)&bits;
     }
 
-    Color Color::fromFagbr(float abgr) {
+    Color &Color::fromFagbr(float abgr) {
         return fromAbgr(*(unsigned int *)&abgr);
     }
 }
