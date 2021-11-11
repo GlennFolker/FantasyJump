@@ -15,6 +15,7 @@ add_executable(Fantasy
     "src/core/time.cpp"
     "src/core/content.cpp"
     "src/core/events.cpp"
+    "src/core/team.cpp"
     "src/graphics/color.cpp"
     "src/graphics/shader.cpp"
     "src/graphics/mesh.cpp"

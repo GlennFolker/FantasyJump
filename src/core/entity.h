@@ -5,6 +5,7 @@
 #include <entt/entity/registry.hpp>
 #include <functional>
 
+#include "team.h"
 #include "../graphics/tex.h"
 
 namespace Fantasy {
@@ -16,10 +17,11 @@ namespace Fantasy {
         Component(entt::entity);
 
         virtual void update();
+        void remove();
 
         entt::entity getRef();
-        entt::registry &getRegistry();
-        b2World &getWorld();
+        static entt::registry &getRegistry();
+        static b2World &getWorld();
     };
 
     class RigidComp: public Component {
@@ -33,6 +35,7 @@ namespace Fantasy {
 
         void beginCollide(RigidComp &);
         void endCollide(RigidComp &);
+        bool shouldCollide(RigidComp &);
 
         static void onDestroy(entt::registry &, entt::entity);
     };
@@ -84,6 +87,36 @@ namespace Fantasy {
         void heal(float);
         void hurt(float);
         bool canHurt();
+    };
+
+    class TeamComp: public Component {
+        public:
+        Team::TeamType team;
+
+        public:
+        TeamComp(entt::entity);
+        TeamComp(entt::entity, Team::TeamType);
+    };
+
+    class ShooterComp: public Component {
+        public:
+        enum ShootType {
+            SMALL
+        };
+
+        private:
+        float time;
+
+        public:
+        ShootType type;
+        float rate, impulse, range;
+
+        public:
+        ShooterComp(entt::entity, ShootType, float);
+        ShooterComp(entt::entity, ShootType, float, float);
+        ShooterComp(entt::entity, ShootType, float, float, float);
+
+        void update() override;
     };
 }
 

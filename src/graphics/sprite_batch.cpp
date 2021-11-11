@@ -79,7 +79,7 @@ namespace Fantasy {
             flush();
         }
 
-        mat4 trns = rotate(identity<mat4>(), radians(rotation), vec3(0.0f, 0.0f, 1.0f));
+        mat4 trns = rotate(identity<mat4>(), rotation, vec3(0.0f, 0.0f, 1.0f));
         vec2
             pos1 = trns * vec4(originX - x, originY - y, 0.0f, 1.0f),
             pos2 = trns * vec4(originX - x + width, originY - y, 0.0f, 1.0f),

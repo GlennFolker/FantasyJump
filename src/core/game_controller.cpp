@@ -20,6 +20,7 @@ namespace Fantasy {
 
         world = new b2World(b2Vec2(0.0f, -9.81f));
         world->SetContactListener(this);
+        world->SetContactFilter(this);
 
         content = new Contents();
 
@@ -160,6 +161,7 @@ namespace Fantasy {
             if(regist->any_of<RigidComp>(e)) regist->get<RigidComp>(e).update();
             if(regist->any_of<JumpComp>(e)) regist->get<JumpComp>(e).update();
             if(regist->any_of<HealthComp>(e)) regist->get<HealthComp>(e).update();
+            if(regist->any_of<ShooterComp>(e)) regist->get<ShooterComp>(e).update();
         });
     }
 
@@ -180,6 +182,17 @@ namespace Fantasy {
             RigidComp &first = regist->get<RigidComp>(a), &second = regist->get<RigidComp>(b);
             first.endCollide(second);
             second.endCollide(first);
+        }
+    }
+
+    bool GameController::ShouldCollide(b2Fixture *fixtA, b2Fixture *fixtB) {
+        entt::entity a = (entt::entity)fixtA->GetBody()->GetUserData().pointer;
+        entt::entity b = (entt::entity)fixtB->GetBody()->GetUserData().pointer;
+        if(regist->valid(a) && regist->any_of<RigidComp>(a) && regist->valid(b) && regist->any_of<RigidComp>(b)) {
+            RigidComp &first = regist->get<RigidComp>(a), &second = regist->get<RigidComp>(b);
+            return first.shouldCollide(second) || second.shouldCollide(first);
+        } else {
+            return false;
         }
     }
 

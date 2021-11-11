@@ -9,7 +9,7 @@
 #include "content.h"
 
 namespace Fantasy {
-    class GameController: public AppListener, public b2ContactListener {
+    class GameController: public AppListener, public b2ContactListener, public b2ContactFilter {
         private:
         std::unordered_set<entt::entity> *removal;
         float restartTime;
@@ -32,8 +32,9 @@ namespace Fantasy {
         void scheduleRemoval(entt::entity);
         void resetGame();
 
-        void BeginContact(b2Contact *contact) override;
-        void EndContact(b2Contact *contact) override;
+        void BeginContact(b2Contact *) override;
+        void EndContact(b2Contact *) override;
+        bool ShouldCollide(b2Fixture *, b2Fixture *) override;
 
         private:
         void removeEntities();

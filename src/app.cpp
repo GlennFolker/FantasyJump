@@ -99,12 +99,12 @@ namespace Fantasy {
             proj = orthoLH_ZO(
                 pos.x - w, pos.x + w,
                 pos.y - h, pos.y + h,
-                -100.0, 100.0
+                24.0, -24.0
             );
             flipProj = orthoLH_ZO(
                 pos.x - w, pos.x + w,
                 pos.y + h, pos.y - h,
-                -100.0, 100.0
+                24.0, -24.0
             );
 
             while(SDL_PollEvent(&e) != 0) {

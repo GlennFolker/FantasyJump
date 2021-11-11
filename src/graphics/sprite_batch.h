@@ -17,13 +17,15 @@ in vec4 a_tint;
 
 out vec2 v_tex_coords;
 out vec4 v_color;
+out vec4 v_tint;
 
 uniform mat4 u_proj;
 
 void main() {
     gl_Position = u_proj * vec4(a_position, 1.0);
     v_tex_coords = a_tex_coords_0;
-    v_color = mix(a_color, a_tint * a_color.a, a_tint.a);
+    v_color = a_color;
+    v_tint = a_tint;
 }
 )";
 
@@ -34,11 +36,13 @@ out vec4 fragColor;
 
 in vec2 v_tex_coords;
 in vec4 v_color;
+in vec4 v_tint;
 
 uniform sampler2D u_texture;
 
 void main() {
-    fragColor = texture2D(u_texture, v_tex_coords) * v_color;
+    vec4 base = texture2D(u_texture, v_tex_coords);
+    gl_FragColor = v_color * mix(base, vec4(v_tint.rgb, base.a), v_tint.a);
 }
 )";
 

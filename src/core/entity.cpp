@@ -1,4 +1,4 @@
-#include <glm/gtx/transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 #include "entity.h"
 #include "events.h"
@@ -12,6 +12,9 @@ namespace Fantasy {
     }
 
     void Component::update() {}
+    void Component::remove() {
+        App::instance->control->scheduleRemoval(ref);
+    }
 
     entt::entity Component::getRef() {
         return ref;
@@ -41,7 +44,7 @@ namespace Fantasy {
             HealthComp &self = registry.get<HealthComp>(ref);
             HealthComp &otherh = registry.get<HealthComp>(other.ref);
 
-            if(!Mathf::near(otherh.damage, 0.0f) && self.canHurt()) {
+            if(otherh.damage > 0.0f && self.canHurt()) {
                 self.hurt(otherh.damage);
                 if(otherh.selfDamage) otherh.hurt(otherh.damage);
             }
@@ -50,6 +53,15 @@ namespace Fantasy {
 
     void RigidComp::endCollide(RigidComp &other) {
 
+    }
+
+    bool RigidComp::shouldCollide(RigidComp &other) {
+        entt::registry &regist = getRegistry();
+        if(!regist.any_of<TeamComp>(ref) || !regist.any_of<TeamComp>(other.ref)) {
+            return true;
+        } else {
+            return regist.get<TeamComp>(ref).team != regist.get<TeamComp>(other.ref).team;
+        }
     }
 
     void RigidComp::onDestroy(entt::registry &registry, entt::entity entity) {
@@ -74,11 +86,11 @@ namespace Fantasy {
 
         if(registry.any_of<HealthComp>(ref)) {
             float alpha = fmaxf(1.0f - (Time::time() - registry.get<HealthComp>(ref).hitTime) / 0.5f, 0.0f);
-            batch->tint(Color(1.0f, 0.0f, 0.3f, alpha));
+            batch->tint(Color(0.8f, 0.0f, 0.1f, alpha));
         }
 
         batch->z = z;
-        batch->draw(texture, trns.p.x, trns.p.y, width, height, degrees(trns.q.GetAngle()));
+        batch->draw(texture, trns.p.x, trns.p.y, width, height, trns.q.GetAngle());
         batch->tint(Color());
     }
 
@@ -146,7 +158,7 @@ namespace Fantasy {
 
     void HealthComp::killed() {
         Events::fire<EntDeathEvent>(EntDeathEvent(ref));
-        App::instance->control->scheduleRemoval(ref);
+        remove();
     }
 
     void HealthComp::heal(float heal) {
@@ -164,5 +176,88 @@ namespace Fantasy {
 
     bool HealthComp::canHurt() {
         return health != -1.0f;
+    }
+
+    TeamComp::TeamComp(entt::entity e): TeamComp(e, Team::GENERIC) {}
+    TeamComp::TeamComp(entt::entity e, Team::TeamType team): Component(e) {
+        this->team = team;
+    }
+
+    ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate): ShooterComp(e, type, rate, 4.0f) {}
+    ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate, float impulse): ShooterComp(e, type, rate, impulse, 40.0f) {}
+    ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate, float impulse, float range): Component(e) {
+        this->type = type;
+        this->rate = rate;
+        this->impulse = impulse;
+        this->range = range;
+        time = -rate;
+    }
+
+    void ShooterComp::update() {
+        entt::registry &regist = getRegistry();
+        b2World &world = getWorld();
+        b2Body *body = regist.get<RigidComp>(ref).body;
+
+        if((Time::time() - time) >= rate) {
+            b2Vec2 pos = body->GetPosition();
+
+            class Report: public b2QueryCallback {
+                private:
+                b2Vec2 origin;
+                float radius;
+                Team::TeamType team;
+
+                b2Body *closest;
+
+                public:
+                Report(b2Vec2 origin, float radius, Team::TeamType team) {
+                    this->origin = origin;
+                    this->radius = radius * radius;
+                    this->team = team;
+                    closest = NULL;
+                }
+
+                bool ReportFixture(b2Fixture *fixture) override {
+                    b2Body *body = fixture->GetBody();
+
+                    entt::entity e = (entt::entity)body->GetUserData().pointer;
+                    entt::registry &regist = getRegistry();
+                    if(!regist.valid(e) || (regist.any_of<TeamComp>(e) && regist.get<TeamComp>(e).team == team)) return true;
+
+                    float range = (body->GetPosition() - origin).LengthSquared();
+                    if(range > radius) return true;
+
+                    if(closest == NULL || (closest->GetPosition() - origin).LengthSquared() > range) closest = body;
+                    return true;
+                }
+
+                b2Body *get() {
+                    return closest;
+                }
+            } report(pos, range, regist.get<TeamComp>(ref).team);
+
+            b2Vec2 extent = b2Vec2(range / 2.0f, range / 2.0f);
+            b2AABB bound;
+            bound.lowerBound = pos - extent;
+            bound.upperBound = pos + extent;
+
+            world.QueryAABB(&report, bound);
+
+            b2Body *target = report.get();
+            if(target != NULL) {
+                entt::entity bullet = App::instance->control->content->bulletSmall->create(regist, world);
+                regist.get<TeamComp>(bullet).team = regist.get<TeamComp>(ref).team;
+
+                b2Body *bbody = regist.get<RigidComp>(bullet).body;
+                bbody->SetTransform(pos, angle(vec2(1.0f, 0.0f), normalize(vec2(bbody->GetPosition().x, bbody->GetPosition().y) - vec2(pos.x, pos.y))));
+
+                b2Vec2 impulse = target->GetPosition() - pos;
+                impulse.Normalize();
+                impulse *= this->impulse;
+                bbody->ApplyLinearImpulseToCenter(impulse, true);
+
+                time = Time::time();
+            }
+        }
     }
 }

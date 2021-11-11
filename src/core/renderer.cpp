@@ -78,9 +78,14 @@ namespace Fantasy {
         batch->col(Color::white);
         batch->tint(Color());
 
-        class: public b2QueryCallback {
+        class Callback: public b2QueryCallback {
             public:
-            entt::registry *regist = NULL;
+            entt::registry *regist;
+
+            public:
+            Callback(entt::registry *regist) {
+                this->regist = regist;
+            }
 
             public:
             bool ReportFixture(b2Fixture *fixture) override {
@@ -91,8 +96,7 @@ namespace Fantasy {
 
                 return true;
             }
-        } callback;
-        callback.regist = regist;
+        } callback(regist);
 
         float x = App::instance->pos.x, y = App::instance->pos.y, w = App::instance->getWidth() / App::instance->scl.x, h = App::instance->getHeight() / App::instance->scl.y;
         b2AABB bound;

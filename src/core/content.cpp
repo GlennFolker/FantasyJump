@@ -38,7 +38,9 @@ namespace Fantasy {
             registry.emplace<RigidComp>(e, e, body);
             registry.emplace<SpriteComp>(e, e, jumpTexture, 1.0f, 1.0f, 2.0f);
             registry.emplace<JumpComp>(e, e, 20.0f, 0.7f);
-            registry.emplace<HealthComp>(e, e, 100.0f);
+            registry.emplace<HealthComp>(e, e, 100.0f, 5.0f);
+            registry.emplace<TeamComp>(e, e, Team::BLUE);
+            registry.emplace<ShooterComp>(e, e, ShooterComp::SMALL, 0.3f);
         });
 
         spike = create<EntityType>("spike", [&](entt::registry &registry, b2World &world, entt::entity e) {
@@ -61,6 +63,7 @@ namespace Fantasy {
             registry.emplace<RigidComp>(e, e, body).rotateSpeed = glm::radians(Mathf::random(1.0f, 2.5f) * (Mathf::random() >= 0.5f ? 1.0f : -1.0f));
             registry.emplace<SpriteComp>(e, e, spikeTexture, 2.0f, 2.0f, 1.0f);
             registry.emplace<HealthComp>(e, e, 100.0f, 10.0f);
+            registry.emplace<TeamComp>(e, e, Team::GENERIC);
         });
 
         bulletSmall = create<EntityType>("bullet-small", [&](entt::registry &registry, b2World &world, entt::entity e) {
@@ -68,12 +71,13 @@ namespace Fantasy {
             bodyDef.type = b2_dynamicBody;
             bodyDef.position.SetZero();
             bodyDef.bullet = true;
+            bodyDef.gravityScale = 0.01f;
 
             b2CircleShape shape;
             shape.m_radius = 0.25f;
 
             b2FixtureDef fixt;
-            fixt.density = 0.1f;
+            fixt.density = 1.0f;
             fixt.shape = &shape;
 
             b2Body *body = world.CreateBody(&bodyDef);
@@ -82,6 +86,7 @@ namespace Fantasy {
             registry.emplace<RigidComp>(e, e, body);
             registry.emplace<SpriteComp>(e, e, bulletSmallTexture, 0.5f, 0.5f, 3.0f);
             registry.emplace<HealthComp>(e, e, 10.0f, 20.0f).selfDamage = true;
+            registry.emplace<TeamComp>(e, e);
         });
     }
 
