@@ -8,7 +8,7 @@
 namespace Fantasy {
     struct InputContext {
         public:
-        void *data;
+        const void *data;
         bool performed;
 
         InputContext() {
@@ -17,23 +17,29 @@ namespace Fantasy {
         }
 
         template<typename T>
-        InputContext(T &&value) {
+        InputContext(const T &value) {
             data = &value;
             performed = false;
         }
 
         template<typename T>
-        void set(T &&value) {
+        void set(const T &value) {
             data = &value;
         }
 
         template<typename T>
-        T &read() {
-            return *(T *)data;
+        const T &read() {
+            return *(const T *)data;
         }
     };
 
     class Input {
+        public:
+        enum InputType {
+            MOUSE,
+            KEYBOARD
+        };
+
         public:
         std::vector<std::function<void(InputContext &)>> *mouse;
         std::vector<std::function<void(InputContext &)>> *keyboard;
@@ -43,8 +49,11 @@ namespace Fantasy {
         ~Input();
 
         void read(SDL_Event e);
-        void attach(SDL_EventType type, std::function<void(InputContext &)> &&);
-        void detach(SDL_EventType type, std::function<void(InputContext &)> &&);
+        void attach(InputType type, const std::function<void(InputContext &)> &);
+        void detach(InputType type, const std::function<void(InputContext &)> &);
+
+        private:
+        void remove(std::vector<std::function<void(InputContext &)>> *, const std::function<void(InputContext &)> &);
     };
 }
 

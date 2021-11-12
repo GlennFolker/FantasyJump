@@ -9,8 +9,8 @@
 #include "../util/mathf.h"
 
 namespace Fantasy {
-    const float GameController::worldWidth = 800.0f;
-    const float GameController::worldHeight = 600.0f;
+    const float GameController::worldWidth = 400.0f;
+    const float GameController::worldHeight = 300.0f;
     const float GameController::borderThickness = 2.0f;
 
     GameController::GameController() {
@@ -30,8 +30,8 @@ namespace Fantasy {
 
         restartTime = -1.0f;
         player = entt::entity();
-        App::instance->input->attach(SDL_MOUSEBUTTONDOWN, [&](InputContext &ctx) {
-            if(ctx.read<char>() != SDL_BUTTON_LEFT || !regist->valid(player)) return;
+        App::instance->input->attach(Input::MOUSE, [&](InputContext &ctx) {
+            if(ctx.read<SDL_MouseButtonEvent>().button != SDL_BUTTON_LEFT || !regist->valid(player)) return;
 
             JumpComp &comp = regist->get<JumpComp>(player);
             if(!ctx.performed) {
@@ -42,6 +42,10 @@ namespace Fantasy {
             } else {
                 comp.hold();
             }
+        });
+
+        App::instance->input->attach(Input::KEYBOARD, [](InputContext &ctx) {
+            if(ctx.read<SDL_KeyboardEvent>().keysym.scancode == SDL_SCANCODE_ESCAPE) App::instance->exit();
         });
 
         Events::on<EntDeathEvent>([this](Event &e) {
@@ -102,19 +106,16 @@ namespace Fantasy {
         restartTime = -1.0f;
         player = content->jumper->create(*regist, *world);
 
-        for(int c = 0; c < 2000; c++) {
+        for(int c = 0; c < 500; c++) {
             b2Body *body = regist->get<RigidComp>(content->spike->create(*regist, *world)).body;
             do {
                 body->SetTransform(b2Vec2(
-                    Mathf::random(-worldWidth, worldWidth) / 2.0f,
-                    Mathf::random(-worldHeight, worldHeight) / 2.0f
+                    Mathf::random(-worldWidth + borderThickness, worldWidth - borderThickness) / 2.0f,
+                    Mathf::random(-worldHeight + borderThickness, worldHeight - borderThickness) / 2.0f
                 ), 0.0f);
             } while([&]() {
                 const b2Transform &trns = body->GetTransform();
                 if(trns.p.LengthSquared() < 25.0f) return true;
-
-                b2Fixture *fixtures = body->GetFixtureList();
-                int fcount = sizeof(fixtures) / sizeof(b2Fixture);
 
                 class: public b2QueryCallback {
                     private:
@@ -131,10 +132,10 @@ namespace Fantasy {
                     }
                 } report;
                 
-                for(int i = 0; i < fcount; i++) {
+                for(b2Fixture *fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
                     b2AABB bound;
 
-                    b2Shape *shape = fixtures[i].GetShape();
+                    b2Shape *shape = fixture->GetShape();
                     int scount = shape->GetChildCount();
                     for(int j = 0; j < scount; j++) {
                         shape->ComputeAABB(&bound, trns, j);
@@ -155,13 +156,14 @@ namespace Fantasy {
         if(restartTime != -1.0f && Time::time() - restartTime > 3.0f) resetGame();
         removeEntities();
 
-        world->Step(1.0f / 60.0f, 8, 3);
+        world->Step(1.0f / 60.0f, 1, 1);
         regist->each([this](const entt::entity e) {
             if(!regist->valid(e)) return;
             if(regist->any_of<RigidComp>(e)) regist->get<RigidComp>(e).update();
             if(regist->any_of<JumpComp>(e)) regist->get<JumpComp>(e).update();
             if(regist->any_of<HealthComp>(e)) regist->get<HealthComp>(e).update();
             if(regist->any_of<ShooterComp>(e)) regist->get<ShooterComp>(e).update();
+            if(regist->any_of<TemporalComp>(e)) regist->get<TemporalComp>(e).update();
         });
     }
 

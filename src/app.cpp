@@ -18,25 +18,13 @@ namespace Fantasy {
     App::App(int argc, char *argv[], AppConfig config) {
         if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) throw std::exception(std::string("Couldn't initialize SDL: ").append(SDL_GetError()).c_str());
 
-        SDL_Log("Initialized SDL v%d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
-
-        SDL_Rect viewport = {
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            config.width, config.height
-        };
+        SDL_version version;
+        SDL_GetVersion(&version);
+        SDL_Log("Initialized SDL v%d.%d.%d", version.major, version.minor, version.patch);
         
-        int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-        if(config.fullscreen) {
-            flags |= SDL_WINDOW_FULLSCREEN;
-
-            SDL_DisplayMode mode;
-            SDL_GetCurrentDisplayMode(0, &mode);
-
-            viewport.w = mode.w;
-            viewport.h = mode.h;
-        }
-
-        if(config.borderless) SDL_WINDOW_BORDERLESS;
+        int flags = SDL_WINDOW_OPENGL;
+        if(config.visible) flags |= SDL_WINDOW_SHOWN;
+        if(config.borderless) flags |= SDL_WINDOW_BORDERLESS;
         if(config.resizable) flags |= SDL_WINDOW_RESIZABLE;
 
         int imgFlags = IMG_INIT_PNG;
@@ -54,8 +42,16 @@ namespace Fantasy {
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-        window = SDL_CreateWindow("Fantasy", viewport.x, viewport.y, viewport.w, viewport.h, flags);
+        window = SDL_CreateWindow("Fantasy", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, config.width, config.height, flags);
         if(window == NULL) throw std::exception(std::string("Couldn't create SDL window: ").append(SDL_GetError()).c_str());
+
+        if(config.fullscreen) {
+            SDL_DisplayMode mode;
+            SDL_GetCurrentDisplayMode(0, &mode);
+
+            SDL_SetWindowSize(window, mode.w, mode.h);
+            SDL_SetWindowFullscreen(window, true);
+        }
         
         context = SDL_GL_CreateContext(window);
         if(context == NULL) throw std::exception(std::string("Couldn't create OpenGL context: ").append(SDL_GetError()).c_str());
@@ -95,7 +91,8 @@ namespace Fantasy {
     bool App::run() {
         SDL_Event e;
         while(!exiting) {
-            double w = getWidth() / scl.x, h = getHeight() / scl.y;
+            int rw = getWidth(), rh = getHeight();
+            double w = rw / scl.x, h = rh / scl.y;
             proj = orthoLH_ZO(
                 pos.x - w, pos.x + w,
                 pos.y - h, pos.y + h,

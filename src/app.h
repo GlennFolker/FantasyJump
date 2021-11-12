@@ -14,8 +14,9 @@
 
 namespace Fantasy {
     struct AppConfig {
-        int width;
-        int height;
+        int width = 800;
+        int height = 600;
+        bool visible;
         bool fullscreen;
         bool resizable;
         bool borderless;

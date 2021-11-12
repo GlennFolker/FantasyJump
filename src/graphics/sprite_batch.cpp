@@ -6,6 +6,45 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+constexpr const char *DEFAULT_VERTEX_SHADER = R"(
+#version 150 core
+
+in vec3 a_position;
+in vec2 a_tex_coords_0;
+in vec4 a_color;
+in vec4 a_tint;
+
+out vec2 v_tex_coords;
+out vec4 v_color;
+out vec4 v_tint;
+
+uniform mat4 u_proj;
+
+void main() {
+    gl_Position = u_proj * vec4(a_position, 1.0);
+    v_tex_coords = a_tex_coords_0;
+    v_color = a_color;
+    v_tint = a_tint;
+}
+)";
+
+constexpr const char *DEFAULT_FRAGMENT_SHADER = R"(
+#version 150 core
+
+out vec4 fragColor;
+
+in vec2 v_tex_coords;
+in vec4 v_color;
+in vec4 v_tint;
+
+uniform sampler2D u_texture;
+
+void main() {
+    vec4 base = texture2D(u_texture, v_tex_coords);
+    gl_FragColor = v_color * mix(base, vec4(v_tint.rgb, base.a), v_tint.a);
+}
+)";
+
 namespace Fantasy {
     SpriteBatch::SpriteBatch(): SpriteBatch(8191, NULL) {}
     SpriteBatch::SpriteBatch(size_t size, Shader *shader) {
@@ -21,7 +60,7 @@ namespace Fantasy {
         projection = identity<mat4>();
 
         size_t indicesCount = size * 6;
-        mesh = new Mesh(size * 4, indicesCount, 4, new VertexAttr[]{
+        mesh = new Mesh(size * 4, indicesCount, 4, new VertexAttr[4]{
             VertexAttr::position,
             VertexAttr::color,
             VertexAttr::tint,

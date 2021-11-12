@@ -37,12 +37,14 @@ namespace Fantasy {
     class Contents {
         private:
         std::vector<std::unordered_map<const char *, Content *> *> *contents;
-        Tex2D *jumpTexture;
-        Tex2D *spikeTexture;
-        Tex2D *bulletSmallTexture;
 
         public:
-        EntityType *jumper, *spike, *bulletSmall;
+        EntityType
+            *jumper, *spike,
+            *bulletSmall, *bulletMed;
+        Tex2D
+            *jumpTexture, *spikeTexture,
+            *bulletSmallTexture, *bulletMedTexture;
 
         public:
         Contents();
@@ -50,7 +52,7 @@ namespace Fantasy {
 
         template<
             typename T, typename... Args,
-            std::enable_if<std::is_base_of<Content, T>::value>::type *_T = nullptr
+            typename std::enable_if<std::is_base_of<Content, T>::value>::type *_T = nullptr
         > T *create(Args&&... args) {
             T *content = new T(args...);
 
@@ -65,6 +67,9 @@ namespace Fantasy {
         }
 
         std::unordered_map<const char *, Content *> *getBy(CType);
+
+        private:
+        Tex2D *loadTex(const char *);
     };
 }
 

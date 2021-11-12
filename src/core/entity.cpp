@@ -51,9 +51,7 @@ namespace Fantasy {
         }
     }
 
-    void RigidComp::endCollide(RigidComp &other) {
-
-    }
+    void RigidComp::endCollide(RigidComp &other) {}
 
     bool RigidComp::shouldCollide(RigidComp &other) {
         entt::registry &regist = getRegistry();
@@ -184,7 +182,7 @@ namespace Fantasy {
     }
 
     ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate): ShooterComp(e, type, rate, 4.0f) {}
-    ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate, float impulse): ShooterComp(e, type, rate, impulse, 40.0f) {}
+    ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate, float impulse): ShooterComp(e, type, rate, impulse, 20.0f) {}
     ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate, float impulse, float range): Component(e) {
         this->type = type;
         this->rate = rate;
@@ -222,7 +220,11 @@ namespace Fantasy {
 
                     entt::entity e = (entt::entity)body->GetUserData().pointer;
                     entt::registry &regist = getRegistry();
-                    if(!regist.valid(e) || (regist.any_of<TeamComp>(e) && regist.get<TeamComp>(e).team == team)) return true;
+                    if(
+                        !regist.valid(e) ||
+                        (regist.any_of<TeamComp>(e) && regist.get<TeamComp>(e).team == team) ||
+                        (regist.any_of<HealthComp>(e) && !regist.get<HealthComp>(e).canHurt())
+                    ) return true;
 
                     float range = (body->GetPosition() - origin).LengthSquared();
                     if(range > radius) return true;
@@ -236,7 +238,7 @@ namespace Fantasy {
                 }
             } report(pos, range, regist.get<TeamComp>(ref).team);
 
-            b2Vec2 extent = b2Vec2(range / 2.0f, range / 2.0f);
+            b2Vec2 extent = b2Vec2(range, range);
             b2AABB bound;
             bound.lowerBound = pos - extent;
             bound.upperBound = pos + extent;
@@ -245,8 +247,13 @@ namespace Fantasy {
 
             b2Body *target = report.get();
             if(target != NULL) {
-                entt::entity bullet = App::instance->control->content->bulletSmall->create(regist, world);
+                entt::entity bullet = (
+                    type == SMALL ? App::instance->control->content->bulletSmall :
+                    App::instance->control->content->bulletMed
+                )->create(regist, world);
+
                 regist.get<TeamComp>(bullet).team = regist.get<TeamComp>(ref).team;
+                regist.get<TemporalComp>(bullet).range = range * 3.0f;
 
                 b2Body *bbody = regist.get<RigidComp>(bullet).body;
                 bbody->SetTransform(pos, angle(vec2(1.0f, 0.0f), normalize(vec2(bbody->GetPosition().x, bbody->GetPosition().y) - vec2(pos.x, pos.y))));
@@ -258,6 +265,39 @@ namespace Fantasy {
 
                 time = Time::time();
             }
+        }
+    }
+
+    TemporalComp::TemporalComp(entt::entity e, TemporalFlag flags): Component(e) {
+        this->flags = flags;
+        range = 0.0f;
+        time = 0.0f;
+        init = false;
+        initTime = 0.0f;
+        initPos = b2Vec2_zero;
+    }
+
+    void TemporalComp::update() {
+        entt::registry &regist = getRegistry();
+        bool ranged = (flags & RANGE) == RANGE;
+        bool timed = (flags & TIME) == TIME;
+
+        b2Body *body = ranged ? regist.get<RigidComp>(ref).body : NULL;
+
+        if(!init) {
+            init = true;
+            if(timed) initTime = Time::time();
+            if(ranged) initPos = body->GetPosition();
+        }
+
+        if(timed && (Time::time() - initTime) >= time) {
+            remove();
+            return;
+        }
+
+        if(ranged && (body->GetPosition() - initPos).Length() >= range) {
+            remove();
+            return;
         }
     }
 }

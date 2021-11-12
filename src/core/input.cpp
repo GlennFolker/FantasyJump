@@ -17,7 +17,7 @@ namespace Fantasy {
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
                 ctx.performed = e.type == SDL_MOUSEBUTTONDOWN;
-                ctx.set(e.button.button);
+                ctx.set(e.button);
                 for(std::function<void(InputContext &)> &func : *mouse) {
                     func(ctx);
                 }
@@ -26,7 +26,7 @@ namespace Fantasy {
             case SDL_KEYDOWN:
             case SDL_KEYUP:
                 ctx.performed = e.type == SDL_KEYDOWN;
-                ctx.set(e.key.keysym);
+                ctx.set(e.key);
                 for(std::function<void(InputContext &)> &func : *keyboard) {
                     func(ctx);
                 }
@@ -34,39 +34,34 @@ namespace Fantasy {
         }
     }
 
-    void Input::attach(SDL_EventType type, std::function<void(InputContext &)> &&func) {
+    void Input::attach(InputType type, const std::function<void(InputContext &)> &func) {
         switch(type) {
-            case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEBUTTONUP:
+            case MOUSE:
                 mouse->push_back(func);
                 break;
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
+            case KEYBOARD:
                 keyboard->push_back(func);
                 break;
         }
     }
 
-    void Input::detach(SDL_EventType type, std::function<void(InputContext &)> &&func) {
+    void Input::detach(InputType type, const std::function<void(InputContext &)> &func) {
         switch(type) {
-            case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEBUTTONUP:
-                for(auto it = mouse->begin(); it != mouse->end(); it++) {
-                    if((*it).target_type() == func.target_type()) {
-                        mouse->erase(it);
-                        break;
-                    }
-                }
+            case MOUSE:
+                remove(mouse, func);
                 break;
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
-                for(auto it = keyboard->begin(); it != keyboard->end(); it++) {
-                    if((*it).target_type() == func.target_type()) {
-                        keyboard->erase(it);
-                        break;
-                    }
-                }
+            case KEYBOARD:
+                remove(keyboard, func);
                 break;
+        }
+    }
+
+    void Input::remove(std::vector<std::function<void(InputContext &)>> *array, const std::function<void(InputContext &)> &func) {
+        for(auto it = array->begin(); it != array->end(); it++) {
+            if((*it).target_type() == func.target_type()) {
+                array->erase(it);
+                break;
+            }
         }
     }
 }

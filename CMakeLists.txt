@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.20.2)
 
 project(Fantasy VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 add_executable(Fantasy
     "src/main.cpp"
     "src/app.cpp"
@@ -24,6 +21,8 @@ add_executable(Fantasy
     "src/graphics/tex.cpp"
     "src/util/mathf.cpp"
 )
+
+target_compile_features(Fantasy PRIVATE cxx_std_20)
 
 find_package(OpenGL REQUIRED)
 find_package(GLEW CONFIG REQUIRED)

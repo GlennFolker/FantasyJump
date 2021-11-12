@@ -20,22 +20,22 @@ namespace Fantasy {
         static void on(const std::type_index &, std::function<void(Event &)> &);
         static void on(const std::type_index &, std::function<void(Event &)> &&);
 
-        template<typename T, std::enable_if<std::is_base_of<Event, T>::value>::type *_T = nullptr>
+        template<typename T, typename std::enable_if<std::is_base_of<Event, T>::value>::type *_T = nullptr>
         static void fire(Event &e) {
             fire(typeid(T), e);
         }
 
-        template<typename T, std::enable_if<std::is_base_of<Event, T>::value>::type *_T = nullptr>
+        template<typename T, typename std::enable_if<std::is_base_of<Event, T>::value>::type *_T = nullptr>
         static void fire(Event &&e) {
             fire(typeid(T), e);
         }
 
-        template<typename T, std::enable_if<std::is_base_of<Event, T>::value>::type *_T = nullptr>
+        template<typename T, typename std::enable_if<std::is_base_of<Event, T>::value>::type *_T = nullptr>
         static void on(std::function<void(Event &)> &func) {
             on(typeid(T), func);
         }
 
-        template<typename T, std::enable_if<std::is_base_of<Event, T>::value>::type *_T = nullptr>
+        template<typename T, typename std::enable_if<std::is_base_of<Event, T>::value>::type *_T = nullptr>
         static void on(std::function<void(Event &)> &&func) {
             on(typeid(T), func);
         }

@@ -8,6 +8,49 @@
 #include "time.h"
 #include "../app.h"
 
+constexpr const char *BLOOM_VERTEX_SHADER = R"(
+#version 150 core
+in vec2 a_position;
+in vec2 a_tex_coords_0;
+
+out vec2 v_tex_coords;
+
+void main() {
+    gl_Position = vec4(a_position, 1.0, 1.0);
+    v_tex_coords = a_tex_coords_0;
+})";
+
+constexpr const char *BLOOM_FRAGMENT_SHADER = R"(
+#version 150 core
+out vec4 fragColor;
+
+in vec2 v_tex_coords;
+
+uniform sampler2D u_texture;
+uniform vec2 u_resolution;
+uniform int u_range;
+uniform float u_threshold;
+uniform float u_suppress;
+
+void main() {
+    float thres = u_threshold * 3.0;
+    float range2 = pow(u_range, 2.0);
+    vec2 step = vec2(1.0) / u_resolution;
+
+    vec4 sum = vec4(0.0);
+    for(int x = -u_range; x <= u_range; x++) {
+        for(int y = -u_range; y <= u_range; y++) {
+            float distance = x * x + y * y;
+            if(distance > range2) continue;
+
+            vec4 col = texture2D(u_texture, v_tex_coords + vec2(x * step.x, y * step.y));
+            if((col.r + col.g + col.b) >= thres) sum += col;
+        }
+    }
+
+    fragColor = texture2D(u_texture, v_tex_coords) + sum / pow(2 * u_range + 1, 2) / u_suppress;
+})";
+
 namespace Fantasy {
     Renderer::Renderer() {
         glEnable(GL_DEPTH_TEST);
@@ -19,18 +62,10 @@ namespace Fantasy {
 
         batch = new SpriteBatch();
         buffer = new FrameBuffer(App::instance->getWidth(), App::instance->getHeight(), true, true);
-        quad = new Mesh(4, 6, 2, new VertexAttr[]{
+        quad = new Mesh(4, 6, 2, new VertexAttr[2]{
             VertexAttr::position2D,
             VertexAttr::texCoords
         });
-
-        ringTexture = new Tex2D("assets/ring.png");
-        ringTexture->load();
-        ringTexture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
-
-        pixelTexture = new Tex2D("assets/pixel.png");
-        pixelTexture->load();
-        pixelTexture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
 
         float vertices[] = {
             -1.0f, -1.0f, 0.0f, 0.0f,
@@ -48,8 +83,6 @@ namespace Fantasy {
     }
 
     Renderer::~Renderer() {
-        delete ringTexture;
-        delete pixelTexture;
         delete batch;
         delete buffer;
         delete quad;
@@ -116,5 +149,12 @@ namespace Fantasy {
         glUniform1f(bloom->uniformLoc("u_suppress"), 1.6f);
 
         quad->render(bloom, GL_TRIANGLES, 0, quad->maxIndices);
+    }
+
+    Tex2D *Renderer::loadTex(const char *name) {
+        Tex2D *tex = new Tex2D(name);
+        tex->load();
+        tex->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
+        return tex;
     }
 }

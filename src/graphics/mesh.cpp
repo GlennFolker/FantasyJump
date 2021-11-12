@@ -111,10 +111,7 @@ namespace Fantasy {
     }
 
     void Mesh::unbind(Shader *shader) {
-        for(size_t i = 0; i < attrCount; i++) {
-            glDisableVertexAttribArray(shader->attributeLoc(attributes[i].alias));
-        }
-
+        for(size_t i = 0; i < attrCount; i++) glDisableVertexAttribArray(shader->attributeLoc(attributes[i].alias));
         glBindBuffer(GL_ARRAY_BUFFER, NULL);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);
     }

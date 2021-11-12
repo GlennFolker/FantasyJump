@@ -101,7 +101,8 @@ namespace Fantasy {
     class ShooterComp: public Component {
         public:
         enum ShootType {
-            SMALL
+            SMALL,
+            MEDIUM
         };
 
         private:
@@ -115,6 +116,28 @@ namespace Fantasy {
         ShooterComp(entt::entity, ShootType, float);
         ShooterComp(entt::entity, ShootType, float, float);
         ShooterComp(entt::entity, ShootType, float, float, float);
+
+        void update() override;
+    };
+
+    class TemporalComp: public Component {
+        public:
+        enum TemporalFlag {
+            RANGE = 1,
+            TIME = 2
+        };
+
+        public:
+        TemporalFlag flags;
+        float range, time;
+
+        private:
+        bool init;
+        float initTime;
+        b2Vec2 initPos;
+
+        public:
+        TemporalComp(entt::entity, TemporalFlag);
 
         void update() override;
     };
