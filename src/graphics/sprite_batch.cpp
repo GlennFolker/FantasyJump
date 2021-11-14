@@ -1,10 +1,10 @@
 #include <SDL.h>
+#include <stdexcept>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "sprite_batch.h"
 #include "../app.h"
 #include "../util/mathf.h"
-
-#include <glm/gtc/type_ptr.hpp>
 
 constexpr const char *DEFAULT_VERTEX_SHADER = R"(
 #version 150 core
@@ -48,7 +48,7 @@ void main() {
 namespace Fantasy {
     SpriteBatch::SpriteBatch(): SpriteBatch(8191, NULL) {}
     SpriteBatch::SpriteBatch(size_t size, Shader *shader) {
-        if(size > 8191) throw std::exception("Max vertices is 8191");
+        if(size > 8191) throw std::runtime_error("Max vertices is 8191");
 
         z = 1.0f;
         color = Color::white;

@@ -6,6 +6,7 @@
 #include "../app_listener.h"
 #include "../graphics/sprite_batch.h"
 #include "../graphics/frame_buffer.h"
+#include "../graphics/shader.h"
 
 namespace Fantasy {
     class Renderer: public AppListener {

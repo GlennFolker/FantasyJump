@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <entt/entity/registry.hpp>
+#include <stdexcept>
 #include <box2d/box2d.h>
 
 #include "../graphics/tex.h"
@@ -58,7 +59,7 @@ namespace Fantasy {
 
             std::unordered_map<const char *, Content *> *map = getBy(T::ctype());
             if(map->contains(content->name)) {
-                throw std::exception(std::string("'").append(typeid(T).name()).append("' with name '").append(content->name).append("' already exists.").c_str());
+                throw std::runtime_error(std::string("'").append(typeid(T).name()).append("' with name '").append(content->name).append("' already exists.").c_str());
             } else {
                 map->emplace(content->name, content);
             }

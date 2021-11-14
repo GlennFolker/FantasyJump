@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <gl/glew.h>
 #include <string>
+#include <stdexcept>
 
 #include "mesh.h"
 
@@ -33,7 +34,7 @@ namespace Fantasy {
                 size = sizeof(short) * components;
                 break;
             default:
-                throw std::exception("Invalid attribute type.");
+                throw std::runtime_error("Invalid attribute type.");
         }
     }
 
@@ -75,14 +76,14 @@ namespace Fantasy {
 
     void Mesh::setVertices(float *vertices, size_t offset, size_t count) {
         SDL_memcpy(this->vertices, vertices + offset, count * sizeof(float));
-        
+
         glBindBuffer(GL_ARRAY_BUFFER, verticesData);
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(float), this->vertices, GL_STATIC_DRAW);
     }
 
     void Mesh::setIndices(unsigned short *indices, size_t offset, size_t count) {
         SDL_memcpy(this->indices, indices + offset, count * sizeof(unsigned short));
-        
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesData);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned short), this->indices, GL_STATIC_DRAW);
     }
@@ -106,7 +107,7 @@ namespace Fantasy {
 
             off += attr.size;
         }
-        
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesData);
     }
 

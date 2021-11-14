@@ -1,17 +1,17 @@
-#include "frame_buffer.h"
-
-#include <exception>
+#include <stdexcept>
 #include <gl/glew.h>
+
+#include "frame_buffer.h"
 
 namespace Fantasy {
     FrameBuffer *FrameBuffer::last = NULL;
 
     FrameBuffer::FrameBuffer(): FrameBuffer(2, 2) {}
-    FrameBuffer::FrameBuffer(int width, int height): FrameBuffer(width, height, true) {}
-    FrameBuffer::FrameBuffer(int width, int height, bool color): FrameBuffer(width, height, color, false) {}
-    FrameBuffer::FrameBuffer(int width, int height, bool color, bool depth): FrameBuffer(width, height, color, depth, false) {}
+    FrameBuffer::FrameBuffer(int width, int height) : FrameBuffer(width, height, true) {}
+    FrameBuffer::FrameBuffer(int width, int height, bool color) : FrameBuffer(width, height, color, false) {}
+    FrameBuffer::FrameBuffer(int width, int height, bool color, bool depth) : FrameBuffer(width, height, color, depth, false) {}
     FrameBuffer::FrameBuffer(int width, int height, bool color, bool depth, bool stencil) {
-        if(!color && !depth && !stencil) throw std::exception("Framebuffers must have at least either a color, depth, or stencil attachment.");
+        if(!color && !depth && !stencil) throw std::runtime_error("Framebuffers must have at least either a color, depth, or stencil attachment.");
 
         before = NULL;
         capturing = false;

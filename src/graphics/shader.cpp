@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <gl/glew.h>
 #include <string>
+#include <stdexcept>
 
 #include "shader.h"
 
@@ -8,13 +9,13 @@ namespace Fantasy {
     Shader::Shader(const char *vertSource, const char *fragSource): Shader(&vertSource, &fragSource) {}
     Shader::Shader(const char **vertSource, const char **fragSource) {
         vertPtr = createShader(GL_VERTEX_SHADER, vertSource);
-        if(vertPtr == NULL) throw std::exception("Couldn't create vertex shader.");
+        if(vertPtr == NULL) throw std::runtime_error("Couldn't create vertex shader.");
 
         fragPtr = createShader(GL_FRAGMENT_SHADER, fragSource);
-        if(fragPtr == NULL) throw std::exception("Couldn't create fragment shader.");
+        if(fragPtr == NULL) throw std::runtime_error("Couldn't create fragment shader.");
 
         progPtr = glCreateProgram();
-        if(progPtr == NULL) throw std::exception("Couldn't create GL program.");
+        if(progPtr == NULL) throw std::runtime_error("Couldn't create GL program.");
         
         glAttachShader(progPtr, vertPtr);
         glAttachShader(progPtr, fragPtr);
@@ -23,7 +24,7 @@ namespace Fantasy {
 
         int success;
         glGetProgramiv(progPtr, GL_LINK_STATUS, &success);
-        if(success != GL_TRUE) throw std::exception("Couldn't link GL program.");
+        if(success != GL_TRUE) throw std::runtime_error("Couldn't link GL program.");
 
         uniforms = new std::unordered_map<const char *, unsigned int>();
         attributes = new std::unordered_map<const char *, unsigned int>();
@@ -90,12 +91,12 @@ namespace Fantasy {
     }
 
     unsigned int Shader::uniformLoc(const char *alias) {
-        if(progPtr == NULL) throw std::exception("Program pointer not defined.");
+        if(progPtr == NULL) throw std::runtime_error("Program pointer not defined.");
         if(!uniforms->contains(alias)) {
             unsigned int loc = glGetUniformLocation(progPtr, alias);
             if(loc == -1) {
                 std::string append(alias);
-                throw std::exception(("Uniform not found: '" + append + "'.").c_str());
+                throw std::runtime_error(("Uniform not found: '" + append + "'.").c_str());
             } else {
                 uniforms->emplace(alias, loc);
                 return loc;
@@ -106,12 +107,12 @@ namespace Fantasy {
     }
 
     unsigned int Shader::attributeLoc(const char *alias) {
-        if(progPtr == NULL) throw std::exception("Program pointer not defined.");
+        if(progPtr == NULL) throw std::runtime_error("Program pointer not defined.");
         if(!attributes->contains(alias)) {
             unsigned int loc = glGetAttribLocation(progPtr, alias);
             if(loc == -1) {
                 std::string append(alias);
-                throw std::exception(("Attribute not found: '" + append + "'.").c_str());
+                throw std::runtime_error(("Attribute not found: '" + append + "'.").c_str());
             } else {
                 attributes->emplace(alias, loc);
                 return loc;
@@ -122,7 +123,7 @@ namespace Fantasy {
     }
 
     void Shader::bind() {
-        if(progPtr == NULL) throw std::exception("Program pointer not defined.");
+        if(progPtr == NULL) throw std::runtime_error("Program pointer not defined.");
         glUseProgram(progPtr);
     }
 }

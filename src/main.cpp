@@ -1,5 +1,6 @@
 #include <SDL.h>
-#include <exception>
+#include <SDL_main.h>
+#include <stdexcept>
 #include <glm/gtx/vector_angle.hpp>
 
 #include "app.h"

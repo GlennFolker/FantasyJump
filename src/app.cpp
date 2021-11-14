@@ -6,7 +6,7 @@
 #include <gl/GLU.h>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 #include "app.h"
@@ -16,7 +16,7 @@ namespace Fantasy {
     App *App::instance = NULL;
 
     App::App(int argc, char *argv[], AppConfig config) {
-        if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) throw std::exception(std::string("Couldn't initialize SDL: ").append(SDL_GetError()).c_str());
+        if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) throw std::runtime_error(std::string("Couldn't initialize SDL: ").append(SDL_GetError()).c_str());
 
         SDL_version version;
         SDL_GetVersion(&version);
@@ -28,7 +28,7 @@ namespace Fantasy {
         if(config.resizable) flags |= SDL_WINDOW_RESIZABLE;
 
         int imgFlags = IMG_INIT_PNG;
-        if((IMG_Init(imgFlags) & ~imgFlags) != 0) throw std::exception(std::string("Couldn't initialize SDL_image: ").append(IMG_GetError()).c_str());
+        if((IMG_Init(imgFlags) & ~imgFlags) != 0) throw std::runtime_error(std::string("Couldn't initialize SDL_image: ").append(IMG_GetError()).c_str());
         
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -43,7 +43,7 @@ namespace Fantasy {
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
         window = SDL_CreateWindow("Fantasy", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, config.width, config.height, flags);
-        if(window == NULL) throw std::exception(std::string("Couldn't create SDL window: ").append(SDL_GetError()).c_str());
+        if(window == NULL) throw std::runtime_error(std::string("Couldn't create SDL window: ").append(SDL_GetError()).c_str());
 
         if(config.fullscreen) {
             SDL_DisplayMode mode;
@@ -54,13 +54,13 @@ namespace Fantasy {
         }
         
         context = SDL_GL_CreateContext(window);
-        if(context == NULL) throw std::exception(std::string("Couldn't create OpenGL context: ").append(SDL_GetError()).c_str());
+        if(context == NULL) throw std::runtime_error(std::string("Couldn't create OpenGL context: ").append(SDL_GetError()).c_str());
 
         SDL_Log("GL version: %s", glGetString(GL_VERSION));
 
         GLenum error = GL_NO_ERROR;
         glewExperimental = GL_TRUE;
-        if((error = glewInit()) != GL_NO_ERROR) throw std::exception(std::string("Couldn't initialize GLEW").append((const char *)glewGetErrorString(error)).c_str());
+        if((error = glewInit()) != GL_NO_ERROR) throw std::runtime_error(std::string("Couldn't initialize GLEW").append((const char *)glewGetErrorString(error)).c_str());
         
         if(SDL_GL_SetSwapInterval(1) != 0) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "VSync disabled.");
 
