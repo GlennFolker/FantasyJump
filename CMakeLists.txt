@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20.2)
+cmake_minimum_required(VERSION 3.14.0)
 
 project(Fantasy VERSION 1.0)
 
@@ -32,11 +32,14 @@ find_package(sdl2-image CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 
-target_link_libraries(Fantasy
+target_link_libraries(Fantasy PUBLIC
     EnTT::EnTT box2d::box2d
     opengl32 GLEW::GLEW glm::glm
     SDL2::SDL2_image SDL2::SDL2main SDL2::SDL2
 )
+
+set(RESOURCE_FILES ${CMAKE_SOURCE_DIR}/assets/)
+set(Fantasy PROPERTIES RESOURCE ${RESOURCE_FILES})
 
 add_custom_command(
     TARGET Fantasy POST_BUILD
@@ -47,3 +50,12 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/assets/ $<TARGET_FILE_DIR:Fantasy>/assets
 )
+
+install(TARGETS Fantasy
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+)
+install(DIRECTORY $<TARGET_FILE_DIR:Fantasy>/assets DESTINATION bin)
+
+include(InstallRequiredSystemLibraries)

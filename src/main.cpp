@@ -1,9 +1,6 @@
-#define GLEW_STATIC
-
 #include <SDL.h>
 #include <exception>
 #include <glm/gtx/vector_angle.hpp>
-#include <glm/vec2.hpp>
 
 #include "app.h"
 
@@ -17,7 +14,7 @@ int main(int argc, char *argv[]) {
     try {
         app = new App(argc, argv, config);
     } catch(std::exception &e) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, e.what());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", e.what());
         app = NULL;
     }
 
@@ -27,7 +24,7 @@ int main(int argc, char *argv[]) {
         SDL_Log("Ended successful launch, program exited with code 0.");
         return 0;
     } else {
-        if(app != NULL) delete app;
+        delete app;
 
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Program exited with code 1.");
         return 1;
