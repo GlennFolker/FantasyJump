@@ -61,10 +61,10 @@ add_custom_command(
 )
 
 install(TARGETS Fantasy
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION .
+    LIBRARY DESTINATION .
+    RUNTIME DESTINATION .
 )
-install(DIRECTORY $<TARGET_FILE_DIR:Fantasy>/assets DESTINATION bin)
+install(DIRECTORY $<TARGET_FILE_DIR:Fantasy>/assets DESTINATION .)
 
 include(InstallRequiredSystemLibraries)
