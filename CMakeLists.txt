@@ -22,7 +22,7 @@ add_executable(Fantasy
     "src/util/mathf.cpp"
 )
 
-target_compile_features(Fantasy PRIVATE cxx_std_20)
+target_compile_features(Fantasy PRIVATE cxx_std_17)
 
 find_package(OpenGL REQUIRED)
 find_package(GLEW CONFIG REQUIRED)

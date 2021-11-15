@@ -58,7 +58,7 @@ namespace Fantasy {
             T *content = new T(args...);
 
             std::unordered_map<const char *, Content *> *map = getBy(T::ctype());
-            if(map->contains(content->name)) {
+            if(map->count(content->name)) {
                 throw std::runtime_error(std::string("'").append(typeid(T).name()).append("' with name '").append(content->name).append("' already exists.").c_str());
             } else {
                 map->emplace(content->name, content);

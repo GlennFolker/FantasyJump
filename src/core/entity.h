@@ -1,12 +1,12 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#include "team.h"
+#include "../graphics/tex.h"
+
 #include <box2d/box2d.h>
 #include <entt/entity/registry.hpp>
 #include <functional>
-
-#include "team.h"
-#include "../graphics/tex.h"
 
 namespace Fantasy {
     class Component {

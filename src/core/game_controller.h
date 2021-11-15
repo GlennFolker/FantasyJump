@@ -13,7 +13,7 @@ namespace Fantasy {
         private:
         std::unordered_set<entt::entity> *removal;
         float restartTime;
-
+        
         public:
         static const float worldWidth;
         static const float worldHeight;

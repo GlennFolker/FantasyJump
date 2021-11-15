@@ -1,10 +1,10 @@
-#include <glm/gtx/vector_angle.hpp>
-
 #include "entity.h"
 #include "events.h"
 #include "time.h"
 #include "../app.h"
 #include "../util/mathf.h"
+
+#include <glm/gtx/vector_angle.hpp>
 
 namespace Fantasy {
     Component::Component(entt::entity e) {

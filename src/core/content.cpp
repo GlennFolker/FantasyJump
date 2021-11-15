@@ -1,8 +1,8 @@
-#include <glm/gtx/transform.hpp>
-
 #include "content.h"
 #include "entity.h"
 #include "../util/mathf.h"
+
+#include <glm/gtx/transform.hpp>
 
 namespace Fantasy {
     Contents::Contents() {

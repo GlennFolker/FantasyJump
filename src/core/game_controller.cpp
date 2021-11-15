@@ -1,12 +1,13 @@
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 #include "game_controller.h"
 #include "entity.h"
 #include "events.h"
 #include "time.h"
 #include "../app.h"
 #include "../util/mathf.h"
+
+#include <SDL.h>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Fantasy {
     const float GameController::worldWidth = 400.0f;
@@ -32,7 +33,7 @@ namespace Fantasy {
         player = entt::entity();
         App::instance->input->attach(Input::MOUSE, [&](InputContext &ctx) {
             if(ctx.read<SDL_MouseButtonEvent>().button != SDL_BUTTON_LEFT || !regist->valid(player)) return;
-
+            
             JumpComp &comp = regist->get<JumpComp>(player);
             if(!ctx.performed) {
                 double x, y;
@@ -131,7 +132,7 @@ namespace Fantasy {
                         return found;
                     }
                 } report;
-                
+
                 for(b2Fixture *fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
                     b2AABB bound;
 
@@ -148,7 +149,7 @@ namespace Fantasy {
                 }
 
                 return false;
-            }());
+                }());
         }
     }
 
@@ -164,7 +165,7 @@ namespace Fantasy {
             if(regist->any_of<HealthComp>(e)) regist->get<HealthComp>(e).update();
             if(regist->any_of<ShooterComp>(e)) regist->get<ShooterComp>(e).update();
             if(regist->any_of<TemporalComp>(e)) regist->get<TemporalComp>(e).update();
-        });
+            });
     }
 
     void GameController::BeginContact(b2Contact *contact) {

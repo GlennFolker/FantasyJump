@@ -40,7 +40,7 @@ namespace Fantasy {
     }
 
     void Shader::logProgram() {
-        if(progPtr == NULL || !glIsProgram(progPtr)) return;
+        if(!progPtr || !glIsProgram(progPtr)) return;
 
         int len = 0;
         int maxLen = len;
@@ -56,7 +56,7 @@ namespace Fantasy {
     }
 
     void Shader::logShader(unsigned int shader) {
-        if(shader == NULL || !glIsShader(shader)) return;
+        if(!shader || !glIsShader(shader)) return;
 
         int len = 0;
         int maxLen = len;
@@ -73,7 +73,7 @@ namespace Fantasy {
 
     unsigned int Shader::createShader(int type, const char **source) {
         unsigned int shader = glCreateShader(type);
-        if(shader == NULL) return NULL;
+        if(!shader) return NULL;
 
         glShaderSource(shader, 1, source, NULL);
         glCompileShader(shader);
@@ -91,8 +91,8 @@ namespace Fantasy {
     }
 
     unsigned int Shader::uniformLoc(const char *alias) {
-        if(progPtr == NULL) throw std::runtime_error("Program pointer not defined.");
-        if(!uniforms->contains(alias)) {
+        if(!progPtr) throw std::runtime_error("Program pointer not defined.");
+        if(!uniforms->count(alias)) {
             unsigned int loc = glGetUniformLocation(progPtr, alias);
             if(loc == -1) {
                 std::string append(alias);
@@ -107,8 +107,8 @@ namespace Fantasy {
     }
 
     unsigned int Shader::attributeLoc(const char *alias) {
-        if(progPtr == NULL) throw std::runtime_error("Program pointer not defined.");
-        if(!attributes->contains(alias)) {
+        if(!progPtr) throw std::runtime_error("Program pointer not defined.");
+        if(!attributes->count(alias)) {
             unsigned int loc = glGetAttribLocation(progPtr, alias);
             if(loc == -1) {
                 std::string append(alias);
@@ -123,7 +123,7 @@ namespace Fantasy {
     }
 
     void Shader::bind() {
-        if(progPtr == NULL) throw std::runtime_error("Program pointer not defined.");
+        if(!progPtr) throw std::runtime_error("Program pointer not defined.");
         glUseProgram(progPtr);
     }
 }
