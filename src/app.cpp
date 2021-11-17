@@ -66,15 +66,17 @@ namespace Fantasy {
 
         exiting = false;
         instance = this;
-        pos = dvec2(0.0, 0.0);
-        scl = dvec2(48.0, 48.0);
-        proj = identity<dmat4>();
-        flipProj = identity<fmat4>();
+        pos = glm::dvec2(0.0, 0.0);
+        scl = glm::dvec2(48.0, 48.0);
+        proj = glm::identity<glm::dmat4>();
+        flipProj = glm::identity<glm::fmat4>();
 
         input = new Input();
         listeners = new std::vector<AppListener *>();
         listeners->push_back(control = new GameController());
         listeners->push_back(renderer = new Renderer());
+
+        control->resetGame();
     }
 
     App::~App() {
@@ -93,12 +95,12 @@ namespace Fantasy {
         while(!exiting) {
             int rw = getWidth(), rh = getHeight();
             double w = rw / scl.x, h = rh / scl.y;
-            proj = orthoLH_ZO(
+            proj = glm::orthoLH_ZO(
                 pos.x - w, pos.x + w,
                 pos.y - h, pos.y + h,
                 24.0, -24.0
             );
-            flipProj = orthoLH_ZO(
+            flipProj = glm::orthoLH_ZO(
                 pos.x - w, pos.x + w,
                 pos.y + h, pos.y - h,
                 24.0, -24.0
@@ -179,7 +181,7 @@ namespace Fantasy {
 
         gluUnProject(
             x, y, 0.0,
-            value_ptr(identity<dmat4>()), value_ptr(flipProj), viewport,
+            glm::value_ptr(glm::identity<glm::dmat4>()), value_ptr(flipProj), viewport,
             newX == NULL ? &unusedX : newX, newY == NULL ? &unusedY : newY, &unusedZ
         );
     }

@@ -1,19 +1,15 @@
 #include "content.h"
 #include "entity.h"
 #include "../util/mathf.h"
+#include "../app.h"
 
 #include <glm/gtx/transform.hpp>
 
 namespace Fantasy {
     Contents::Contents() {
-        contents = new std::vector<std::unordered_map<const char *, Content *> *>((int)CType::ALL);
+        contents = new std::vector<std::unordered_map<std::string, Content *> *>((int)CType::ALL);
 
-        jumpTexture = loadTex("assets/jumper.png");
-        spikeTexture = loadTex("assets/spike.png");
-        bulletSmallTexture = loadTex("assets/bullet-small.png");
-        bulletMedTexture = loadTex("assets/bullet-medium.png");
-
-        jumper = create<EntityType>("jumper", [&](entt::registry &registry, b2World &world, entt::entity e) {
+        jumper = create<EntityType>("jumper", [this](entt::registry &registry, const TexAtlas &atlas, b2World &world, entt::entity e) {
             b2BodyDef bodyDef;
             bodyDef.type = b2_dynamicBody;
             bodyDef.position.SetZero();
@@ -30,14 +26,14 @@ namespace Fantasy {
             body->CreateFixture(&fixt);
 
             registry.emplace<RigidComp>(e, e, body);
-            registry.emplace<SpriteComp>(e, e, jumpTexture, 1.0f, 1.0f, 2.0f);
+            registry.emplace<SpriteComp>(e, e, atlas.get("jumper"), 1.0f, 1.0f, 2.0f);
             registry.emplace<JumpComp>(e, e, 20.0f, 0.7f);
             registry.emplace<HealthComp>(e, e, 100.0f, 5.0f);
             registry.emplace<TeamComp>(e, e, Team::BLUE);
-            registry.emplace<ShooterComp>(e, e, ShooterComp::SMALL, 0.3f);
+            registry.emplace<ShooterComp>(e, e, bulletSmall->name, 0.3f);
         });
 
-        spike = create<EntityType>("spike", [&](entt::registry &registry, b2World &world, entt::entity e) {
+        spike = create<EntityType>("spike", [this](entt::registry &registry, const TexAtlas &atlas, b2World &world, entt::entity e) {
             b2BodyDef bodyDef;
             bodyDef.type = b2_dynamicBody;
             bodyDef.position.SetZero();
@@ -57,13 +53,13 @@ namespace Fantasy {
             body->CreateFixture(&fixt);
             
             registry.emplace<RigidComp>(e, e, body).rotateSpeed = glm::radians(Mathf::random(1.0f, 2.5f) * (Mathf::random() >= 0.5f ? 1.0f : -1.0f));
-            registry.emplace<SpriteComp>(e, e, spikeTexture, 2.0f, 2.0f, 1.0f);
+            registry.emplace<SpriteComp>(e, e, atlas.get("spike"), 2.0f, 2.0f, 1.0f);
             registry.emplace<HealthComp>(e, e, 100.0f, 10.0f);
             registry.emplace<TeamComp>(e, e, Team::GENERIC);
-            registry.emplace<ShooterComp>(e, e, ShooterComp::MEDIUM, 1.2f, 5.0f, 10.0f);
+            registry.emplace<ShooterComp>(e, e, bulletMed->name, 1.2f, 5.0f, 10.0f);
         });
 
-        bulletSmall = create<EntityType>("bullet-small", [&](entt::registry &registry, b2World &world, entt::entity e) {
+        bulletSmall = create<EntityType>("bullet-small", [](entt::registry &registry, const TexAtlas &atlas, b2World &world, entt::entity e) {
             b2BodyDef bodyDef;
             bodyDef.type = b2_dynamicBody;
             bodyDef.position.SetZero();
@@ -82,13 +78,13 @@ namespace Fantasy {
             body->CreateFixture(&fixt);
 
             registry.emplace<RigidComp>(e, e, body);
-            registry.emplace<SpriteComp>(e, e, bulletSmallTexture, 0.5f, 0.5f, 3.0f);
+            registry.emplace<SpriteComp>(e, e, atlas.get("bullet-small"), 0.5f, 0.5f, 3.0f);
             registry.emplace<HealthComp>(e, e, 5.0f, 10.0f).selfDamage = true;
             registry.emplace<TeamComp>(e, e);
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
         });
 
-        bulletMed = create<EntityType>("bullet-medium", [&](entt::registry &registry, b2World &world, entt::entity e) {
+        bulletMed = create<EntityType>("bullet-medium", [this](entt::registry &registry, const TexAtlas &atlas, b2World &world, entt::entity e) {
             b2BodyDef bodyDef;
             bodyDef.type = b2_dynamicBody;
             bodyDef.position.SetZero();
@@ -106,52 +102,87 @@ namespace Fantasy {
             b2Body *body = world.CreateBody(&bodyDef);
             body->CreateFixture(&fixt);
 
-            registry.emplace<RigidComp>(e, e, body).rotateSpeed = glm::radians(Mathf::random() > 0.5f ? 10.0f : -10.0f);
-            registry.emplace<SpriteComp>(e, e, bulletMedTexture, 0.75f, 0.75f, 3.0f);
+            RigidComp &comp = registry.emplace<RigidComp>(e, e, body);
+            comp.rotateSpeed = glm::radians(Mathf::random() > 0.5f ? 10.0f : -10.0f);
+            comp.spawnFx = fx->name;
+
+            registry.emplace<SpriteComp>(e, e, atlas.get("bullet-medium"), 0.75f, 0.75f, 3.0f);
             registry.emplace<HealthComp>(e, e, 10.0f, 20.0f).selfDamage = true;
             registry.emplace<TeamComp>(e, e);
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
+        });
+
+        fx = create<EffectType>("effect", [](entt::registry &registry, const TexAtlas &atlas, b2World &world, entt::entity e) {
+            RigidComp &comp = registry.get<RigidComp>(e);
+            TemporalComp &life = registry.get<TemporalComp>(e);
+
+            float s = 1.0f - powf(life.timef(), 3.0f);
+            App::instance->renderer->batch->z = 5.0f;
+            App::instance->renderer->batch->draw(atlas.get("white"), comp.body->GetPosition().x, comp.body->GetPosition().y, s, s);
         });
     }
 
     Contents::~Contents() {
         delete contents;
-        delete jumpTexture;
-        delete spikeTexture;
-        delete bulletSmallTexture;
-        delete bulletMedTexture;
     }
 
-    std::unordered_map<const char *, Content *> *Contents::getBy(CType type) {
+    std::unordered_map<std::string, Content *> *Contents::getBy(CType type) {
         int ordinal = (int)type;
-        if(contents->at(ordinal) == NULL) contents->insert(contents->begin() + ordinal, new std::unordered_map<const char *, Content *>());
+        if(contents->at(ordinal) == NULL) contents->insert(contents->begin() + ordinal, new std::unordered_map<std::string, Content *>());
 
         return contents->at(ordinal);
     }
 
-    Tex2D *Contents::loadTex(const char *name) {
-        Tex2D *tex = new Tex2D(name);
-        tex->load();
-        tex->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
-        return tex;
-    }
-
-    Content::Content(const char *name) {
+    Content::Content(const std::string &name) {
         this->name = name;
     }
 
-    EntityType::EntityType(const char *name, std::function<void(entt::registry &, b2World &, entt::entity)> &&initializer): Content(name) {
+    EntityType::EntityType(const std::string &name, const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &initializer): Content(name) {
         this->initializer = initializer;
     }
 
-    entt::entity EntityType::create(entt::registry &registry, b2World &world) {
+    entt::entity EntityType::create(entt::registry &registry, const TexAtlas &atlas, b2World &world) {
         entt::entity e = registry.create();
-        initializer(registry, world, e);
+        initializer(registry, atlas, world, e);
 
         return e;
     }
 
     CType EntityType::ctype() {
         return CType::ENTITY;
+    }
+
+    EffectType::EffectType(const std::string &name, const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &updater): EffectType(name,
+        [this](entt::registry &registry, const TexAtlas &atlas, b2World &world, entt::entity e) {
+            b2BodyDef bodyDef;
+            bodyDef.type = b2_kinematicBody;
+            bodyDef.position.SetZero();
+
+            b2PolygonShape shape;
+            shape.SetAsBox(clipSize / 2.0f, clipSize / 2.0f);
+
+            b2FixtureDef fixt;
+            fixt.shape = &shape;
+            fixt.isSensor = true;
+
+            b2Body *body = world.CreateBody(&bodyDef);
+            body->CreateFixture(&fixt);
+
+            registry.emplace<RigidComp>(e, e, body);
+            registry.emplace<TemporalComp>(e, e, TemporalComp::TIME).time = lifetime;
+            registry.emplace<EffectComp>(e, e);
+        }, updater
+    ) {}
+    EffectType::EffectType(const std::string &name,
+        const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &initializer,
+        const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &updater
+    ): EntityType(name, initializer) {
+        this->updater = updater;
+        clipSize = 1.0f;
+        lifetime = 1.0f;
+    }
+
+    CType EffectType::ctype() {
+        return CType::EFFECT;
     }
 }

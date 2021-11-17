@@ -22,7 +22,6 @@ namespace Fantasy {
 
         public:
         VertexAttr(int components, int type, const char *alias): VertexAttr(components, type, false, alias) {}
-
         VertexAttr(int, int, bool, const char *);
     };
 

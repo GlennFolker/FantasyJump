@@ -12,29 +12,36 @@ namespace Fantasy {
     }
 
     void Component::update() {}
-    void Component::remove() {
-        App::instance->control->scheduleRemoval(ref);
+    void Component::remove() { App::instance->control->scheduleRemoval(ref); }
+    entt::entity Component::getRef() { return ref; }
+    entt::registry &Component::getRegistry() { return *App::instance->control->regist; }
+    b2World &Component::getWorld() { return *App::instance->control->world; }
+
+    void Component::applyFx(const std::string &effect) {
+        App::instance->control->content->getByName<EffectType>(effect)->updater(getRegistry(), *App::instance->renderer->atlas, getWorld(), ref);
     }
 
-    entt::entity Component::getRef() {
-        return ref;
-    }
+    entt::entity Component::createFx(const std::string &effect) {
+        entt::registry &regist = getRegistry();
+        entt::entity fx = App::instance->control->content->getByName<EffectType>(effect)->create(regist, *App::instance->renderer->atlas, getWorld());
+        regist.get<EffectComp>(fx).effect = effect;
 
-    entt::registry &Component::getRegistry() {
-        return *App::instance->control->regist;
-    }
-
-    b2World &Component::getWorld() {
-        return *App::instance->control->world;
+        return fx;
     }
 
     RigidComp::RigidComp(entt::entity e, b2Body *body): Component(e) {
         this->body = body;
         this->body->GetUserData().pointer = (uintptr_t)ref;
         rotateSpeed = 0.0f;
+        spawned = false;
     }
 
     void RigidComp::update() {
+        if(!spawned) {
+            spawned = true;
+            if(!spawnFx.empty()) getRegistry().get<RigidComp>(createFx(spawnFx)).body->SetTransform(body->GetPosition(), 0.0f);
+        }
+
         if(!Mathf::near(rotateSpeed, 0.0f)) body->SetTransform(body->GetPosition(), body->GetAngle() + rotateSpeed);
     }
 
@@ -64,14 +71,16 @@ namespace Fantasy {
 
     void RigidComp::onDestroy(entt::registry &registry, entt::entity entity) {
         RigidComp &comp = registry.get<RigidComp>(entity);
+        if(!comp.deathFx.empty()) registry.get<RigidComp>(createFx(comp.deathFx)).body->SetTransform(comp.body->GetPosition(), 0.0f);
+
         comp.getWorld().DestroyBody(comp.body);
     }
 
-    SpriteComp::SpriteComp(entt::entity e, Tex2D *texture): SpriteComp(e, texture, 1.0f, 1.0f) {}
-    SpriteComp::SpriteComp(entt::entity e, Tex2D *texture, float size): SpriteComp(e, texture, size, size) {}
-    SpriteComp::SpriteComp(entt::entity e, Tex2D *texture, float width, float height): SpriteComp(e, texture, width, height, 0.0f) {}
-    SpriteComp::SpriteComp(entt::entity e, Tex2D *texture, float width, float height, float z): Component(e) {
-        this->texture = texture;
+    SpriteComp::SpriteComp(entt::entity e, const TexRegion &region): SpriteComp(e, region, 1.0f, 1.0f) {}
+    SpriteComp::SpriteComp(entt::entity e, const TexRegion &region, float size): SpriteComp(e, region, size, size) {}
+    SpriteComp::SpriteComp(entt::entity e, const TexRegion &region, float width, float height): SpriteComp(e, region, width, height, 0.0f) {}
+    SpriteComp::SpriteComp(entt::entity e, const TexRegion &region, float width, float height, float z): Component(e) {
+        this->region = region;
         this->width = width;
         this->height = height;
         this->z = z;
@@ -88,7 +97,7 @@ namespace Fantasy {
         }
 
         batch->z = z;
-        batch->draw(texture, trns.p.x, trns.p.y, width, height, trns.q.GetAngle());
+        batch->draw(region, trns.p.x, trns.p.y, width, height, trns.q.GetAngle());
         batch->tint(Color());
     }
 
@@ -181,10 +190,10 @@ namespace Fantasy {
         this->team = team;
     }
 
-    ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate): ShooterComp(e, type, rate, 4.0f) {}
-    ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate, float impulse): ShooterComp(e, type, rate, impulse, 20.0f) {}
-    ShooterComp::ShooterComp(entt::entity e, ShootType type, float rate, float impulse, float range): Component(e) {
-        this->type = type;
+    ShooterComp::ShooterComp(entt::entity e, const std::string &bullet, float rate): ShooterComp(e, bullet, rate, 4.0f) {}
+    ShooterComp::ShooterComp(entt::entity e, const std::string &bullet, float rate, float impulse): ShooterComp(e, bullet, rate, impulse, 20.0f) {}
+    ShooterComp::ShooterComp(entt::entity e, const std::string &bullet, float rate, float impulse, float range): Component(e) {
+        this->bullet = bullet;
         this->rate = rate;
         this->impulse = impulse;
         this->range = range;
@@ -222,8 +231,8 @@ namespace Fantasy {
                     entt::registry &regist = getRegistry();
                     if(
                         !regist.valid(e) ||
-                        (regist.any_of<TeamComp>(e) && regist.get<TeamComp>(e).team == team) ||
-                        (regist.any_of<HealthComp>(e) && !regist.get<HealthComp>(e).canHurt())
+                        (!regist.any_of<TeamComp>(e) || regist.get<TeamComp>(e).team == team) ||
+                        (!regist.any_of<HealthComp>(e) || !regist.get<HealthComp>(e).canHurt())
                     ) return true;
 
                     float range = (body->GetPosition() - origin).LengthSquared();
@@ -247,16 +256,13 @@ namespace Fantasy {
 
             b2Body *target = report.get();
             if(target != NULL) {
-                entt::entity bullet = (
-                    type == SMALL ? App::instance->control->content->bulletSmall :
-                    App::instance->control->content->bulletMed
-                )->create(regist, world);
+                entt::entity bullet = App::instance->control->content->getByName<EntityType>(this->bullet)->create(regist, *App::instance->renderer->atlas, world);
 
                 regist.get<TeamComp>(bullet).team = regist.get<TeamComp>(ref).team;
                 regist.get<TemporalComp>(bullet).range = range * 3.0f;
 
                 b2Body *bbody = regist.get<RigidComp>(bullet).body;
-                bbody->SetTransform(pos, angle(vec2(1.0f, 0.0f), normalize(vec2(bbody->GetPosition().x, bbody->GetPosition().y) - vec2(pos.x, pos.y))));
+                bbody->SetTransform(pos, glm::angle(glm::vec2(1.0f, 0.0f), glm::normalize(glm::vec2(bbody->GetPosition().x, bbody->GetPosition().y) - glm::vec2(pos.x, pos.y))));
 
                 b2Vec2 impulse = target->GetPosition() - pos;
                 impulse.Normalize();
@@ -272,32 +278,35 @@ namespace Fantasy {
         this->flags = flags;
         range = 0.0f;
         time = 0.0f;
-        init = false;
-        initTime = 0.0f;
-        initPos = b2Vec2_zero;
+        initTime = Time::time();
+        travelled = 0.0f;
     }
 
     void TemporalComp::update() {
         entt::registry &regist = getRegistry();
-        bool ranged = (flags & RANGE) == RANGE;
         bool timed = (flags & TIME) == TIME;
-
-        b2Body *body = ranged ? regist.get<RigidComp>(ref).body : NULL;
-
-        if(!init) {
-            init = true;
-            if(timed) initTime = Time::time();
-            if(ranged) initPos = body->GetPosition();
-        }
+        bool ranged = (flags & RANGE) == RANGE;
 
         if(timed && (Time::time() - initTime) >= time) {
             remove();
             return;
         }
 
-        if(ranged && (body->GetPosition() - initPos).Length() >= range) {
-            remove();
-            return;
+        if(ranged) {
+            travelled += regist.get<RigidComp>(ref).body->GetLinearVelocity().Length() / 60.0f;
+            if(travelled >= range) remove();
         }
+    }
+
+    float TemporalComp::rangef() { return travelled / range; }
+    float TemporalComp::timef() { return (Time::time() - initTime) / time; }
+
+    EffectComp::EffectComp(entt::entity e): EffectComp(e, "") {}
+    EffectComp::EffectComp(entt::entity e, const std::string &effect): Component(e) {
+        this->effect = effect;
+    }
+
+    void EffectComp::update() {
+        if(!effect.empty()) applyFx(effect);
     }
 }

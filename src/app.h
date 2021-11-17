@@ -30,10 +30,10 @@ namespace Fantasy {
         SDL_Window *window = NULL;
         SDL_GLContext context;
 
-        dmat4 proj;
-        dmat4 flipProj;
-        dvec2 pos;
-        dvec2 scl;
+        glm::dmat4 proj;
+        glm::dmat4 flipProj;
+        glm::dvec2 pos;
+        glm::dvec2 scl;
         Input *input;
         GameController *control;
         Renderer *renderer;

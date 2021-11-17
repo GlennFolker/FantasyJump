@@ -2,7 +2,7 @@
 #define ENTITY_H
 
 #include "team.h"
-#include "../graphics/tex.h"
+#include "../graphics/tex_atlas.h"
 
 #include <box2d/box2d.h>
 #include <entt/entity/registry.hpp>
@@ -18,6 +18,8 @@ namespace Fantasy {
 
         virtual void update();
         void remove();
+        void applyFx(const std::string &);
+        static entt::entity createFx(const std::string &);
 
         entt::entity getRef();
         static entt::registry &getRegistry();
@@ -28,6 +30,11 @@ namespace Fantasy {
         public:
         b2Body *body;
         float rotateSpeed;
+
+        std::string spawnFx, deathFx;
+
+        private:
+        bool spawned;
 
         public:
         RigidComp(entt::entity, b2Body *);
@@ -42,14 +49,14 @@ namespace Fantasy {
 
     class SpriteComp: public Component {
         public:
-        Tex2D *texture;
+        TexRegion region;
         float width, height, z;
 
         public:
-        SpriteComp(entt::entity, Tex2D *);
-        SpriteComp(entt::entity, Tex2D *, float);
-        SpriteComp(entt::entity, Tex2D *, float, float);
-        SpriteComp(entt::entity, Tex2D *, float, float, float);
+        SpriteComp(entt::entity, const TexRegion &);
+        SpriteComp(entt::entity, const TexRegion &, float);
+        SpriteComp(entt::entity, const TexRegion &, float, float);
+        SpriteComp(entt::entity, const TexRegion &, float, float, float);
 
         void update() override;
     };
@@ -100,22 +107,16 @@ namespace Fantasy {
 
     class ShooterComp: public Component {
         public:
-        enum ShootType {
-            SMALL,
-            MEDIUM
-        };
+        std::string bullet;
+        float rate, impulse, range;
 
         private:
         float time;
 
         public:
-        ShootType type;
-        float rate, impulse, range;
-
-        public:
-        ShooterComp(entt::entity, ShootType, float);
-        ShooterComp(entt::entity, ShootType, float, float);
-        ShooterComp(entt::entity, ShootType, float, float, float);
+        ShooterComp(entt::entity, const std::string &, float);
+        ShooterComp(entt::entity, const std::string &, float, float);
+        ShooterComp(entt::entity, const std::string &, float, float, float);
 
         void update() override;
     };
@@ -132,12 +133,24 @@ namespace Fantasy {
         float range, time;
 
         private:
-        bool init;
         float initTime;
-        b2Vec2 initPos;
+        float travelled;
 
         public:
         TemporalComp(entt::entity, TemporalFlag);
+
+        void update() override;
+        float rangef();
+        float timef();
+    };
+
+    class EffectComp: public Component {
+        public:
+        std::string effect;
+
+        public:
+        EffectComp(entt::entity);
+        EffectComp(entt::entity, const std::string &);
 
         void update() override;
     };

@@ -5,12 +5,14 @@
 
 #include "../app_listener.h"
 #include "../graphics/sprite_batch.h"
+#include "../graphics/tex_atlas.h"
 #include "../graphics/frame_buffer.h"
 #include "../graphics/shader.h"
 
 namespace Fantasy {
     class Renderer: public AppListener {
         public:
+        TexAtlas *atlas;
         SpriteBatch *batch;
 
         private:
@@ -18,16 +20,10 @@ namespace Fantasy {
         Mesh *quad;
         Shader *bloom;
 
-        Tex2D *bg1;
-        Shader *bgShader;
-
         public:
         Renderer();
         ~Renderer() override;
         void update() override;
-
-        private:
-        Tex2D *loadTex(const char *);
     };
 }
 

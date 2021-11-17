@@ -25,8 +25,7 @@ void main() {
     v_tex_coords = a_tex_coords_0;
     v_color = a_color;
     v_tint = a_tint;
-}
-)";
+})";
 
 constexpr const char *DEFAULT_FRAGMENT_SHADER = R"(
 #version 150 core
@@ -40,10 +39,9 @@ in vec4 v_tint;
 uniform sampler2D u_texture;
 
 void main() {
-    vec4 base = texture2D(u_texture, v_tex_coords);
-    gl_FragColor = v_color * mix(base, vec4(v_tint.rgb, base.a), v_tint.a);
-}
-)";
+    vec4 base = texture(u_texture, v_tex_coords);
+    gl_FragColor = v_color * vec4(mix(base, vec4(v_tint.rgb, base.a), v_tint.a).rgb, base.a);
+})";
 
 namespace Fantasy {
     SpriteBatch::SpriteBatch(): SpriteBatch(8191, NULL) {}
@@ -57,7 +55,7 @@ namespace Fantasy {
         tintBits = tinted.fabgr();
         index = 0;
         texture = NULL;
-        projection = identity<mat4>();
+        projection = glm::identity<glm::mat4>();
 
         size_t indicesCount = size * 6;
         mesh = new Mesh(size * 4, indicesCount, 4, new VertexAttr[4]{
@@ -76,6 +74,7 @@ namespace Fantasy {
 
         vertLength = size * spriteSize;
         vertices = new float[vertLength];
+        tmp = new float[spriteSize * 4];
 
         this->shader = shader == NULL ? new Shader(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER) : shader;
 
@@ -98,64 +97,91 @@ namespace Fantasy {
         if(vertices != NULL) delete[] vertices;
     }
 
-    void SpriteBatch::draw(Tex2D *texture, float x, float y) {
-        draw(texture, x, y, x - texture->width / 2.0f, y - texture->height / 2.0f, texture->width, texture->height, 0.0f);
-    }
+    void SpriteBatch::draw(Tex2D *texture, float *vertices, size_t offset, size_t length) {
+        if(length % spriteSize != 0) throw std::runtime_error(std::string("Vertices size must be increment of ").append(std::to_string(spriteSize)).c_str());
 
-    void SpriteBatch::draw(Tex2D *texture, float x, float y, float rotation) {
-        draw(texture, x, y, x - texture->width / 2.0f, y - texture->height / 2.0f, texture->width, texture->height, rotation);
-    }
-
-    void SpriteBatch::draw(Tex2D *texture, float x, float y, float width, float height, float rotation) {
-        draw(texture, x, y, x - width / 2.0f, y - height / 2.0f, width, height, rotation);
-    }
-
-    void SpriteBatch::draw(Tex2D *texture, float x, float y, float originX, float originY, float width, float height, float rotation) {
+        int len = vertLength;
+        int remaining = len;
         if(this->texture != texture) {
             flush();
             this->texture = texture;
-        } else if(index >= vertLength) {
-            flush();
+        } else {
+            remaining -= index;
+            if(remaining == 0) {
+                flush();
+                remaining = len;
+            }
         }
 
-        mat4 trns = rotate(identity<mat4>(), rotation, vec3(0.0f, 0.0f, 1.0f));
-        vec2
-            pos1 = trns * vec4(originX - x, originY - y, 0.0f, 1.0f),
-            pos2 = trns * vec4(originX - x + width, originY - y, 0.0f, 1.0f),
-            pos3 = trns * vec4(originX - x + width, originY - y + height, 0.0f, 1.0f),
-            pos4 = trns * vec4(originX - x, originY - y + height, 0.0f, 1.0f);
+        size_t copyCount = fminf(remaining, length);
 
-        vertices[index++] = pos1.x + x;
-        vertices[index++] = pos1.y + y;
-        vertices[index++] = z;
-        vertices[index++] = colorBits;
-        vertices[index++] = tintBits;
-        vertices[index++] = 0.0f;
-        vertices[index++] = 1.0f;
+        SDL_memcpy(this->vertices + index, vertices + offset, copyCount * sizeof(float));
+        index += copyCount;
+        length -= copyCount;
+        while(length > 0) {
+            offset += copyCount;
+            flush();
 
-        vertices[index++] = pos2.x + x;
-        vertices[index++] = pos2.y + y;
-        vertices[index++] = z;
-        vertices[index++] = colorBits;
-        vertices[index++] = tintBits;
-        vertices[index++] = 1.0f;
-        vertices[index++] = 1.0f;
+            copyCount = fminf(len, length);
+            SDL_memcpy(this->vertices, vertices + offset, copyCount * sizeof(float));
+            index += copyCount;
+            length -= copyCount;
+        }
+    }
 
-        vertices[index++] = pos3.x + x;
-        vertices[index++] = pos3.y + y;
-        vertices[index++] = z;
-        vertices[index++] = colorBits;
-        vertices[index++] = tintBits;
-        vertices[index++] = 1.0f;
-        vertices[index++] = 0.0f;
+    void SpriteBatch::draw(const TexRegion &region, float x, float y) {
+        draw(region, x, y, x - region.width / 2.0f, y - region.height / 2.0f, region.width, region.height);
+    }
 
-        vertices[index++] = pos4.x + x;
-        vertices[index++] = pos4.y + y;
-        vertices[index++] = z;
-        vertices[index++] = colorBits;
-        vertices[index++] = tintBits;
-        vertices[index++] = 0.0f;
-        vertices[index++] = 0.0f;
+    void SpriteBatch::draw(const TexRegion &region, float x, float y, float rotation) {
+        draw(region, x, y, x - region.width / 2.0f, y - region.height / 2.0f, region.width, region.height, rotation);
+    }
+
+    void SpriteBatch::draw(const TexRegion &region, float x, float y, float width, float height, float rotation) {
+        draw(region, x, y, x - width / 2.0f, y - height / 2.0f, width, height, rotation);
+    }
+
+    void SpriteBatch::draw(const TexRegion &region, float x, float y, float originX, float originY, float width, float height, float rotation) {
+        glm::mat4 trns = glm::rotate(glm::identity<glm::mat4>(), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::vec2
+            pos1 = trns * glm::vec4(originX - x, originY - y, 0.0f, 1.0f),
+            pos2 = trns * glm::vec4(originX - x + width, originY - y, 0.0f, 1.0f),
+            pos3 = trns * glm::vec4(originX - x + width, originY - y + height, 0.0f, 1.0f),
+            pos4 = trns * glm::vec4(originX - x, originY - y + height, 0.0f, 1.0f);
+
+        tmp[0] = pos1.x + x;
+        tmp[1] = pos1.y + y;
+        tmp[2] = z;
+        tmp[3] = colorBits;
+        tmp[4] = tintBits;
+        tmp[5] = region.u;
+        tmp[6] = region.v;
+
+        tmp[7] = pos2.x + x;
+        tmp[8] = pos2.y + y;
+        tmp[9] = z;
+        tmp[10] = colorBits;
+        tmp[11] = tintBits;
+        tmp[12] = region.u2;
+        tmp[13] = region.v;
+
+        tmp[14] = pos3.x + x;
+        tmp[15] = pos3.y + y;
+        tmp[16] = z;
+        tmp[17] = colorBits;
+        tmp[18] = tintBits;
+        tmp[19] = region.u2;
+        tmp[20] = region.v2;
+
+        tmp[21] = pos4.x + x;
+        tmp[22] = pos4.y + y;
+        tmp[23] = z;
+        tmp[24] = colorBits;
+        tmp[25] = tintBits;
+        tmp[26] = region.u;
+        tmp[27] = region.v2;
+
+        draw(region.texture, tmp, 0, 28);
     }
 
     void SpriteBatch::col(Color color) {
@@ -178,7 +204,7 @@ namespace Fantasy {
         this->tintBits = abgr;
     }
 
-    void SpriteBatch::proj(mat4 projection) {
+    void SpriteBatch::proj(const glm::mat4 &projection) {
         this->projection = projection;
     }
 

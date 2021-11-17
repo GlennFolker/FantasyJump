@@ -5,9 +5,8 @@
 
 #include "mesh.h"
 #include "tex.h"
+#include "tex_atlas.h"
 #include "color.h"
-
-using namespace glm;
 
 namespace Fantasy {
     class SpriteBatch {
@@ -27,25 +26,28 @@ namespace Fantasy {
         Mesh *mesh;
         Shader *shader;
 
+        private:
         size_t vertLength;
         float *vertices;
-        mat4 projection;
+        float *tmp;
+        glm::mat4 projection;
 
         public:
         SpriteBatch();
         SpriteBatch(size_t, Shader *);
         ~SpriteBatch();
-
-        void draw(Tex2D *, float, float);
-        void draw(Tex2D *, float, float, float);
-        void draw(Tex2D *, float, float, float, float, float);
-        void draw(Tex2D *, float, float, float, float, float, float, float);
+        
+        void draw(Tex2D *, float *, size_t, size_t);
+        void draw(const TexRegion &, float, float);
+        void draw(const TexRegion &, float, float, float rotation = 0.0f);
+        void draw(const TexRegion &, float, float, float, float, float rotation = 0.0f);
+        void draw(const TexRegion &, float, float, float, float, float, float, float rotation = 0.0f);
         void col(Color);
         void col(float);
         void tint(Color);
         void tint(float);
 
-        void proj(mat4 projection);
+        void proj(const glm::mat4 &projection);
         void flush();
     };
 }

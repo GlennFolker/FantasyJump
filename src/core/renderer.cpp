@@ -60,6 +60,7 @@ namespace Fantasy {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+        atlas = new TexAtlas("assets/texture.atlas");
         batch = new SpriteBatch();
         buffer = new FrameBuffer(App::instance->getWidth(), App::instance->getHeight(), true, true);
         quad = new Mesh(4, 6, 2, new VertexAttr[2]{
@@ -83,6 +84,7 @@ namespace Fantasy {
     }
 
     Renderer::~Renderer() {
+        delete atlas;
         delete batch;
         delete buffer;
         delete quad;
@@ -90,7 +92,7 @@ namespace Fantasy {
     }
 
     void Renderer::update() {
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         buffer->begin();
@@ -104,7 +106,7 @@ namespace Fantasy {
 
         if(regist->valid(player)) {
             b2Vec2 pos = regist->get<RigidComp>(player).body->GetTransform().p;
-            App::instance->pos = vec2(pos.x, pos.y);
+            App::instance->pos = glm::vec2(pos.x, pos.y);
         }
 
         batch->proj(App::instance->proj);
@@ -144,17 +146,10 @@ namespace Fantasy {
         bloom->bind();
         glUniform1i(bloom->uniformLoc("u_texture"), buffer->texture->active(0));
         glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 2.5f, App::instance->getHeight() / 2.5f);
-        glUniform1i(bloom->uniformLoc("u_range"), 6);
+        glUniform1i(bloom->uniformLoc("u_range"), 7);
         glUniform1f(bloom->uniformLoc("u_threshold"), 0.3f);
-        glUniform1f(bloom->uniformLoc("u_suppress"), 1.6f);
+        glUniform1f(bloom->uniformLoc("u_suppress"), 1.3f);
 
         quad->render(bloom, GL_TRIANGLES, 0, quad->maxIndices);
-    }
-
-    Tex2D *Renderer::loadTex(const char *name) {
-        Tex2D *tex = new Tex2D(name);
-        tex->load();
-        tex->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
-        return tex;
     }
 }

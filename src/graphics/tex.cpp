@@ -54,7 +54,7 @@ namespace Fantasy {
         if(bind) this->bind();
         glTexImage2D(
             GL_TEXTURE_2D, 0,
-            GL_RGBA,
+            GL_RGBA8,
             width, height, 0,
             GL_RGBA,
             GL_UNSIGNED_BYTE, surface == NULL ? NULL : surface->pixels
@@ -66,7 +66,6 @@ namespace Fantasy {
         if(bind) this->bind();
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, s);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, t);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, r);
     }
 
     void Tex2D::setFilter(int min, int mag, bool bind) {

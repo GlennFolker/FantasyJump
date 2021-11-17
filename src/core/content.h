@@ -1,51 +1,68 @@
 #ifndef CONTENT_H
 #define CONTENT_H
 
+#include "../graphics/tex_atlas.h"
+
 #include <unordered_map>
 #include <vector>
 #include <functional>
-#include <entt/entity/registry.hpp>
 #include <stdexcept>
+#include <string>
+#include <entt/entity/registry.hpp>
 #include <box2d/box2d.h>
-
-#include "../graphics/tex.h"
 
 namespace Fantasy {
     enum class CType {
         ENTITY,
+        EFFECT,
         ALL
     };
 
     class Content {
         public:
-        const char *name;
+        std::string name;
 
         public:
-        Content(const char *);
+        Content(const Content &) = delete;
+        Content(Content &&) = delete;
+        Content(const std::string &);
     };
 
     class EntityType: public Content {
         public:
-        std::function<void(entt::registry &, b2World &, entt::entity)> initializer;
+        std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> initializer;
 
         public:
-        EntityType(const char *, std::function<void(entt::registry &, b2World &, entt::entity)> &&);
-        entt::entity create(entt::registry &, b2World &);
+        EntityType(const std::string &, const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &);
+        entt::entity create(entt::registry &, const TexAtlas &, b2World &);
+
+        static CType ctype();
+    };
+
+    class EffectType: public EntityType {
+        public:
+        float clipSize, lifetime;
+        std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> updater;
+
+        public:
+        EffectType(const std::string &, const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &);
+        EffectType(const std::string &,
+            const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &,
+            const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &
+        );
 
         static CType ctype();
     };
 
     class Contents {
         private:
-        std::vector<std::unordered_map<const char *, Content *> *> *contents;
+        std::vector<std::unordered_map<std::string, Content *> *> *contents;
 
         public:
         EntityType
             *jumper, *spike,
-            *bulletSmall, *bulletMed;
-        Tex2D
-            *jumpTexture, *spikeTexture,
-            *bulletSmallTexture, *bulletMedTexture;
+            *bulletSmall, *bulletMed,
+            *fx;
 
         public:
         Contents();
@@ -54,10 +71,11 @@ namespace Fantasy {
         template<
             typename T, typename... Args,
             typename std::enable_if<std::is_base_of<Content, T>::value>::type *_T = nullptr
-        > T *create(Args&&... args) {
+        > T *create(const Args&... args) {
             T *content = new T(args...);
+            if(content->name.empty()) throw std::runtime_error("Content name can't be empty.");
 
-            std::unordered_map<const char *, Content *> *map = getBy(T::ctype());
+            std::unordered_map<std::string, Content *> *map = getBy(T::ctype());
             if(map->count(content->name)) {
                 throw std::runtime_error(std::string("'").append(typeid(T).name()).append("' with name '").append(content->name).append("' already exists.").c_str());
             } else {
@@ -67,10 +85,19 @@ namespace Fantasy {
             return content;
         }
 
-        std::unordered_map<const char *, Content *> *getBy(CType);
+        template<typename T, typename std::enable_if<std::is_base_of<Content, T>::value>::type *_T = nullptr>
+        T *getByName(const std::string &name) {
+            if(name.empty()) throw std::runtime_error("Content name can't be empty.");
 
-        private:
-        Tex2D *loadTex(const char *);
+            std::unordered_map<std::string, Content *> *map = getBy(T::ctype());
+            if(!map->count(name)) {
+                throw std::runtime_error(std::string("'").append(typeid(T).name()).append("' with name '").append(name).append("' doesn't exist.").c_str());
+            } else {
+                return (T *)map->at(name);
+            }
+        }
+
+        std::unordered_map<std::string, Content *> *getBy(CType);
     };
 }
 

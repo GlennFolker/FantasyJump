@@ -8,6 +8,7 @@
 #include <SDL.h>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <entt/entity/observer.hpp>
 
 namespace Fantasy {
     const float GameController::worldWidth = 400.0f;
@@ -24,10 +25,6 @@ namespace Fantasy {
         world->SetContactFilter(this);
 
         content = new Contents();
-
-        borderTex = new Tex2D("assets/red-box.png");
-        borderTex->load();
-        borderTex->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
 
         restartTime = -1.0f;
         player = entt::entity();
@@ -53,15 +50,11 @@ namespace Fantasy {
             EntDeathEvent &ent = (EntDeathEvent &)e;
             if(ent.entity == player) restartTime = Time::time();
         });
-
-        resetGame();
     }
 
     GameController::~GameController() {
         removeEntities();
         delete removal;
-        delete borderTex;
-
         delete regist;
         delete world;
         delete content;
@@ -71,6 +64,7 @@ namespace Fantasy {
         removeEntities();
         regist->clear();
 
+        const TexAtlas &atlas = *App::instance->renderer->atlas;
         for(int i = -1; i <= 1; i += 2) {
             b2BodyDef bodyDef;
             bodyDef.type = b2_staticBody;
@@ -89,7 +83,7 @@ namespace Fantasy {
 
             entt::entity borderA = regist->create();
             regist->emplace<RigidComp>(borderA, borderA, bodyA);
-            regist->emplace<SpriteComp>(borderA, borderA, borderTex, worldWidth, borderThickness);
+            regist->emplace<SpriteComp>(borderA, borderA, atlas.get("red-box"), worldWidth, borderThickness);
             regist->emplace<HealthComp>(borderA, borderA, -1.0f, 10.0f);
 
             bodyDef.position.Set(i * worldWidth / 2.0f - borderThickness / 2.0f * i, 0.0f);
@@ -100,15 +94,15 @@ namespace Fantasy {
 
             entt::entity borderB = regist->create();
             regist->emplace<RigidComp>(borderB, borderB, bodyB);
-            regist->emplace<SpriteComp>(borderB, borderB, borderTex, borderThickness, worldHeight);
+            regist->emplace<SpriteComp>(borderB, borderB, atlas.get("red-box"), borderThickness, worldHeight);
             regist->emplace<HealthComp>(borderB, borderB, -1.0f, 10.0f);
         }
 
         restartTime = -1.0f;
-        player = content->jumper->create(*regist, *world);
+        player = content->jumper->create(*regist, atlas, *world);
 
         for(int c = 0; c < 500; c++) {
-            b2Body *body = regist->get<RigidComp>(content->spike->create(*regist, *world)).body;
+            b2Body *body = regist->get<RigidComp>(content->spike->create(*regist, atlas, *world)).body;
             do {
                 body->SetTransform(b2Vec2(
                     Mathf::random(-worldWidth + borderThickness, worldWidth - borderThickness) / 2.0f,
@@ -149,7 +143,7 @@ namespace Fantasy {
                 }
 
                 return false;
-                }());
+            }());
         }
     }
 
@@ -164,13 +158,17 @@ namespace Fantasy {
             if(regist->any_of<JumpComp>(e)) regist->get<JumpComp>(e).update();
             if(regist->any_of<HealthComp>(e)) regist->get<HealthComp>(e).update();
             if(regist->any_of<ShooterComp>(e)) regist->get<ShooterComp>(e).update();
+            if(regist->any_of<EffectComp>(e)) regist->get<EffectComp>(e).update();
             if(regist->any_of<TemporalComp>(e)) regist->get<TemporalComp>(e).update();
-            });
+        });
     }
 
     void GameController::BeginContact(b2Contact *contact) {
-        entt::entity a = (entt::entity)contact->GetFixtureA()->GetBody()->GetUserData().pointer;
-        entt::entity b = (entt::entity)contact->GetFixtureB()->GetBody()->GetUserData().pointer;
+        b2Fixture *fa = contact->GetFixtureA(), *fb = contact->GetFixtureB();
+        if(fa->IsSensor() || fb->IsSensor()) return;
+
+        entt::entity a = (entt::entity)fa->GetBody()->GetUserData().pointer;
+        entt::entity b = (entt::entity)fb->GetBody()->GetUserData().pointer;
         if(regist->valid(a) && regist->any_of<RigidComp>(a) && regist->valid(b) && regist->any_of<RigidComp>(b)) {
             RigidComp &first = regist->get<RigidComp>(a), &second = regist->get<RigidComp>(b);
             first.beginCollide(second);
@@ -179,8 +177,11 @@ namespace Fantasy {
     }
 
     void GameController::EndContact(b2Contact *contact) {
-        entt::entity a = (entt::entity)contact->GetFixtureA()->GetBody()->GetUserData().pointer;
-        entt::entity b = (entt::entity)contact->GetFixtureB()->GetBody()->GetUserData().pointer;
+        b2Fixture *fa = contact->GetFixtureA(), *fb = contact->GetFixtureB();
+        if(fa->IsSensor() || fb->IsSensor()) return;
+
+        entt::entity a = (entt::entity)fa->GetBody()->GetUserData().pointer;
+        entt::entity b = (entt::entity)fb->GetBody()->GetUserData().pointer;
         if(regist->valid(a) && regist->any_of<RigidComp>(a) && regist->valid(b) && regist->any_of<RigidComp>(b)) {
             RigidComp &first = regist->get<RigidComp>(a), &second = regist->get<RigidComp>(b);
             first.endCollide(second);

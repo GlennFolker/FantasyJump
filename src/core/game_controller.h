@@ -19,7 +19,6 @@ namespace Fantasy {
         static const float worldHeight;
         static const float borderThickness;
 
-        Tex2D *borderTex;
         Contents *content;
         b2World *world;
         entt::registry *regist;

@@ -1,7 +1,8 @@
+#include "frame_buffer.h"
+#include "../app.h"
+
 #include <stdexcept>
 #include <gl/glew.h>
-
-#include "frame_buffer.h"
 
 namespace Fantasy {
     FrameBuffer *FrameBuffer::last = NULL;
@@ -42,6 +43,7 @@ namespace Fantasy {
                 width, height
             );
 
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
             glFramebufferRenderbuffer(
                 GL_FRAMEBUFFER,
                 (depth && stencil) ? GL_DEPTH_STENCIL_ATTACHMENT :
