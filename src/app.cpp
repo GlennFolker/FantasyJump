@@ -92,15 +92,13 @@ namespace Fantasy {
         while(!exiting) {
             int rw = getWidth(), rh = getHeight();
             double w = rw / scl.x, h = rh / scl.y;
-            proj = glm::orthoLH_ZO(
+            proj = glm::ortho(
                 pos.x - w, pos.x + w,
-                pos.y - h, pos.y + h,
-                24.0, -24.0
+                pos.y - h, pos.y + h
             );
-            flipProj = glm::orthoLH_ZO(
+            flipProj = glm::ortho(
                 pos.x - w, pos.x + w,
-                pos.y + h, pos.y - h,
-                24.0, -24.0
+                pos.y + h, pos.y - h
             );
 
             while(SDL_PollEvent(&e) != 0) {
