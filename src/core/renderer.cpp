@@ -135,7 +135,7 @@ namespace Fantasy {
                     float za = regist->any_of<SpriteComp>(a) ? regist->get<SpriteComp>(a).z : regist->get<EffectComp>(a).z;
                     float zb = regist->any_of<SpriteComp>(b) ? regist->get<SpriteComp>(b).z : regist->get<EffectComp>(b).z;
                     if(Mathf::near(za, zb)) {
-                        return regist->current(a) < regist->current(b);
+                        return (int)a < (int)b;
                     } else {
                         return za < zb;
                     }
@@ -163,7 +163,7 @@ namespace Fantasy {
         glUniform1i(bloom->uniformLoc("u_texture"), buffer->texture->active(0));
         glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 1.4f, App::instance->getHeight() / 1.4f);
         glUniform1i(bloom->uniformLoc("u_range"), 7);
-        glUniform1f(bloom->uniformLoc("u_threshold"), 0.3f);
+        glUniform1f(bloom->uniformLoc("u_threshold"), 0.36f);
         glUniform1f(bloom->uniformLoc("u_suppress"), 1.3f);
 
         quad->render(bloom, GL_TRIANGLES, 0, quad->maxIndices);
