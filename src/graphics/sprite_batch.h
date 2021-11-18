@@ -10,9 +10,6 @@
 
 namespace Fantasy {
     class SpriteBatch {
-        public:
-        float z;
-
         protected:
         Tex2D *texture;
         Color color;

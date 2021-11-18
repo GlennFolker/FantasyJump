@@ -158,7 +158,6 @@ namespace Fantasy {
             if(regist->any_of<JumpComp>(e)) regist->get<JumpComp>(e).update();
             if(regist->any_of<HealthComp>(e)) regist->get<HealthComp>(e).update();
             if(regist->any_of<ShooterComp>(e)) regist->get<ShooterComp>(e).update();
-            if(regist->any_of<EffectComp>(e)) regist->get<EffectComp>(e).update();
             if(regist->any_of<TemporalComp>(e)) regist->get<TemporalComp>(e).update();
         });
     }

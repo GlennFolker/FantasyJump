@@ -117,9 +117,9 @@ namespace Fantasy {
             TemporalComp &life = registry.get<TemporalComp>(e);
 
             float s = 1.0f - powf(life.timef(), 3.0f);
-            App::instance->renderer->batch->z = 5.0f;
             App::instance->renderer->batch->draw(atlas.get("white"), comp.body->GetPosition().x, comp.body->GetPosition().y, s, s);
         });
+        fx->z = 5.0f;
     }
 
     Contents::~Contents() {
@@ -170,7 +170,7 @@ namespace Fantasy {
 
             registry.emplace<RigidComp>(e, e, body);
             registry.emplace<TemporalComp>(e, e, TemporalComp::TIME).time = lifetime;
-            registry.emplace<EffectComp>(e, e);
+            registry.emplace<EffectComp>(e, e).z = z;
         }, updater
     ) {}
     EffectType::EffectType(const std::string &name,
@@ -180,6 +180,7 @@ namespace Fantasy {
         this->updater = updater;
         clipSize = 1.0f;
         lifetime = 1.0f;
+        z = 1.0f;
     }
 
     CType EffectType::ctype() {

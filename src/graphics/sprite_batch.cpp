@@ -9,7 +9,7 @@
 constexpr const char *DEFAULT_VERTEX_SHADER = R"(
 #version 150 core
 
-in vec3 a_position;
+in vec2 a_position;
 in vec2 a_tex_coords_0;
 in vec4 a_color;
 in vec4 a_tint;
@@ -21,7 +21,7 @@ out vec4 v_tint;
 uniform mat4 u_proj;
 
 void main() {
-    gl_Position = u_proj * vec4(a_position, 1.0);
+    gl_Position = u_proj * vec4(a_position, 1.0, 1.0);
     v_tex_coords = a_tex_coords_0;
     v_color = a_color;
     v_tint = a_tint;
@@ -39,8 +39,8 @@ in vec4 v_tint;
 uniform sampler2D u_texture;
 
 void main() {
-    vec4 base = texture(u_texture, v_tex_coords);
-    gl_FragColor = v_color * vec4(mix(base, vec4(v_tint.rgb, base.a), v_tint.a).rgb, base.a);
+    vec4 base = texture2D(u_texture, v_tex_coords);
+    gl_FragColor = v_color * mix(base, vec4(v_tint.rgb, base.a), v_tint.a);
 })";
 
 namespace Fantasy {
@@ -48,7 +48,6 @@ namespace Fantasy {
     SpriteBatch::SpriteBatch(size_t size, Shader *shader) {
         if(size > 8191) throw std::runtime_error("Max vertices is 8191");
 
-        z = 1.0f;
         color = Color::white;
         colorBits = color.fabgr();
         tinted = Color();
@@ -59,14 +58,14 @@ namespace Fantasy {
 
         size_t indicesCount = size * 6;
         mesh = new Mesh(size * 4, indicesCount, 4, new VertexAttr[4]{
-            VertexAttr::position,
+            VertexAttr::position2D,
             VertexAttr::color,
             VertexAttr::tint,
             VertexAttr::texCoords
         });
 
         spriteSize = 4 * ( // Vertex size.
-            3 + // Position.
+            2 + // Position.
             1 + // Base color.
             1 + // Tint color.
             2   // Texture coordinates.
@@ -151,37 +150,33 @@ namespace Fantasy {
 
         tmp[0] = pos1.x + x;
         tmp[1] = pos1.y + y;
-        tmp[2] = z;
-        tmp[3] = colorBits;
-        tmp[4] = tintBits;
-        tmp[5] = region.u;
-        tmp[6] = region.v;
+        tmp[2] = colorBits;
+        tmp[3] = tintBits;
+        tmp[4] = region.u;
+        tmp[5] = region.v;
 
-        tmp[7] = pos2.x + x;
-        tmp[8] = pos2.y + y;
-        tmp[9] = z;
-        tmp[10] = colorBits;
-        tmp[11] = tintBits;
-        tmp[12] = region.u2;
-        tmp[13] = region.v;
+        tmp[6] = pos2.x + x;
+        tmp[7] = pos2.y + y;
+        tmp[8] = colorBits;
+        tmp[9] = tintBits;
+        tmp[10] = region.u2;
+        tmp[11] = region.v;
 
-        tmp[14] = pos3.x + x;
-        tmp[15] = pos3.y + y;
-        tmp[16] = z;
-        tmp[17] = colorBits;
-        tmp[18] = tintBits;
-        tmp[19] = region.u2;
-        tmp[20] = region.v2;
+        tmp[12] = pos3.x + x;
+        tmp[13] = pos3.y + y;
+        tmp[14] = colorBits;
+        tmp[15] = tintBits;
+        tmp[16] = region.u2;
+        tmp[17] = region.v2;
 
-        tmp[21] = pos4.x + x;
-        tmp[22] = pos4.y + y;
-        tmp[23] = z;
-        tmp[24] = colorBits;
-        tmp[25] = tintBits;
-        tmp[26] = region.u;
-        tmp[27] = region.v2;
+        tmp[18] = pos4.x + x;
+        tmp[19] = pos4.y + y;
+        tmp[20] = colorBits;
+        tmp[21] = tintBits;
+        tmp[22] = region.u;
+        tmp[23] = region.v2;
 
-        draw(region.texture, tmp, 0, 28);
+        draw(region.texture, tmp, 0, 24);
     }
 
     void SpriteBatch::col(Color color) {
@@ -212,7 +207,7 @@ namespace Fantasy {
         if(index == 0 || texture == NULL) return;
 
         shader->bind();
-        glUniformMatrix4fv(shader->uniformLoc("u_proj"), 1, false, value_ptr(projection));
+        glUniformMatrix4fv(shader->uniformLoc("u_proj"), 1, false, glm::value_ptr(projection));
         glUniform1i(shader->uniformLoc("u_texture"), texture->active(0));
         
         mesh->setVertices(vertices, 0, index);

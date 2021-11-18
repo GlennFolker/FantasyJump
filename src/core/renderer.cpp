@@ -1,12 +1,13 @@
-#include <glm/gtx/vector_angle.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <SDL.h>
-#include <gl/glew.h>
-
 #include "renderer.h"
 #include "entity.h"
 #include "time.h"
 #include "../app.h"
+#include "../util/mathf.h"
+
+#include <glm/gtx/vector_angle.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+#include <SDL.h>
+#include <gl/glew.h>
 
 constexpr const char *BLOOM_VERTEX_SHADER = R"(
 #version 150 core
@@ -53,16 +54,12 @@ void main() {
 
 namespace Fantasy {
     Renderer::Renderer() {
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(true);
-        glDepthFunc(GL_LEQUAL);
-
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         atlas = new TexAtlas("assets/texture.atlas");
         batch = new SpriteBatch();
-        buffer = new FrameBuffer(App::instance->getWidth(), App::instance->getHeight(), true, true);
+        buffer = new FrameBuffer(App::instance->getWidth(), App::instance->getHeight());
         quad = new Mesh(4, 6, 2, new VertexAttr[2]{
             VertexAttr::position2D,
             VertexAttr::texCoords
@@ -93,11 +90,11 @@ namespace Fantasy {
 
     void Renderer::update() {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         buffer->begin();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         float time = Time::time();
         b2World *world = App::instance->control->world;
@@ -116,6 +113,7 @@ namespace Fantasy {
         class Callback: public b2QueryCallback {
             public:
             entt::registry *regist;
+            std::vector<entt::entity> entities;
 
             public:
             Callback(entt::registry *regist) {
@@ -127,9 +125,26 @@ namespace Fantasy {
                 if(regist == NULL) return false;
 
                 entt::entity e = (entt::entity)fixture->GetBody()->GetUserData().pointer;
-                if(regist->valid(e) && regist->any_of<SpriteComp>(e)) regist->get<SpriteComp>(e).update();
+                if(regist->valid(e) && regist->any_of<SpriteComp, EffectComp>(e)) entities.push_back(e);
 
                 return true;
+            }
+
+            void render() {
+                std::sort(entities.begin(), entities.end(), [this](const entt::entity &a, const entt::entity &b) {
+                    float za = regist->any_of<SpriteComp>(a) ? regist->get<SpriteComp>(a).z : regist->get<EffectComp>(a).z;
+                    float zb = regist->any_of<SpriteComp>(b) ? regist->get<SpriteComp>(b).z : regist->get<EffectComp>(b).z;
+                    if(Mathf::near(za, zb)) {
+                        return regist->version(a) < regist->version(b);
+                    } else {
+                        return za < zb;
+                    }
+                });
+
+                for(const entt::entity &e : entities) {
+                    if(regist->any_of<SpriteComp>(e)) regist->get<SpriteComp>(e).update();
+                    if(regist->any_of<EffectComp>(e)) regist->get<EffectComp>(e).update();
+                }
             }
         } callback(regist);
 
@@ -139,6 +154,7 @@ namespace Fantasy {
         bound.upperBound = b2Vec2(x + w, y + h);
 
         world->QueryAABB(&callback, bound);
+        callback.render();
 
         batch->flush();
         buffer->end();

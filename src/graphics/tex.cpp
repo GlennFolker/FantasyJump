@@ -51,15 +51,22 @@ namespace Fantasy {
             height = surface->h;
         }
 
+        SDL_Surface *substitute = NULL;
+        if(surface != NULL && surface->format->format != SDL_PIXELFORMAT_ABGR8888) {
+            substitute = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ABGR8888, 0);
+        }
+        
         if(bind) this->bind();
         glTexImage2D(
             GL_TEXTURE_2D, 0,
             GL_RGBA8,
             width, height, 0,
             GL_RGBA,
-            GL_UNSIGNED_BYTE, surface == NULL ? NULL : surface->pixels
+            GL_UNSIGNED_BYTE, substitute != NULL ? substitute->pixels : surface != NULL ? surface->pixels : NULL
         );
+        
         glGenerateMipmap(GL_TEXTURE_2D);
+        if(substitute != NULL) SDL_FreeSurface(substitute);
     }
 
     void Tex2D::setWrap(int s, int t, int r, bool bind) {

@@ -146,6 +146,7 @@ namespace Fantasy {
 
     class EffectComp: public Component {
         public:
+        float z;
         std::string effect;
 
         public:

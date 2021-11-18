@@ -17,10 +17,7 @@ namespace Fantasy {
 
     App::App(int argc, char *argv[], AppConfig config) {
         if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) throw std::runtime_error(std::string("Couldn't initialize SDL: ").append(SDL_GetError()).c_str());
-
-        SDL_version version;
-        SDL_GetVersion(&version);
-        SDL_Log("Initialized SDL v%d.%d.%d", version.major, version.minor, version.patch);
+        SDL_Log("Initialized SDL v%d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
         
         int flags = SDL_WINDOW_OPENGL;
         if(config.visible) flags |= SDL_WINDOW_SHOWN;
@@ -29,17 +26,17 @@ namespace Fantasy {
 
         int imgFlags = IMG_INIT_PNG;
         if((IMG_Init(imgFlags) & ~imgFlags) != 0) throw std::runtime_error(std::string("Couldn't initialize SDL_image: ").append(IMG_GetError()).c_str());
+        SDL_Log("Initialized SDL-image v%d.%d.%d", SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION, SDL_IMAGE_PATCHLEVEL);
         
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 0);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
         window = SDL_CreateWindow("Fantasy", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, config.width, config.height, flags);
@@ -60,7 +57,7 @@ namespace Fantasy {
 
         GLenum error = GL_NO_ERROR;
         glewExperimental = GL_TRUE;
-        if((error = glewInit()) != GL_NO_ERROR) throw std::runtime_error(std::string("Couldn't initialize GLEW").append((const char *)glewGetErrorString(error)).c_str());
+        if((error = glewInit()) != GL_NO_ERROR) throw std::runtime_error(std::string("Couldn't initialize GLEW: ").append((const char *)glewGetErrorString(error)).c_str());
         
         if(SDL_GL_SetSwapInterval(1) != 0) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "VSync disabled.");
 

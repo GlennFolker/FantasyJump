@@ -96,7 +96,6 @@ namespace Fantasy {
             batch->tint(Color(0.8f, 0.0f, 0.1f, alpha));
         }
 
-        batch->z = z;
         batch->draw(region, trns.p.x, trns.p.y, width, height, trns.q.GetAngle());
         batch->tint(Color());
     }
@@ -304,6 +303,7 @@ namespace Fantasy {
     EffectComp::EffectComp(entt::entity e): EffectComp(e, "") {}
     EffectComp::EffectComp(entt::entity e, const std::string &effect): Component(e) {
         this->effect = effect;
+        z = 0.0f;
     }
 
     void EffectComp::update() {

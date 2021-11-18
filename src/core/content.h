@@ -41,7 +41,7 @@ namespace Fantasy {
 
     class EffectType: public EntityType {
         public:
-        float clipSize, lifetime;
+        float clipSize, lifetime, z;
         std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> updater;
 
         public:
@@ -61,7 +61,8 @@ namespace Fantasy {
         public:
         EntityType
             *jumper, *spike,
-            *bulletSmall, *bulletMed,
+            *bulletSmall, *bulletMed;
+        EffectType
             *fx;
 
         public:
