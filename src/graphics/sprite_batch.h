@@ -35,7 +35,6 @@ namespace Fantasy {
         ~SpriteBatch();
         
         void draw(Tex2D *, float *, size_t, size_t);
-        void draw(const TexRegion &, float, float);
         void draw(const TexRegion &, float, float, float rotation = 0.0f);
         void draw(const TexRegion &, float, float, float, float, float rotation = 0.0f);
         void draw(const TexRegion &, float, float, float, float, float, float, float rotation = 0.0f);

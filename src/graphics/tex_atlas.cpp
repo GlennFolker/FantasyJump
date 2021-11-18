@@ -1,8 +1,8 @@
-#include "tex_atlas.h"
-
 #include <string>
 #include <stdexcept>
 #include <fstream>
+
+#include "tex_atlas.h"
 
 namespace Fantasy {
     TexRegion::TexRegion(): TexRegion(NULL, 0, 0, 1, 1) {}

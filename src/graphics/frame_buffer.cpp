@@ -1,8 +1,8 @@
-#include "frame_buffer.h"
-#include "../app.h"
-
 #include <stdexcept>
 #include <gl/glew.h>
+
+#include "frame_buffer.h"
+#include "../app.h"
 
 namespace Fantasy {
     FrameBuffer *FrameBuffer::last = NULL;

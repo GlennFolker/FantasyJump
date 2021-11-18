@@ -13,6 +13,7 @@ namespace Fantasy {
         private:
         std::unordered_set<entt::entity> *removal;
         float restartTime;
+        bool resetting;
         
         public:
         static const float worldWidth;
@@ -30,6 +31,7 @@ namespace Fantasy {
         void update() override;
         void scheduleRemoval(entt::entity);
         void resetGame();
+        bool isResetting();
 
         void BeginContact(b2Contact *) override;
         void EndContact(b2Contact *) override;

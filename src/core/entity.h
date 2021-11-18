@@ -1,12 +1,12 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "team.h"
-#include "../graphics/tex_atlas.h"
-
 #include <box2d/box2d.h>
 #include <entt/entity/registry.hpp>
 #include <functional>
+
+#include "team.h"
+#include "../graphics/tex_atlas.h"
 
 namespace Fantasy {
     class Component {
@@ -19,11 +19,8 @@ namespace Fantasy {
         virtual void update();
         void remove();
         void applyFx(const std::string &);
-        static entt::entity createFx(const std::string &);
-
+        entt::entity createFx(const std::string &, bool follow = false);
         entt::entity getRef();
-        static entt::registry &getRegistry();
-        static b2World &getWorld();
     };
 
     class RigidComp: public Component {
@@ -107,7 +104,7 @@ namespace Fantasy {
 
     class ShooterComp: public Component {
         public:
-        std::string bullet;
+        std::string bullet, shootFx;
         float rate, impulse, range;
 
         private:

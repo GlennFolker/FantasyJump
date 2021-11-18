@@ -7,6 +7,11 @@ namespace Fantasy {
         static const Color white;
         static const Color gray;
         static const Color red;
+        static const Color lred;
+        static const Color orange;
+        static const Color lorange;
+        static const Color yellow;
+        static const Color lyellow;
         static const Color green;
         static const Color blue;
 
@@ -20,10 +25,11 @@ namespace Fantasy {
         Color(float, float, float);
         Color(float, float, float, float);
 
-        unsigned int abgr();
+        unsigned int abgr() const;
         Color &fromAbgr(unsigned int);
-        float fabgr();
+        float fabgr() const;
         Color &fromFagbr(float);
+        Color &lerp(const Color &, float);
     };
 }
 

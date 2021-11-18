@@ -128,10 +128,6 @@ namespace Fantasy {
         }
     }
 
-    void SpriteBatch::draw(const TexRegion &region, float x, float y) {
-        draw(region, x, y, x - region.width / 2.0f, y - region.height / 2.0f, region.width, region.height);
-    }
-
     void SpriteBatch::draw(const TexRegion &region, float x, float y, float rotation) {
         draw(region, x, y, x - region.width / 2.0f, y - region.height / 2.0f, region.width, region.height, rotation);
     }

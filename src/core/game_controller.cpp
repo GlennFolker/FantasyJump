@@ -1,14 +1,14 @@
+#include <SDL.h>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <entt/entity/observer.hpp>
+
 #include "game_controller.h"
 #include "entity.h"
 #include "events.h"
 #include "time.h"
 #include "../app.h"
 #include "../util/mathf.h"
-
-#include <SDL.h>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <entt/entity/observer.hpp>
 
 namespace Fantasy {
     const float GameController::worldWidth = 400.0f;
@@ -19,6 +19,7 @@ namespace Fantasy {
         regist = new entt::registry();
         regist->on_destroy<RigidComp>().connect<&RigidComp::onDestroy>();
         removal = new std::unordered_set<entt::entity>();
+        resetting = false;
 
         world = new b2World(b2Vec2(0.0f, -9.81f));
         world->SetContactListener(this);
@@ -61,10 +62,11 @@ namespace Fantasy {
     }
 
     void GameController::resetGame() {
-        removeEntities();
+        resetting = true;
+        regist->each([this](const entt::entity e) { regist->destroy(e); });
         regist->clear();
+        removal->clear();
 
-        const TexAtlas &atlas = *App::instance->renderer->atlas;
         for(int i = -1; i <= 1; i += 2) {
             b2BodyDef bodyDef;
             bodyDef.type = b2_staticBody;
@@ -83,7 +85,7 @@ namespace Fantasy {
 
             entt::entity borderA = regist->create();
             regist->emplace<RigidComp>(borderA, borderA, bodyA);
-            regist->emplace<SpriteComp>(borderA, borderA, atlas.get("red-box"), worldWidth, borderThickness);
+            regist->emplace<SpriteComp>(borderA, borderA, App::iatlas().get("red-box"), worldWidth, borderThickness);
             regist->emplace<HealthComp>(borderA, borderA, -1.0f, 10.0f);
 
             bodyDef.position.Set(i * worldWidth / 2.0f - borderThickness / 2.0f * i, 0.0f);
@@ -94,15 +96,15 @@ namespace Fantasy {
 
             entt::entity borderB = regist->create();
             regist->emplace<RigidComp>(borderB, borderB, bodyB);
-            regist->emplace<SpriteComp>(borderB, borderB, atlas.get("red-box"), borderThickness, worldHeight);
+            regist->emplace<SpriteComp>(borderB, borderB, App::iatlas().get("red-box"), borderThickness, worldHeight);
             regist->emplace<HealthComp>(borderB, borderB, -1.0f, 10.0f);
         }
 
         restartTime = -1.0f;
-        player = content->jumper->create(*regist, atlas, *world);
+        player = content->jumper->create(*regist, App::iatlas(), *world);
 
         for(int c = 0; c < 500; c++) {
-            b2Body *body = regist->get<RigidComp>(content->spike->create(*regist, atlas, *world)).body;
+            b2Body *body = regist->get<RigidComp>(content->spike->create(*regist, App::iatlas(), *world)).body;
             do {
                 body->SetTransform(b2Vec2(
                     Mathf::random(-worldWidth + borderThickness, worldWidth - borderThickness) / 2.0f,
@@ -145,6 +147,8 @@ namespace Fantasy {
                 return false;
             }());
         }
+
+        resetting = false;
     }
 
     void GameController::update() {
@@ -206,5 +210,9 @@ namespace Fantasy {
     void GameController::removeEntities() {
         for(entt::entity e : *removal) regist->destroy(e);
         removal->clear();
+    }
+
+    bool GameController::isResetting() {
+        return resetting;
     }
 }

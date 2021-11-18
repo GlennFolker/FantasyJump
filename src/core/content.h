@@ -1,8 +1,6 @@
 #ifndef CONTENT_H
 #define CONTENT_H
 
-#include "../graphics/tex_atlas.h"
-
 #include <unordered_map>
 #include <vector>
 #include <functional>
@@ -10,6 +8,8 @@
 #include <string>
 #include <entt/entity/registry.hpp>
 #include <box2d/box2d.h>
+
+#include "../graphics/tex_atlas.h"
 
 namespace Fantasy {
     enum class CType {
@@ -63,7 +63,8 @@ namespace Fantasy {
             *jumper, *spike,
             *bulletSmall, *bulletMed;
         EffectType
-            *fx;
+            *smokeSmall, *smokeBig,
+            *destructSmall, *destructMed, *destructBig;
 
         public:
         Contents();

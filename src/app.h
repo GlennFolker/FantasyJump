@@ -56,6 +56,14 @@ namespace Fantasy {
         int getMouseY();
         float getAspect();
         void unproject(double, double, double *, double *);
+
+        static inline GameController &icontrol() { return *instance->control; }
+        static inline Contents &icontent() { return *instance->control->content; }
+        static inline entt::registry &iregistry() { return *instance->control->regist; }
+        static inline b2World &iworld() { return *instance->control->world; }
+        static inline Renderer &irenderer() { return *instance->renderer; }
+        static inline TexAtlas &iatlas() { return *instance->renderer->atlas; }
+        static inline SpriteBatch &ibatch() { return *instance->renderer->batch; }
     };
 }
 

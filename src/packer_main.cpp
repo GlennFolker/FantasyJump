@@ -1,5 +1,3 @@
-#include "util/pngio.h"
-
 #include <filesystem>
 #include <fstream>
 #include <cstdio>
@@ -8,6 +6,8 @@
 #include <cstring>
 #include <vector>
 #include <unordered_map>
+
+#include "util/pngio.h"
 
 namespace fs = std::filesystem;
 using namespace Fantasy;

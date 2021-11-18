@@ -21,7 +21,6 @@ add_executable(Fantasy
     "src/graphics/frame_buffer.cpp"
     "src/graphics/tex.cpp"
     "src/graphics/tex_atlas.cpp"
-    "src/util/mathf.cpp"
 )
 
 add_executable(Packer

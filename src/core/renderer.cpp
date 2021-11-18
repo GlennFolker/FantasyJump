@@ -1,13 +1,13 @@
+#include <glm/gtx/vector_angle.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+#include <SDL.h>
+#include <gl/glew.h>
+
 #include "renderer.h"
 #include "entity.h"
 #include "time.h"
 #include "../app.h"
 #include "../util/mathf.h"
-
-#include <glm/gtx/vector_angle.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <SDL.h>
-#include <gl/glew.h>
 
 constexpr const char *BLOOM_VERTEX_SHADER = R"(
 #version 150 core
@@ -135,7 +135,7 @@ namespace Fantasy {
                     float za = regist->any_of<SpriteComp>(a) ? regist->get<SpriteComp>(a).z : regist->get<EffectComp>(a).z;
                     float zb = regist->any_of<SpriteComp>(b) ? regist->get<SpriteComp>(b).z : regist->get<EffectComp>(b).z;
                     if(Mathf::near(za, zb)) {
-                        return regist->version(a) < regist->version(b);
+                        return regist->current(a) < regist->current(b);
                     } else {
                         return za < zb;
                     }
@@ -161,7 +161,7 @@ namespace Fantasy {
 
         bloom->bind();
         glUniform1i(bloom->uniformLoc("u_texture"), buffer->texture->active(0));
-        glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 2.5f, App::instance->getHeight() / 2.5f);
+        glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 1.4f, App::instance->getHeight() / 1.4f);
         glUniform1i(bloom->uniformLoc("u_range"), 7);
         glUniform1f(bloom->uniformLoc("u_threshold"), 0.3f);
         glUniform1f(bloom->uniformLoc("u_suppress"), 1.3f);

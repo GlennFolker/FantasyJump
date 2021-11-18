@@ -1,12 +1,12 @@
 #ifndef TEX_ATLAS_H
 #define TEX_ATLAS_H
 
-#include "tex.h"
-
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+
+#include "tex.h"
 
 namespace Fantasy {
     struct TexRegion {

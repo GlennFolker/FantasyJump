@@ -1,30 +1,34 @@
+#include <glm/gtx/vector_angle.hpp>
+
 #include "entity.h"
 #include "events.h"
 #include "time.h"
 #include "../app.h"
 #include "../util/mathf.h"
 
-#include <glm/gtx/vector_angle.hpp>
-
 namespace Fantasy {
-    Component::Component(entt::entity e) {
-        ref = e;
-    }
+    Component::Component(entt::entity e) { ref = e; }
 
     void Component::update() {}
-    void Component::remove() { App::instance->control->scheduleRemoval(ref); }
+    void Component::remove() { App::icontrol().scheduleRemoval(ref); }
     entt::entity Component::getRef() { return ref; }
-    entt::registry &Component::getRegistry() { return *App::instance->control->regist; }
-    b2World &Component::getWorld() { return *App::instance->control->world; }
 
     void Component::applyFx(const std::string &effect) {
-        App::instance->control->content->getByName<EffectType>(effect)->updater(getRegistry(), *App::instance->renderer->atlas, getWorld(), ref);
+        App::icontent().getByName<EffectType>(effect)->updater(App::iregistry(), App::iatlas(), App::iworld(), ref);
     }
 
-    entt::entity Component::createFx(const std::string &effect) {
-        entt::registry &regist = getRegistry();
-        entt::entity fx = App::instance->control->content->getByName<EffectType>(effect)->create(regist, *App::instance->renderer->atlas, getWorld());
-        regist.get<EffectComp>(fx).effect = effect;
+    entt::entity Component::createFx(const std::string &effect, bool follow) {
+        entt::registry &registry = App::iregistry();
+        entt::entity fx = App::icontent().getByName<EffectType>(effect)->create(registry, App::iatlas(), App::iworld());
+
+        EffectComp &comp = registry.get<EffectComp>(fx);
+        if(registry.any_of<RigidComp>(ref)) {
+            RigidComp &other = registry.get<RigidComp>(fx);
+            RigidComp &self = registry.get<RigidComp>(ref);
+
+            other.body->SetTransform(self.body->GetPosition(), 0.0f);
+            if(follow) other.body->SetLinearVelocity(self.body->GetLinearVelocity());
+        }
 
         return fx;
     }
@@ -39,14 +43,14 @@ namespace Fantasy {
     void RigidComp::update() {
         if(!spawned) {
             spawned = true;
-            if(!spawnFx.empty()) getRegistry().get<RigidComp>(createFx(spawnFx)).body->SetTransform(body->GetPosition(), 0.0f);
+            if(!spawnFx.empty()) createFx(spawnFx);
         }
 
         if(!Mathf::near(rotateSpeed, 0.0f)) body->SetTransform(body->GetPosition(), body->GetAngle() + rotateSpeed);
     }
 
     void RigidComp::beginCollide(RigidComp &other) {
-        entt::registry &registry = getRegistry();
+        entt::registry &registry = App::iregistry();
         if(registry.any_of<HealthComp>(ref) && registry.any_of<HealthComp>(other.ref)) {
             HealthComp &self = registry.get<HealthComp>(ref);
             HealthComp &otherh = registry.get<HealthComp>(other.ref);
@@ -61,7 +65,7 @@ namespace Fantasy {
     void RigidComp::endCollide(RigidComp &other) {}
 
     bool RigidComp::shouldCollide(RigidComp &other) {
-        entt::registry &regist = getRegistry();
+        entt::registry &regist = App::iregistry();
         if(!regist.any_of<TeamComp>(ref) || !regist.any_of<TeamComp>(other.ref)) {
             return true;
         } else {
@@ -71,9 +75,9 @@ namespace Fantasy {
 
     void RigidComp::onDestroy(entt::registry &registry, entt::entity entity) {
         RigidComp &comp = registry.get<RigidComp>(entity);
-        if(!comp.deathFx.empty()) registry.get<RigidComp>(createFx(comp.deathFx)).body->SetTransform(comp.body->GetPosition(), 0.0f);
+        if(!App::icontrol().isResetting() && !comp.deathFx.empty()) comp.createFx(comp.deathFx);
 
-        comp.getWorld().DestroyBody(comp.body);
+        App::iworld().DestroyBody(comp.body);
     }
 
     SpriteComp::SpriteComp(entt::entity e, const TexRegion &region): SpriteComp(e, region, 1.0f, 1.0f) {}
@@ -87,17 +91,16 @@ namespace Fantasy {
     }
 
     void SpriteComp::update() {
-        entt::registry &registry = getRegistry();
+        entt::registry &registry = App::iregistry();
         b2Transform trns = registry.get<RigidComp>(ref).body->GetTransform();
-        SpriteBatch *batch = App::instance->renderer->batch;
 
         if(registry.any_of<HealthComp>(ref)) {
             float alpha = fmaxf(1.0f - (Time::time() - registry.get<HealthComp>(ref).hitTime) / 0.5f, 0.0f);
-            batch->tint(Color(0.8f, 0.0f, 0.1f, alpha));
+            App::ibatch().tint(Color(0.8f, 0.0f, 0.1f, alpha));
         }
 
-        batch->draw(region, trns.p.x, trns.p.y, width, height, trns.q.GetAngle());
-        batch->tint(Color());
+        App::ibatch().draw(region, trns.p.x, trns.p.y, width, height, trns.q.GetAngle());
+        App::ibatch().tint(Color());
     }
 
     JumpComp::JumpComp(entt::entity e, float force, float timeout): Component(e) {
@@ -121,7 +124,7 @@ namespace Fantasy {
     }
 
     void JumpComp::update() {
-        b2Body *body = getRegistry().get<RigidComp>(ref).body;
+        b2Body *body = App::iregistry().get<RigidComp>(ref).body;
         float now = Time::time();
 
         if(holding) {
@@ -200,8 +203,8 @@ namespace Fantasy {
     }
 
     void ShooterComp::update() {
-        entt::registry &regist = getRegistry();
-        b2World &world = getWorld();
+        entt::registry &regist = App::iregistry();
+        b2World &world = App::iworld();
         b2Body *body = regist.get<RigidComp>(ref).body;
 
         if((Time::time() - time) >= rate) {
@@ -227,7 +230,7 @@ namespace Fantasy {
                     b2Body *body = fixture->GetBody();
 
                     entt::entity e = (entt::entity)body->GetUserData().pointer;
-                    entt::registry &regist = getRegistry();
+                    entt::registry &regist = App::iregistry();
                     if(
                         !regist.valid(e) ||
                         (!regist.any_of<TeamComp>(e) || regist.get<TeamComp>(e).team == team) ||
@@ -255,7 +258,8 @@ namespace Fantasy {
 
             b2Body *target = report.get();
             if(target != NULL) {
-                entt::entity bullet = App::instance->control->content->getByName<EntityType>(this->bullet)->create(regist, *App::instance->renderer->atlas, world);
+                if(!shootFx.empty()) createFx(shootFx, true);
+                entt::entity bullet = App::icontent().getByName<EntityType>(this->bullet)->create(regist, App::iatlas(), world);
 
                 regist.get<TeamComp>(bullet).team = regist.get<TeamComp>(ref).team;
                 regist.get<TemporalComp>(bullet).range = range * 3.0f;
@@ -282,7 +286,7 @@ namespace Fantasy {
     }
 
     void TemporalComp::update() {
-        entt::registry &regist = getRegistry();
+        entt::registry &regist = App::iregistry();
         bool timed = (flags & TIME) == TIME;
         bool ranged = (flags & RANGE) == RANGE;
 
@@ -297,8 +301,8 @@ namespace Fantasy {
         }
     }
 
-    float TemporalComp::rangef() { return travelled / range; }
-    float TemporalComp::timef() { return (Time::time() - initTime) / time; }
+    float TemporalComp::rangef() { return Mathf::clamp(travelled / range); }
+    float TemporalComp::timef() { return Mathf::clamp((Time::time() - initTime) / time); }
 
     EffectComp::EffectComp(entt::entity e): EffectComp(e, "") {}
     EffectComp::EffectComp(entt::entity e, const std::string &effect): Component(e) {
