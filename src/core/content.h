@@ -14,6 +14,7 @@
 namespace Fantasy {
     enum class CType {
         ENTITY,
+        DRAW,
         EFFECT,
         ALL
     };
@@ -30,11 +31,21 @@ namespace Fantasy {
 
     class EntityType: public Content {
         public:
-        std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> initializer;
+        std::function<void(entt::entity)> initializer;
 
         public:
-        EntityType(const std::string &, const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &);
-        entt::entity create(entt::registry &, const TexAtlas &, b2World &);
+        EntityType(const std::string &, const std::function<void(entt::entity)> &);
+        entt::entity create();
+
+        static CType ctype();
+    };
+
+    class DrawType: public Content {
+        public:
+        std::function<void(entt::entity)> drawer;
+
+        public:
+        DrawType(const std::string &, const std::function<void(entt::entity)> &);
 
         static CType ctype();
     };
@@ -42,14 +53,13 @@ namespace Fantasy {
     class EffectType: public EntityType {
         public:
         float clipSize, lifetime, z;
-        std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> updater;
+        std::string drawer;
 
         public:
-        EffectType(const std::string &, const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &);
-        EffectType(const std::string &,
-            const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &,
-            const std::function<void(entt::registry &, const TexAtlas &, b2World &, entt::entity)> &
-        );
+        EffectType(const std::string &, const std::string &);
+        EffectType(const std::string &, DrawType *);
+        EffectType(const std::string &, const std::function<void(entt::entity)> &, const std::string &);
+        EffectType(const std::string &, const std::function<void(entt::entity)> &, DrawType *);
 
         static CType ctype();
     };
@@ -59,9 +69,13 @@ namespace Fantasy {
         std::vector<std::unordered_map<std::string, Content *> *> *contents;
 
         public:
+        DrawType
+            *genericRegion;
+
         EntityType
-            *jumper, *spike,
+            *jumper, *spike, *leak,
             *bulletSmall, *bulletMed;
+
         EffectType
             *smokeSmall, *smokeBig,
             *destructSmall, *destructMed, *destructBig;

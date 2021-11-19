@@ -28,7 +28,7 @@ namespace Fantasy {
         if((IMG_Init(imgFlags) & ~imgFlags) != 0) throw std::runtime_error(std::string("Couldn't initialize SDL_image: ").append(IMG_GetError()).c_str());
         SDL_Log("Initialized SDL-image v%d.%d.%d", SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION, SDL_IMAGE_PATCHLEVEL);
         
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -47,7 +47,7 @@ namespace Fantasy {
             SDL_GetCurrentDisplayMode(0, &mode);
 
             SDL_SetWindowSize(window, mode.w, mode.h);
-            SDL_SetWindowFullscreen(window, true);
+            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
         }
         
         context = SDL_GL_CreateContext(window);
@@ -101,6 +101,7 @@ namespace Fantasy {
                 pos.y + h, pos.y - h
             );
 
+            glViewport(0, 0, rw, rh);
             while(SDL_PollEvent(&e) != 0) {
                 switch(e.type) {
                     case SDL_QUIT:

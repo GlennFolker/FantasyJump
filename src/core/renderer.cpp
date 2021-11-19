@@ -24,7 +24,6 @@ void main() {
 constexpr const char *BLOOM_FRAGMENT_SHADER = R"(
 #version 150 core
 out vec4 fragColor;
-
 in vec2 v_tex_coords;
 
 uniform sampler2D u_texture;
@@ -60,6 +59,7 @@ namespace Fantasy {
         atlas = new TexAtlas("assets/texture.atlas");
         batch = new SpriteBatch();
         buffer = new FrameBuffer(App::instance->getWidth(), App::instance->getHeight());
+        toRender = new std::vector<entt::entity>();
         quad = new Mesh(4, 6, 2, new VertexAttr[2]{
             VertexAttr::position2D,
             VertexAttr::texCoords
@@ -86,12 +86,14 @@ namespace Fantasy {
         delete buffer;
         delete quad;
         delete bloom;
+        delete toRender;
     }
 
     void Renderer::update() {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        buffer->resize(App::instance->getWidth(), App::instance->getHeight());
         buffer->begin();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -110,62 +112,44 @@ namespace Fantasy {
         batch->col(Color::white);
         batch->tint(Color());
 
-        class Callback: public b2QueryCallback {
-            public:
-            entt::registry *regist;
-            std::vector<entt::entity> entities;
-
-            public:
-            Callback(entt::registry *regist) {
-                this->regist = regist;
-            }
-
-            public:
-            bool ReportFixture(b2Fixture *fixture) override {
-                if(regist == NULL) return false;
-
-                entt::entity e = (entt::entity)fixture->GetBody()->GetUserData().pointer;
-                if(regist->valid(e) && regist->any_of<SpriteComp, EffectComp>(e)) entities.push_back(e);
-
-                return true;
-            }
-
-            void render() {
-                std::sort(entities.begin(), entities.end(), [this](const entt::entity &a, const entt::entity &b) {
-                    float za = regist->any_of<SpriteComp>(a) ? regist->get<SpriteComp>(a).z : regist->get<EffectComp>(a).z;
-                    float zb = regist->any_of<SpriteComp>(b) ? regist->get<SpriteComp>(b).z : regist->get<EffectComp>(b).z;
-                    if(Mathf::near(za, zb)) {
-                        return (int)a < (int)b;
-                    } else {
-                        return za < zb;
-                    }
-                });
-
-                for(const entt::entity &e : entities) {
-                    if(regist->any_of<SpriteComp>(e)) regist->get<SpriteComp>(e).update();
-                    if(regist->any_of<EffectComp>(e)) regist->get<EffectComp>(e).update();
-                }
-            }
-        } callback(regist);
-
         float x = App::instance->pos.x, y = App::instance->pos.y, w = App::instance->getWidth() / App::instance->scl.x, h = App::instance->getHeight() / App::instance->scl.y;
         b2AABB bound;
         bound.lowerBound = b2Vec2(x - w, y - h);
         bound.upperBound = b2Vec2(x + w, y + h);
 
-        world->QueryAABB(&callback, bound);
-        callback.render();
+        world->QueryAABB(this, bound);
+        std::sort(toRender->begin(), toRender->end(), [](const entt::entity &a, const entt::entity &b) {
+            entt::registry &registry = App::iregistry();
+            float za = registry.get<DrawComp>(a).z, zb = registry.get<DrawComp>(b).z;
 
+            if(Mathf::near(za, zb)) {
+                return (int)a < (int)b;
+            } else {
+                return za < zb;
+            }
+        });
+
+        for(const entt::entity &e : *toRender) regist->get<DrawComp>(e).update();
+        toRender->clear();
         batch->flush();
         buffer->end();
 
         bloom->bind();
         glUniform1i(bloom->uniformLoc("u_texture"), buffer->texture->active(0));
-        glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 1.4f, App::instance->getHeight() / 1.4f);
-        glUniform1i(bloom->uniformLoc("u_range"), 7);
+        glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 2.5f, App::instance->getHeight() / 2.5f);
+        glUniform1i(bloom->uniformLoc("u_range"), 4);
         glUniform1f(bloom->uniformLoc("u_threshold"), 0.36f);
-        glUniform1f(bloom->uniformLoc("u_suppress"), 1.3f);
+        glUniform1f(bloom->uniformLoc("u_suppress"), 1.2f);
 
         quad->render(bloom, GL_TRIANGLES, 0, quad->maxIndices);
+    }
+
+    bool Renderer::ReportFixture(b2Fixture *fixture) {
+        entt::registry &registry = App::iregistry();
+
+        entt::entity e = (entt::entity)fixture->GetBody()->GetUserData().pointer;
+        if(registry.valid(e) && registry.any_of<DrawComp>(e)) toRender->push_back(e);
+
+        return true;
     }
 }

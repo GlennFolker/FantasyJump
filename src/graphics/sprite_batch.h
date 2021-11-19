@@ -38,9 +38,9 @@ namespace Fantasy {
         void draw(const TexRegion &, float, float, float rotation = 0.0f);
         void draw(const TexRegion &, float, float, float, float, float rotation = 0.0f);
         void draw(const TexRegion &, float, float, float, float, float, float, float rotation = 0.0f);
-        void col(Color);
+        void col(const Color &);
         void col(float);
-        void tint(Color);
+        void tint(const Color &);
         void tint(float);
 
         void proj(const glm::mat4 &projection);

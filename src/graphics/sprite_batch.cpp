@@ -175,7 +175,7 @@ namespace Fantasy {
         draw(region.texture, tmp, 0, 24);
     }
 
-    void SpriteBatch::col(Color color) {
+    void SpriteBatch::col(const Color &color) {
         this->color = color;
         colorBits = color.fabgr();
     }
@@ -185,7 +185,7 @@ namespace Fantasy {
         this->colorBits = abgr;
     }
 
-    void SpriteBatch::tint(Color color) {
+    void SpriteBatch::tint(const Color &color) {
         this->tinted = color;
         tintBits = color.fabgr();
     }

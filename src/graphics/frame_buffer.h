@@ -14,6 +14,8 @@ namespace Fantasy {
         unsigned int data;
         Tex2D *texture;
         unsigned int render;
+        int width, height;
+        bool hasColor, hasDepth, hasStencil;
 
         public:
         FrameBuffer();
@@ -23,6 +25,7 @@ namespace Fantasy {
         FrameBuffer(int, int, bool, bool, bool);
         ~FrameBuffer();
 
+        void resize(int width, int height);
         void begin();
         void end();
     };

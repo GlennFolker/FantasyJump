@@ -85,7 +85,7 @@ namespace Fantasy {
 
             entt::entity borderA = regist->create();
             regist->emplace<RigidComp>(borderA, borderA, bodyA);
-            regist->emplace<SpriteComp>(borderA, borderA, App::iatlas().get("red-box"), worldWidth, borderThickness);
+            regist->emplace<DrawComp>(borderA, borderA, content->genericRegion->name, worldWidth, borderThickness).region = App::iatlas().get("red-box");
             regist->emplace<HealthComp>(borderA, borderA, -1.0f, 10.0f);
 
             bodyDef.position.Set(i * worldWidth / 2.0f - borderThickness / 2.0f * i, 0.0f);
@@ -96,15 +96,15 @@ namespace Fantasy {
 
             entt::entity borderB = regist->create();
             regist->emplace<RigidComp>(borderB, borderB, bodyB);
-            regist->emplace<SpriteComp>(borderB, borderB, App::iatlas().get("red-box"), borderThickness, worldHeight);
+            regist->emplace<DrawComp>(borderB, borderB, content->genericRegion->name, borderThickness, worldHeight).region = App::iatlas().get("red-box");
             regist->emplace<HealthComp>(borderB, borderB, -1.0f, 10.0f);
         }
 
         restartTime = -1.0f;
-        player = content->jumper->create(*regist, App::iatlas(), *world);
+        player = content->jumper->create();
 
         for(int c = 0; c < 500; c++) {
-            b2Body *body = regist->get<RigidComp>(content->spike->create(*regist, App::iatlas(), *world)).body;
+            b2Body *body = regist->get<RigidComp>(content->spike->create()).body;
             do {
                 body->SetTransform(b2Vec2(
                     Mathf::random(-worldWidth + borderThickness, worldWidth - borderThickness) / 2.0f,

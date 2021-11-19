@@ -3,6 +3,8 @@
 
 #include <box2d/box2d.h>
 #include <entt/entity/registry.hpp>
+#include <string>
+#include <optional>
 #include <functional>
 
 #include "team.h"
@@ -18,7 +20,6 @@ namespace Fantasy {
 
         virtual void update();
         void remove();
-        void applyFx(const std::string &);
         entt::entity createFx(const std::string &, bool follow = false);
         entt::entity getRef();
     };
@@ -44,16 +45,18 @@ namespace Fantasy {
         static void onDestroy(entt::registry &, entt::entity);
     };
 
-    class SpriteComp: public Component {
+    class DrawComp: public Component {
         public:
-        TexRegion region;
+        std::string drawer;
+
+        std::optional<TexRegion> region;
         float width, height, z;
 
         public:
-        SpriteComp(entt::entity, const TexRegion &);
-        SpriteComp(entt::entity, const TexRegion &, float);
-        SpriteComp(entt::entity, const TexRegion &, float, float);
-        SpriteComp(entt::entity, const TexRegion &, float, float, float);
+        DrawComp(entt::entity, const std::string &);
+        DrawComp(entt::entity, const std::string &, float);
+        DrawComp(entt::entity, const std::string &, float, float);
+        DrawComp(entt::entity, const std::string &, float, float, float);
 
         void update() override;
     };
@@ -139,18 +142,6 @@ namespace Fantasy {
         void update() override;
         float rangef();
         float timef();
-    };
-
-    class EffectComp: public Component {
-        public:
-        float z;
-        std::string effect;
-
-        public:
-        EffectComp(entt::entity);
-        EffectComp(entt::entity, const std::string &);
-
-        void update() override;
     };
 }
 

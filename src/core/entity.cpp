@@ -13,15 +13,10 @@ namespace Fantasy {
     void Component::remove() { App::icontrol().scheduleRemoval(ref); }
     entt::entity Component::getRef() { return ref; }
 
-    void Component::applyFx(const std::string &effect) {
-        App::icontent().getByName<EffectType>(effect)->updater(App::iregistry(), App::iatlas(), App::iworld(), ref);
-    }
-
     entt::entity Component::createFx(const std::string &effect, bool follow) {
         entt::registry &registry = App::iregistry();
-        entt::entity fx = App::icontent().getByName<EffectType>(effect)->create(registry, App::iatlas(), App::iworld());
+        entt::entity fx = App::icontent().getByName<EffectType>(effect)->create();
 
-        EffectComp &comp = registry.get<EffectComp>(fx);
         if(registry.any_of<RigidComp>(ref)) {
             RigidComp &other = registry.get<RigidComp>(fx);
             RigidComp &self = registry.get<RigidComp>(ref);
@@ -80,17 +75,18 @@ namespace Fantasy {
         App::iworld().DestroyBody(comp.body);
     }
 
-    SpriteComp::SpriteComp(entt::entity e, const TexRegion &region): SpriteComp(e, region, 1.0f, 1.0f) {}
-    SpriteComp::SpriteComp(entt::entity e, const TexRegion &region, float size): SpriteComp(e, region, size, size) {}
-    SpriteComp::SpriteComp(entt::entity e, const TexRegion &region, float width, float height): SpriteComp(e, region, width, height, 0.0f) {}
-    SpriteComp::SpriteComp(entt::entity e, const TexRegion &region, float width, float height, float z): Component(e) {
-        this->region = region;
+    DrawComp::DrawComp(entt::entity e, const std::string &drawer): DrawComp(e, drawer, 1.0f, 1.0f) {}
+    DrawComp::DrawComp(entt::entity e, const std::string &drawer, float size): DrawComp(e, drawer, size, size) {}
+    DrawComp::DrawComp(entt::entity e, const std::string &drawer, float width, float height): DrawComp(e, drawer, width, height, 0.0f) {}
+    DrawComp::DrawComp(entt::entity e, const std::string &drawer, float width, float height, float z): Component(e) {
+        this->drawer = drawer;
         this->width = width;
         this->height = height;
         this->z = z;
+        region = std::nullopt;
     }
 
-    void SpriteComp::update() {
+    void DrawComp::update() {
         entt::registry &registry = App::iregistry();
         b2Transform trns = registry.get<RigidComp>(ref).body->GetTransform();
 
@@ -99,7 +95,7 @@ namespace Fantasy {
             App::ibatch().tint(Color(0.8f, 0.0f, 0.1f, alpha));
         }
 
-        App::ibatch().draw(region, trns.p.x, trns.p.y, width, height, trns.q.GetAngle());
+        App::icontent().getByName<DrawType>(drawer)->drawer(ref);
         App::ibatch().tint(Color());
     }
 
@@ -259,7 +255,7 @@ namespace Fantasy {
             b2Body *target = report.get();
             if(target != NULL) {
                 if(!shootFx.empty()) createFx(shootFx, true);
-                entt::entity bullet = App::icontent().getByName<EntityType>(this->bullet)->create(regist, App::iatlas(), world);
+                entt::entity bullet = App::icontent().getByName<EntityType>(this->bullet)->create();
 
                 regist.get<TeamComp>(bullet).team = regist.get<TeamComp>(ref).team;
                 regist.get<TemporalComp>(bullet).range = range * 3.0f;
@@ -303,14 +299,4 @@ namespace Fantasy {
 
     float TemporalComp::rangef() { return Mathf::clamp(travelled / range); }
     float TemporalComp::timef() { return Mathf::clamp((Time::time() - initTime) / time); }
-
-    EffectComp::EffectComp(entt::entity e): EffectComp(e, "") {}
-    EffectComp::EffectComp(entt::entity e, const std::string &effect): Component(e) {
-        this->effect = effect;
-        z = 0.0f;
-    }
-
-    void EffectComp::update() {
-        if(!effect.empty()) applyFx(effect);
-    }
 }
