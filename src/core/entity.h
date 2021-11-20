@@ -64,6 +64,7 @@ namespace Fantasy {
     class JumpComp: public Component {
         public:
         float force, timeout;
+        std::string effect;
 
         private:
         bool holding, jumping;
@@ -73,15 +74,20 @@ namespace Fantasy {
         public:
         JumpComp(entt::entity, float, float);
 
+        void update() override;
         void hold();
         void release(float, float);
-        void update() override;
+        bool isHolding();
+        float getTime();
     };
 
     class HealthComp: public Component {
         public:
         float health, maxHealth, damage, hitTime;
-        bool selfDamage;
+        bool selfDamage, showBar;
+
+        private:
+        bool dead;
 
         public:
         HealthComp(entt::entity, float);
@@ -108,10 +114,10 @@ namespace Fantasy {
     class ShooterComp: public Component {
         public:
         std::string bullet, shootFx;
-        float rate, impulse, range;
+        float rate, impulse, range, inaccuracy;
 
         private:
-        float time;
+        float lastShoot, timer;
 
         public:
         ShooterComp(entt::entity, const std::string &, float);
@@ -143,6 +149,15 @@ namespace Fantasy {
         float rangef();
         float timef();
     };
+
+    class IdentifierComp: public Component {
+        public:
+        std::string id;
+
+        public:
+        IdentifierComp(entt::entity, const std::string &);
+    };
 }
 
 #endif
+

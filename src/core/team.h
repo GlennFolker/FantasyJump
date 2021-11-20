@@ -10,8 +10,8 @@ namespace Fantasy {
 
         public:
         enum TeamType {
-            BLUE,
-            GREEN,
+            AZURE,
+            KAYDE,
             GENERIC,
             ALL
         };

@@ -70,15 +70,17 @@ namespace Fantasy {
 
         public:
         DrawType
-            *genericRegion;
+            *genericRegion, *drawJumper, *drawLeak;
 
         EntityType
             *jumper, *spike, *leak,
-            *bulletSmall, *bulletMed;
+            *bulletSmall, *bulletMed, *bulletLeak, *laser;
 
         EffectType
+            *jumped,
             *smokeSmall, *smokeBig,
-            *destructSmall, *destructMed, *destructBig;
+            *destructSmall, *destructMed, *destructBig,
+            *laserDefuse, *leaked;
 
         public:
         Contents();

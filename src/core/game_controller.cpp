@@ -85,7 +85,7 @@ namespace Fantasy {
 
             entt::entity borderA = regist->create();
             regist->emplace<RigidComp>(borderA, borderA, bodyA);
-            regist->emplace<DrawComp>(borderA, borderA, content->genericRegion->name, worldWidth, borderThickness).region = App::iatlas().get("red-box");
+            regist->emplace<DrawComp>(borderA, borderA, content->genericRegion->name, borderThickness, worldWidth).region = App::iatlas().get("red-box");
             regist->emplace<HealthComp>(borderA, borderA, -1.0f, 10.0f);
 
             bodyDef.position.Set(i * worldWidth / 2.0f - borderThickness / 2.0f * i, 0.0f);
@@ -96,57 +96,26 @@ namespace Fantasy {
 
             entt::entity borderB = regist->create();
             regist->emplace<RigidComp>(borderB, borderB, bodyB);
-            regist->emplace<DrawComp>(borderB, borderB, content->genericRegion->name, borderThickness, worldHeight).region = App::iatlas().get("red-box");
+            regist->emplace<DrawComp>(borderB, borderB, content->genericRegion->name, worldHeight, borderThickness).region = App::iatlas().get("red-box");
             regist->emplace<HealthComp>(borderB, borderB, -1.0f, 10.0f);
         }
 
         restartTime = -1.0f;
         player = content->jumper->create();
 
-        for(int c = 0; c < 500; c++) {
-            b2Body *body = regist->get<RigidComp>(content->spike->create()).body;
+        std::function<void(entt::entity, float)> adjust = [this](entt::entity e, float range) {
+            b2Body *body = regist->get<RigidComp>(e).body;
             do {
                 body->SetTransform(b2Vec2(
                     Mathf::random(-worldWidth + borderThickness, worldWidth - borderThickness) / 2.0f,
                     Mathf::random(-worldHeight + borderThickness, worldHeight - borderThickness) / 2.0f
                 ), 0.0f);
-            } while([&]() {
-                const b2Transform &trns = body->GetTransform();
-                if(trns.p.LengthSquared() < 25.0f) return true;
+                world->Step(0.0f, 1, 1);
+            } while(body->GetTransform().p.Length() <= range);
+        };
 
-                class: public b2QueryCallback {
-                    private:
-                    bool found = false;
-
-                    public:
-                    bool ReportFixture(b2Fixture *fixture) override {
-                        found = true;
-                        return false;
-                    }
-
-                    bool isFound() {
-                        return found;
-                    }
-                } report;
-
-                for(b2Fixture *fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
-                    b2AABB bound;
-
-                    b2Shape *shape = fixture->GetShape();
-                    int scount = shape->GetChildCount();
-                    for(int j = 0; j < scount; j++) {
-                        shape->ComputeAABB(&bound, trns, j);
-                        bound.lowerBound *= 2.0f;
-                        bound.upperBound *= 2.0f;
-
-                        world->QueryAABB(&report, bound);
-                        if(report.isFound()) return true;
-                    }
-                }
-
-                return false;
-            }());
-        }
+        for(int i = 0; i < 5; i++) adjust(content->leak->create(), 40.0f);
+        for(int i = 0; i < 500; i++) adjust(content->spike->create(), 16.0f);
 
         resetting = false;
     }

@@ -12,6 +12,8 @@ namespace Fantasy {
     const Color Color::lyellow = Color(1.0f, 0.6f, 0.3f, 1.0f);
     const Color Color::green = Color(0.1f, 1.0f, 0.2f, 1.0f);
     const Color Color::blue = Color(0.1f, 0.3f, 1.0f, 1.0f);
+    const Color Color::purple = Color(0.6f, 0.0f, 1.0f, 1.0f);
+    const Color Color::lpurple = Color(0.7f, 0.5f, 1.0f, 1.0f);
 
     Color::Color(): Color(0.0f, 0.0f, 0.0f, 0.0f) {}
     Color::Color(float r, float g, float b): Color(r, g, b, 1.0f) {}

@@ -14,6 +14,8 @@ namespace Fantasy {
         static const Color lyellow;
         static const Color green;
         static const Color blue;
+        static const Color purple;
+        static const Color lpurple;
 
         float r;
         float g;

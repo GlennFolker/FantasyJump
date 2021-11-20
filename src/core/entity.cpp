@@ -119,17 +119,20 @@ namespace Fantasy {
         target = b2Vec2(x, y);
     }
 
+    bool JumpComp::isHolding() { return holding; }
+    float JumpComp::getTime() { return time; }
+
     void JumpComp::update() {
         b2Body *body = App::iregistry().get<RigidComp>(ref).body;
         float now = Time::time();
 
         if(holding) {
-            b2Vec2 vel = body->GetLinearVelocity();
-            vel *= (-1.0f * fminf((now - time) / 0.1f, 1.0f)) * vel.Length();
+            b2Vec2 vel = -body->GetLinearVelocity();
+            vel *= (1.0f * fminf((now - time) / 0.08f, 1.0f)) * force / 3.0f;
 
             body->ApplyForceToCenter(vel, true);
             if(!Mathf::near(body->GetAngularVelocity(), 1.0f)) {
-                body->ApplyAngularImpulse(body->GetAngularVelocity() * -0.01f, true);
+                body->ApplyAngularImpulse(body->GetAngularVelocity() * -(force * 0.001f), true);
             }
         } else if(jumping) {
             jumping = false;
@@ -142,6 +145,8 @@ namespace Fantasy {
                 body->GetPosition().x + Mathf::random(-0.1f, 0.1f),
                 body->GetPosition().y + Mathf::random(-0.1f, 0.1f)
             ), true);
+
+            if(!effect.empty()) createFx(effect);
         }
     }
 
@@ -151,10 +156,12 @@ namespace Fantasy {
         this->damage = damage;
         hitTime = -1000.0f;
         selfDamage = false;
+        showBar = true;
+        dead = false;
     }
 
     void HealthComp::update() {
-        if(canHurt() && health <= 0.0f) killed();
+        if(canHurt() && !dead && health <= 0.0f) killed();
     }
 
     void HealthComp::kill() {
@@ -162,6 +169,9 @@ namespace Fantasy {
     }
 
     void HealthComp::killed() {
+        if(dead) return;
+        dead = true;
+
         Events::fire<EntDeathEvent>(EntDeathEvent(ref));
         remove();
     }
@@ -176,6 +186,7 @@ namespace Fantasy {
             health = fmaxf(health - damage, 0.0f);
 
             if(!Mathf::near(prev, health)) hitTime = Time::time();
+            if(canHurt() && health <= 0.0f) killed();
         }
     }
 
@@ -195,7 +206,8 @@ namespace Fantasy {
         this->rate = rate;
         this->impulse = impulse;
         this->range = range;
-        time = -rate;
+        lastShoot = timer = Time::time();
+        inaccuracy = 0.0f;
     }
 
     void ShooterComp::update() {
@@ -203,7 +215,9 @@ namespace Fantasy {
         b2World &world = App::iworld();
         b2Body *body = regist.get<RigidComp>(ref).body;
 
-        if((Time::time() - time) >= rate) {
+        float time = Time::time();
+        if(time - lastShoot >= rate && time - timer >= 0.1f) {
+            timer = time;
             b2Vec2 pos = body->GetPosition();
 
             class Report: public b2QueryCallback {
@@ -258,17 +272,18 @@ namespace Fantasy {
                 entt::entity bullet = App::icontent().getByName<EntityType>(this->bullet)->create();
 
                 regist.get<TeamComp>(bullet).team = regist.get<TeamComp>(ref).team;
-                regist.get<TemporalComp>(bullet).range = range * 3.0f;
+                regist.get<TemporalComp>(bullet).range = range * 1.4f;
 
                 b2Body *bbody = regist.get<RigidComp>(bullet).body;
-                bbody->SetTransform(pos, glm::angle(glm::vec2(1.0f, 0.0f), glm::normalize(glm::vec2(bbody->GetPosition().x, bbody->GetPosition().y) - glm::vec2(pos.x, pos.y))));
+                bbody->SetTransform(pos, glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::normalize(glm::vec2(target->GetPosition().x - pos.x, target->GetPosition().y - pos.y))));
 
                 b2Vec2 impulse = target->GetPosition() - pos;
                 impulse.Normalize();
                 impulse *= this->impulse;
                 bbody->ApplyLinearImpulseToCenter(impulse, true);
+                body->ApplyLinearImpulseToCenter(-impulse, true);
 
-                time = Time::time();
+                lastShoot = time;
             }
         }
     }
@@ -299,4 +314,8 @@ namespace Fantasy {
 
     float TemporalComp::rangef() { return Mathf::clamp(travelled / range); }
     float TemporalComp::timef() { return Mathf::clamp((Time::time() - initTime) / time); }
+
+    IdentifierComp::IdentifierComp(entt::entity e, const std::string &id): Component(e) {
+        this->id = id;
+    }
 }

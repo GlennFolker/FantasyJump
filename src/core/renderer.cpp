@@ -29,11 +29,9 @@ in vec2 v_tex_coords;
 uniform sampler2D u_texture;
 uniform vec2 u_resolution;
 uniform int u_range;
-uniform float u_threshold;
 uniform float u_suppress;
 
 void main() {
-    float thres = u_threshold * 3.0;
     float range2 = pow(u_range, 2.0);
     vec2 step = vec2(1.0) / u_resolution;
 
@@ -43,8 +41,7 @@ void main() {
             float distance = x * x + y * y;
             if(distance > range2) continue;
 
-            vec4 col = texture2D(u_texture, v_tex_coords + vec2(x * step.x, y * step.y));
-            if((col.r + col.g + col.b) >= thres) sum += col;
+            sum += texture2D(u_texture, v_tex_coords + vec2(x * step.x, y * step.y));
         }
     }
 
@@ -129,7 +126,46 @@ namespace Fantasy {
             }
         });
 
-        for(const entt::entity &e : *toRender) regist->get<DrawComp>(e).update();
+        for(const entt::entity &e : *toRender) {
+            batch->col(Color::white);
+            batch->tint(Color());
+            regist->get<DrawComp>(e).update();
+
+            if(regist->any_of<HealthComp>(e)) {
+                HealthComp &comp = regist->get<HealthComp>(e);
+                if(!comp.showBar || !comp.canHurt()) continue;
+
+                b2Vec2 pos = regist->get<RigidComp>(e).body->GetPosition();
+                
+                float frac = comp.health / comp.maxHealth;
+                const TexRegion &region = atlas->get("white");
+
+                batch->tint(Color(Color::green).lerp(Color::red, 1.0f - frac));
+                batch->draw(region, pos.x, pos.y - 1.0f, fmaxf(1.5f * frac - 0.25f, 0.125f), 0.125f);
+            }
+
+            batch->col(Color::white);
+            batch->tint(Color());
+        }
+        
+        App::iregistry().view<IdentifierComp>().each([](const entt::entity &e, IdentifierComp &comp) {
+            entt::registry &registry = App::iregistry();
+            if(comp.id != "leak" || !registry.any_of<RigidComp>(e)) return;
+
+            b2Vec2 target = registry.get<RigidComp>(e).body->GetPosition();
+            b2Vec2 pos = b2Vec2(App::instance->pos.x, App::instance->pos.y);
+
+            b2Vec2 result = target - pos;
+            result.Normalize();
+            
+            float angle = glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::vec2(result.x, result.y));
+            result *= 3.0f;
+
+            App::ibatch().col(Color::red);
+            App::ibatch().draw(App::iatlas().get("white"), pos.x + result.x, pos.y + result.y, 0.5f, 0.125f, angle);
+            App::ibatch().col(Color::white);
+        });
+
         toRender->clear();
         batch->flush();
         buffer->end();
@@ -138,7 +174,6 @@ namespace Fantasy {
         glUniform1i(bloom->uniformLoc("u_texture"), buffer->texture->active(0));
         glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 2.5f, App::instance->getHeight() / 2.5f);
         glUniform1i(bloom->uniformLoc("u_range"), 4);
-        glUniform1f(bloom->uniformLoc("u_threshold"), 0.36f);
         glUniform1f(bloom->uniformLoc("u_suppress"), 1.2f);
 
         quad->render(bloom, GL_TRIANGLES, 0, quad->maxIndices);
@@ -153,3 +188,4 @@ namespace Fantasy {
         return true;
     }
 }
+;
