@@ -198,8 +198,11 @@ namespace Fantasy {
     }
 
     TeamComp::TeamComp(entt::entity e): TeamComp(e, Team::GENERIC) {}
-    TeamComp::TeamComp(entt::entity e, Team::TeamType team): Component(e) {
+    TeamComp::TeamComp(entt::entity e, float priority) : TeamComp(e, Team::GENERIC, priority) {}
+    TeamComp::TeamComp(entt::entity e, Team::TeamType team): TeamComp(e, team, 1.0f) {}
+    TeamComp::TeamComp(entt::entity e, Team::TeamType team, float priority): Component(e) {
         this->team = team;
+        this->priority = priority;
     }
 
     ShooterComp::ShooterComp(entt::entity e, const std::string &bullet, float rate): ShooterComp(e, bullet, rate, 4.0f) {}
@@ -243,18 +246,31 @@ namespace Fantasy {
                     b2Body *body = fixture->GetBody();
 
                     entt::entity e = (entt::entity)body->GetUserData().pointer;
-                    entt::registry &regist = App::iregistry();
+                    entt::registry &registry = App::iregistry();
                     if(
-                        !regist.valid(e) ||
-                        (!regist.any_of<TeamComp>(e) || regist.get<TeamComp>(e).team == team) ||
-                        (!regist.any_of<HealthComp>(e) || !regist.get<HealthComp>(e).canHurt())
+                        !registry.valid(e) ||
+                        (!registry.any_of<TeamComp>(e) || registry.get<TeamComp>(e).team == team) ||
+                        (!registry.any_of<HealthComp>(e) || !registry.get<HealthComp>(e).canHurt())
                     ) return true;
 
                     float range = (body->GetPosition() - origin).LengthSquared();
                     if(range > radius) return true;
 
-                    if(closest == NULL || (closest->GetPosition() - origin).LengthSquared() > range) closest = body;
+                    if(closest == NULL) {
+                        closest = body;
+                        return true;
+                    }
+
+                    entt::entity b = (entt::entity)closest->GetUserData().pointer;
+                    float brange = (closest->GetPosition() - origin).LengthSquared();
+                    
+                    if(priority(b) * (1.0f - brange / radius) < priority(e) * (1.0f - range / radius)) closest = body;
                     return true;
+                }
+
+                float priority(entt::entity e) {
+                    entt::registry &registry = App::iregistry();
+                    return registry.any_of<TeamComp>(e) ? registry.get<TeamComp>(e).priority : 1.0f;
                 }
 
                 b2Body *get() {

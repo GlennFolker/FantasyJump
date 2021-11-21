@@ -105,11 +105,14 @@ namespace Fantasy {
 
     class TeamComp: public Component {
         public:
+        float priority;
         Team::TeamType team;
 
         public:
         TeamComp(entt::entity);
+        TeamComp(entt::entity, float);
         TeamComp(entt::entity, Team::TeamType);
+        TeamComp(entt::entity, Team::TeamType, float);
     };
 
     class ShooterComp: public Component {

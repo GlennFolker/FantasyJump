@@ -73,7 +73,7 @@ namespace Fantasy {
             registry.emplace<DrawComp>(e, e, drawJumper->name, 1.0f, 1.0f, 2.0f);
             registry.emplace<JumpComp>(e, e, 100.0f, 0.5f).effect = jumped->name;
             registry.emplace<HealthComp>(e, e, 150.0f, 5.0f, 0.04f);
-            registry.emplace<TeamComp>(e, e, Team::AZURE);
+            registry.emplace<TeamComp>(e, e, Team::AZURE, 10.0f);
             registry.emplace<ShooterComp>(e, e, bulletSmall->name, 0.24f).shootFx = smokeSmall->name;
         });
 
@@ -104,7 +104,7 @@ namespace Fantasy {
 
             registry.emplace<DrawComp>(e, e, genericRegion->name, 2.0f, 2.0f, 1.0f).region = App::iatlas().get("spike");
             registry.emplace<HealthComp>(e, e, 100.0f, 10.0f);
-            registry.emplace<TeamComp>(e, e, Team::KAYDE);
+            registry.emplace<TeamComp>(e, e, Team::KAYDE, 15.0f);
             registry.emplace<ShooterComp>(e, e, bulletMed->name, 1.2f, 5.0f, 10.0f).shootFx = smokeBig->name;
         });
 
@@ -155,7 +155,7 @@ namespace Fantasy {
 
             registry.emplace<RigidComp>(e, e, body).deathFx = leaked->name;
             registry.emplace<HealthComp>(e, e, 320.0f, 150.0f);
-            registry.emplace<TeamComp>(e, e, Team::KAYDE);
+            registry.emplace<TeamComp>(e, e, Team::KAYDE, 30.0f);
             registry.emplace<ShooterComp>(e, e, bulletLeak->name, 0.84f, 24.0f, 48.0f).shootFx = laserDefuse->name;
             registry.emplace<DrawComp>(e, e, drawLeak->name, 1.0f, 1.0f, 2.5f);
             registry.emplace<IdentifierComp>(e, e, "leak");
@@ -183,7 +183,7 @@ namespace Fantasy {
 
             registry.emplace<RigidComp>(e, e, body).deathFx = destructSmall->name;
             registry.emplace<DrawComp>(e, e, genericRegion->name, 0.5f, 0.5f, 3.0f).region = App::iatlas().get("bullet-small");
-            registry.emplace<TeamComp>(e, e);
+            registry.emplace<TeamComp>(e, e, 1.0f);
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
 
             HealthComp &comp = registry.emplace<HealthComp>(e, e, 5.0f, 10.0f);
@@ -216,7 +216,7 @@ namespace Fantasy {
             comp.deathFx = destructSmall->name;
 
             registry.emplace<DrawComp>(e, e, genericRegion->name, 0.75f, 0.75f, 3.0f).region = App::iatlas().get("bullet-medium");
-            registry.emplace<TeamComp>(e, e);
+            registry.emplace<TeamComp>(e, e, 2.0f);
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
 
             HealthComp &health = registry.emplace<HealthComp>(e, e, 10.0f, 20.0f);
@@ -247,7 +247,7 @@ namespace Fantasy {
             registry.emplace<RigidComp>(e, e, body).deathFx = destructBig->name;
             registry.emplace<DrawComp>(e, e, genericRegion->name, 1.25f, 1.25f, 3.5f).region = App::iatlas().get("bullet-leak");
             registry.emplace<HealthComp>(e, e, 100.0f, 100.0f);
-            registry.emplace<TeamComp>(e, e);
+            registry.emplace<TeamComp>(e, e, 20.0f);
             registry.emplace<ShooterComp>(e, e, laser->name, 0.5f).shootFx = smokeBig->name;
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
         });
@@ -273,7 +273,7 @@ namespace Fantasy {
             
             registry.emplace<RigidComp>(e, e, body).deathFx = laserDefuse->name;
             registry.emplace<DrawComp>(e, e, genericRegion->name, 0.25f, 2.0f, 3.0f).region = App::iatlas().get("laser");
-            registry.emplace<TeamComp>(e, e);
+            registry.emplace<TeamComp>(e, e, 10.0f);
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
 
             HealthComp &comp = registry.emplace<HealthComp>(e, e, 5.0f, 10.0f);
