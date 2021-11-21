@@ -1,4 +1,5 @@
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 #include "content.h"
 #include "entity.h"
@@ -71,9 +72,9 @@ namespace Fantasy {
             registry.emplace<RigidComp>(e, e, body).deathFx = destructMed->name;
             registry.emplace<DrawComp>(e, e, drawJumper->name, 1.0f, 1.0f, 2.0f);
             registry.emplace<JumpComp>(e, e, 100.0f, 0.5f).effect = jumped->name;
-            registry.emplace<HealthComp>(e, e, 100.0f, 5.0f);
+            registry.emplace<HealthComp>(e, e, 150.0f, 5.0f, 0.04f);
             registry.emplace<TeamComp>(e, e, Team::AZURE);
-            registry.emplace<ShooterComp>(e, e, bulletSmall->name, 0.3f).shootFx = smokeSmall->name;
+            registry.emplace<ShooterComp>(e, e, bulletSmall->name, 0.24f).shootFx = smokeSmall->name;
         });
 
         spike = create<EntityType>("ent-spike", [this](entt::entity e) {
@@ -152,10 +153,10 @@ namespace Fantasy {
             body->CreateFixture(&fixt);
             body->CreateFixture(&clip);
 
-            registry.emplace<RigidComp>(e, e, body);
-            registry.emplace<HealthComp>(e, e, 640.0f, 150.0f);
+            registry.emplace<RigidComp>(e, e, body).deathFx = leaked->name;
+            registry.emplace<HealthComp>(e, e, 320.0f, 150.0f);
             registry.emplace<TeamComp>(e, e, Team::KAYDE);
-            registry.emplace<ShooterComp>(e, e, bulletLeak->name, 0.84f, 24.0f, 32.0f).shootFx = smokeBig->name;
+            registry.emplace<ShooterComp>(e, e, bulletLeak->name, 0.84f, 24.0f, 48.0f).shootFx = laserDefuse->name;
             registry.emplace<DrawComp>(e, e, drawLeak->name, 1.0f, 1.0f, 2.5f);
             registry.emplace<IdentifierComp>(e, e, "leak");
         });
@@ -289,8 +290,7 @@ namespace Fantasy {
             TemporalComp &life = registry.get<TemporalComp>(e);
             b2Vec2 pos = comp.body->GetPosition();
 
-            float l = life.timef();
-            l = (1.0f - powf(1.0f - l, 2.5f));
+            float l = 1.0f - powf(1.0f - life.timef(), 2.5f);
 
             App::ibatch().col(Color(Color::lpurple).lerp(Color::gray, l));
             Mathf::randVecs((unsigned int)e, 12, 2.0f, l, [&](float x, float y) {
@@ -307,6 +307,7 @@ namespace Fantasy {
             batch.draw(atlas.get("white"), pos.x, pos.y, size, size);
             batch.col(Color::white);
         }));
+        jumped->clipSize = 3.0f;
         jumped->lifetime = 0.5f;
         jumped->z = 7.0f;
 
@@ -326,6 +327,7 @@ namespace Fantasy {
             });
             App::ibatch().col(Color::white);
         }));
+        smokeSmall->clipSize = 2.5f;
         smokeSmall->lifetime = 0.24f;
         smokeSmall->z = 5.0f;
 
@@ -345,6 +347,7 @@ namespace Fantasy {
             });
             App::ibatch().col(Color::white);
         }));
+        smokeBig->clipSize = 5.0f;
         smokeBig->lifetime = 0.4f;
         smokeBig->z = 6.0f;
 
@@ -357,8 +360,7 @@ namespace Fantasy {
             TemporalComp &life = registry.get<TemporalComp>(e);
             b2Vec2 pos = comp.body->GetPosition();
 
-            float l = life.timef();
-            l = (1.0f - powf(1.0f - l, 2.0f));
+            float l = 1.0f - powf(1.0f - life.timef(), 2.0f);
 
             batch.col(Color(Color::lyellow).lerp(Color::gray, l));
             Mathf::randVecs((unsigned int)e, 6, 1.2f, l, [&](float x, float y) {
@@ -371,6 +373,7 @@ namespace Fantasy {
             batch.draw(atlas.get("white"), pos.x, pos.y, size, size);
             batch.col(Color::white);
         }));
+        destructSmall->clipSize = 2.5f;
         destructSmall->lifetime = 0.24f;
         destructSmall->z = 8.0f;
 
@@ -383,8 +386,7 @@ namespace Fantasy {
             TemporalComp &life = registry.get<TemporalComp>(e);
             b2Vec2 pos = comp.body->GetPosition();
 
-            float l = life.timef();
-            l = (1.0f - powf(1.0f - l, 2.5f));
+            float l = 1.0f - powf(1.0f - life.timef(), 2.5f);
 
             App::ibatch().col(Color(Color::lorange).lerp(Color::gray, l));
             Mathf::randVecs((unsigned int)e, 12, 4.0f, l, [&](float x, float y) {
@@ -397,6 +399,7 @@ namespace Fantasy {
             batch.draw(atlas.get("white"), pos.x, pos.y, size, size);
             batch.col(Color::white);
         }));
+        destructMed->clipSize = 10.0f;
         destructMed->lifetime = 0.8f;
         destructMed->z = 8.0f;
 
@@ -409,8 +412,7 @@ namespace Fantasy {
             TemporalComp &life = registry.get<TemporalComp>(e);
             b2Vec2 pos = comp.body->GetPosition();
 
-            float l = life.timef();
-            l = (1.0f - powf(1.0f - l, 3.0f));
+            float l = 1.0f - powf(1.0f - life.timef(), 3.0f);
 
             batch.col(Color(Color::lred).lerp(Color::gray, l));
             Mathf::randVecs((unsigned int)e, 17, 7.0f, l, [&](float x, float y) {
@@ -423,26 +425,87 @@ namespace Fantasy {
             batch.draw(atlas.get("white"), pos.x, pos.y, size, size);
             batch.col(Color::white);
         }));
+        destructBig->clipSize = 15.0f;
         destructBig->lifetime = 1.5f;
         destructBig->z = 9.0f;
 
         laserDefuse = create<EffectType>("fx-laser-defuse", create<DrawType>("drawer-fx-laser-defuse", [](entt::entity e) {
             entt::registry &registry = App::iregistry();
             SpriteBatch &batch = App::ibatch();
+            TexAtlas &atlas = App::iatlas();
             b2Vec2 pos = registry.get<RigidComp>(e).body->GetPosition();
             
             float l = powf(1.0f - registry.get<TemporalComp>(e).timef(), 3.0f);
 
             batch.col(Color(Color::lpurple).lerp(Color::purple, l));
-            batch.draw(App::iatlas().get("white"), pos.x, pos.y, l, l, glm::radians(45.0f));
+            Mathf::randVecs((unsigned int)e, 5, 2.0f, l, [&](float x, float y) {
+                float size = (1.0f - fabs((1.0f - l - 1.0f) * 2.0f + 1.0f)) * 0.5f;
+                batch.draw(atlas.get("white"), pos.x + x, pos.y + y, size, size, glm::radians(45.0f));
+            });
+
+            batch.draw(atlas.get("white"), pos.x, pos.y, l * 1.25f, l * 1.25f);
             batch.col(Color::white);
         }));
         laserDefuse->lifetime = 0.8f;
         laserDefuse->z = 5.5f;
 
-        leaked = create<EffectType>("fx-leaked", create<DrawType>("drawer-fx-leaker", [](entt::entity e) {
+        leaked = create<EffectType>("fx-leaked", create<DrawType>("drawer-fx-leaked", [](entt::entity e) {
+            entt::registry &registry = App::iregistry();
+            SpriteBatch &batch = App::ibatch();
+            TexAtlas &atlas = App::iatlas();
+            b2Vec2 pos = registry.get<RigidComp>(e).body->GetPosition();
 
+            float time = registry.get<TemporalComp>(e).timef();
+
+            float l = 1.0f - powf(1.0f - Mathf::clamp(time * 6.0f), 5.0f);
+            batch.col(Color(Color::lpurple).lerp(Color(Color::purple.r, Color::purple.g, Color::purple.b, 0.0f), l));
+            batch.draw(atlas.get("white"), pos.x, pos.y, 8.0f + l * 48.0f, 8.0f + l * 48.0f);
+
+            l = 1.0f - powf(1.0f - Mathf::clamp(time * 3.6f), 5.0f);
+            batch.col(Color(Color::lpurple).lerp(Color(Color::purple.r, Color::purple.g, Color::purple.b, 0.0f), l));
+            batch.draw(atlas.get("white"), pos.x, pos.y, 8.0f + l * 28.0f, 8.0f + l * 28.0f, glm::radians(45.0f));
+
+            l = 1.0f - powf(1.0f - Mathf::clamp(time * 2.0f), 4.0f);
+            Mathf::randVecs((unsigned int)e, 32, 28.0f, l, [&](float x, float y) {
+                batch.col(Color(Color::lyellow).lerp(Color::purple, Mathf::clamp(time * 5.0f)));
+                batch.draw(atlas.get("white"), pos.x + x, pos.y + y, pos.x + x, pos.y + y, 0.5f, 7.5f * (1.0f - l), glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::normalize(glm::vec2(x, y))));
+            });
+
+            l = 1.0f - powf(1.0f - Mathf::clamp(time * 1.5f), 3.0f);
+            Mathf::randVecs((unsigned int)e + 1, 24, 17.0f, l, [&](float x, float y) {
+                batch.col(Color(Color::lyellow).lerp(Color::purple, Mathf::clamp(time * 5.0f)));
+                batch.draw(atlas.get("white"), pos.x + x, pos.y + y, pos.x + x, pos.y + y, 0.375f, 5.0f * (1.0f - l), glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::normalize(glm::vec2(x, y))));
+            });
+
+            l = 1.0f - powf(1.0f - Mathf::clamp(time * 1.6f), 3.2f);
+            Mathf::randVecs((unsigned int)e + 2, 24, 25.0f, l, [&](float x, float y) {
+                float size = (1.0f - l) * 4.8f;
+
+                batch.col(Color(Color::purple).lerp(Color::gray, Mathf::clamp(time * 1.6f)));
+                batch.draw(atlas.get("white"), pos.x + x, pos.y + y, size, size, glm::radians(45.0f));
+            });
+
+            l = 1.0f - powf(1.0f - Mathf::clamp(time * 1.3f), 2.4f);
+            Mathf::randVecs((unsigned int)e + 3, 18, 16.0f, l, [&](float x, float y) {
+                float size = (1.0f - l) * 6.0f;
+
+                batch.col(Color(Color::lpurple).lerp(Color::gray, Mathf::clamp(time * 1.3f)));
+                batch.draw(atlas.get("white"), pos.x + x, pos.y + y, size, size, glm::radians(45.0f));
+            });
+
+            l = 1.0f - powf(1.0f - time, 2.0f);
+            Mathf::randVecs((unsigned int)e + 4, 18, 20.0f, l, [&](float x, float y) {
+                float size = (1.0f - l) * 5.6f;
+
+                batch.col(Color(Color::lyellow).lerp(Color::purple, 1.0f - powf(1.0f - time, 3.0f)));
+                batch.draw(atlas.get("white"), pos.x + x, pos.y + y, size, size, glm::radians(45.0f));
+            });
+
+            batch.col(Color::white);
         }));
+        leaked->clipSize = 56.0f;
+        leaked->lifetime = 5.6f;
+        leaked->z = 10.0f;
     }
 
     Contents::~Contents() {

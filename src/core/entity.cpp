@@ -128,7 +128,7 @@ namespace Fantasy {
 
         if(holding) {
             b2Vec2 vel = -body->GetLinearVelocity();
-            vel *= (1.0f * fminf((now - time) / 0.08f, 1.0f)) * force / 3.0f;
+            vel *= (1.0f * fminf((now - time) / 0.08f, 1.0f)) * force / 2.0f;
 
             body->ApplyForceToCenter(vel, true);
             if(!Mathf::near(body->GetAngularVelocity(), 1.0f)) {
@@ -151,9 +151,11 @@ namespace Fantasy {
     }
 
     HealthComp::HealthComp(entt::entity e, float health): HealthComp(e, health, 0.0f) {}
-    HealthComp::HealthComp(entt::entity e, float health, float damage): Component(e) {
+    HealthComp::HealthComp(entt::entity e, float health, float damage) : HealthComp(e, health, damage, 0.0f) {}
+    HealthComp::HealthComp(entt::entity e, float health, float damage, float regeneration): Component(e) {
         this->health = maxHealth = health;
         this->damage = damage;
+        this->regeneration = regeneration;
         hitTime = -1000.0f;
         selfDamage = false;
         showBar = true;
@@ -162,6 +164,7 @@ namespace Fantasy {
 
     void HealthComp::update() {
         if(canHurt() && !dead && health <= 0.0f) killed();
+        if(!dead) health = fminf(health + regeneration, maxHealth);
     }
 
     void HealthComp::kill() {

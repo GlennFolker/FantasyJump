@@ -1,6 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include <glm/mat4x4.hpp>
 #include <box2d/box2d.h>
 #include <entt/entity/registry.hpp>
 
@@ -15,6 +16,10 @@ namespace Fantasy {
         public:
         TexAtlas *atlas;
         SpriteBatch *batch;
+        glm::dmat4 proj;
+        glm::dmat4 flipProj;
+        glm::dvec2 pos;
+        glm::dvec2 scl;
 
         private:
         FrameBuffer *buffer;
@@ -27,6 +32,7 @@ namespace Fantasy {
         ~Renderer() override;
 
         void update() override;
+        void unproject(double, double, double *, double *);
         bool ReportFixture(b2Fixture *fixture) override;
     };
 }

@@ -15,13 +15,13 @@ namespace Fantasy {
         this->height = height;
 
         if(texture == NULL) {
-            u = v = 0.0f;
-            u2 = v2 = 1.0f;
+            u = v2 = 0.0f;
+            u2 = v = 1.0f;
         } else {
             u = (float)x / (float)texture->width;
-            v = (float)y / (float)texture->height;
+            v2 = (float)y / (float)texture->height;
             u2 = (float)(x + width) / (float)texture->width;
-            v2 = (float)(y + height) / (float)texture->height;
+            v = (float)(y + height) / (float)texture->height;
         }
     }
 

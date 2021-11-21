@@ -3,9 +3,6 @@
 #include <SDL_image.h>
 #include <gl/glew.h>
 #include <SDL_opengl.h>
-#include <gl/GLU.h>
-#include <glm/gtx/transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <stdexcept>
 #include <string>
 
@@ -63,10 +60,6 @@ namespace Fantasy {
 
         exiting = false;
         instance = this;
-        pos = glm::dvec2(0.0, 0.0);
-        scl = glm::dvec2(48.0, 48.0);
-        proj = glm::identity<glm::dmat4>();
-        flipProj = glm::identity<glm::fmat4>();
 
         input = new Input();
         listeners = new std::vector<AppListener *>();
@@ -90,18 +83,6 @@ namespace Fantasy {
     bool App::run() {
         SDL_Event e;
         while(!exiting) {
-            int rw = getWidth(), rh = getHeight();
-            double w = rw / scl.x, h = rh / scl.y;
-            proj = glm::ortho(
-                pos.x - w, pos.x + w,
-                pos.y - h, pos.y + h
-            );
-            flipProj = glm::ortho(
-                pos.x - w, pos.x + w,
-                pos.y + h, pos.y - h
-            );
-
-            glViewport(0, 0, rw, rh);
             while(SDL_PollEvent(&e) != 0) {
                 switch(e.type) {
                     case SDL_QUIT:
@@ -167,18 +148,5 @@ namespace Fantasy {
 
     float App::getAspect() {
         return (float)getWidth() / (float)getHeight();
-    }
-
-    void App::unproject(double x, double y, double *newX, double *newY) {
-        double unusedX, unusedY, unusedZ;
-        int viewport[4];
-        viewport[0] = viewport[1] = 0;
-        getViewport(&viewport[2], &viewport[3]);
-
-        gluUnProject(
-            x, y, 0.0,
-            glm::value_ptr(glm::identity<glm::dmat4>()), value_ptr(flipProj), viewport,
-            newX == NULL ? &unusedX : newX, newY == NULL ? &unusedY : newY, &unusedZ
-        );
     }
 }

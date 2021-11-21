@@ -1,7 +1,9 @@
+#include <SDL.h>
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/rotate_vector.hpp>
-#include <SDL.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <gl/glew.h>
+#include <gl/GLU.h>
 
 #include "renderer.h"
 #include "entity.h"
@@ -75,6 +77,10 @@ namespace Fantasy {
         quad->setIndices(indices, 0, sizeof(indices) / sizeof(unsigned short));
 
         bloom = new Shader(BLOOM_VERTEX_SHADER, BLOOM_FRAGMENT_SHADER);
+        pos = glm::dvec2(0.0, 0.0);
+        scl = glm::dvec2(48.0, 48.0);
+        proj = glm::identity<glm::dmat4>();
+        flipProj = glm::identity<glm::fmat4>();
     }
 
     Renderer::~Renderer() {
@@ -87,6 +93,28 @@ namespace Fantasy {
     }
 
     void Renderer::update() {
+        float time = Time::time();
+        b2World *world = App::instance->control->world;
+        entt::registry *regist = App::instance->control->regist;
+        entt::entity player = App::instance->control->player;
+
+        if(regist->valid(player)) {
+            b2Vec2 pos = regist->get<RigidComp>(player).body->GetTransform().p;
+            this->pos = glm::vec2(pos.x, pos.y);
+        }
+
+        int rw = App::instance->getWidth(), rh = App::instance->getHeight();
+        float w = rw / scl.x, h = rh / scl.y;
+        proj = glm::ortho(
+            pos.x - w, pos.x + w,
+            pos.y - h, pos.y + h
+        );
+        flipProj = glm::ortho(
+            pos.x - w, pos.x + w,
+            pos.y + h, pos.y - h
+        );
+
+        glViewport(0, 0, rw, rh);
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -95,24 +123,12 @@ namespace Fantasy {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        float time = Time::time();
-        b2World *world = App::instance->control->world;
-        entt::registry *regist = App::instance->control->regist;
-        entt::entity player = App::instance->control->player;
-
-        if(regist->valid(player)) {
-            b2Vec2 pos = regist->get<RigidComp>(player).body->GetTransform().p;
-            App::instance->pos = glm::vec2(pos.x, pos.y);
-        }
-
-        batch->proj(App::instance->proj);
         batch->col(Color::white);
         batch->tint(Color());
 
-        float x = App::instance->pos.x, y = App::instance->pos.y, w = App::instance->getWidth() / App::instance->scl.x, h = App::instance->getHeight() / App::instance->scl.y;
         b2AABB bound;
-        bound.lowerBound = b2Vec2(x - w, y - h);
-        bound.upperBound = b2Vec2(x + w, y + h);
+        bound.lowerBound = b2Vec2(pos.x - w, pos.y - h);
+        bound.upperBound = b2Vec2(pos.x + w, pos.y + h);
 
         world->QueryAABB(this, bound);
         std::sort(toRender->begin(), toRender->end(), [](const entt::entity &a, const entt::entity &b) {
@@ -140,20 +156,24 @@ namespace Fantasy {
                 float frac = comp.health / comp.maxHealth;
                 const TexRegion &region = atlas->get("white");
 
-                batch->tint(Color(Color::green).lerp(Color::red, 1.0f - frac));
-                batch->draw(region, pos.x, pos.y - 1.0f, fmaxf(1.5f * frac - 0.25f, 0.125f), 0.125f);
+                batch->tint(Color::red);
+                batch->draw(region, pos.x, pos.y - 1.0f, pos.x - 0.625f, pos.y - 1.075, 1.25f, 0.125f);
+                batch->tint(Color::green);
+
+                float bw = (int)((1.25f * frac) / 0.125f) * 0.125f;
+                batch->draw(region, pos.x, pos.y - 1.0f, pos.x - 0.625f, pos.y - 1.075f, bw, 0.125f);
             }
 
             batch->col(Color::white);
             batch->tint(Color());
         }
         
-        App::iregistry().view<IdentifierComp>().each([](const entt::entity &e, IdentifierComp &comp) {
+        App::iregistry().view<IdentifierComp>().each([this](const entt::entity &e, IdentifierComp &comp) {
             entt::registry &registry = App::iregistry();
             if(comp.id != "leak" || !registry.any_of<RigidComp>(e)) return;
 
             b2Vec2 target = registry.get<RigidComp>(e).body->GetPosition();
-            b2Vec2 pos = b2Vec2(App::instance->pos.x, App::instance->pos.y);
+            b2Vec2 pos = b2Vec2(this->pos.x, this->pos.y);
 
             b2Vec2 result = target - pos;
             result.Normalize();
@@ -161,12 +181,27 @@ namespace Fantasy {
             float angle = glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::vec2(result.x, result.y));
             result *= 3.0f;
 
-            App::ibatch().col(Color::red);
-            App::ibatch().draw(App::iatlas().get("white"), pos.x + result.x, pos.y + result.y, 0.5f, 0.125f, angle);
-            App::ibatch().col(Color::white);
+            batch->col(Color::red);
+            batch->draw(atlas->get("white"), pos.x + result.x, pos.y + result.y, 0.5f, 0.125f, angle);
+            batch->col(Color::white);
         });
 
+        if(App::icontrol().getRestartTime() != -1.0f) {
+            const TexRegion &region = atlas->get("splash-lose");
+            batch->draw(region, pos.x, pos.y - 5.0f, region.width / 8.0f, region.height / 8.0f);
+        } else if(App::icontrol().getWinTime() != -1.0f) {
+            const TexRegion &region = atlas->get("splash-win");
+            batch->draw(region, pos.x, pos.y - 5.0f, region.width / 8.0f, region.height / 8.0f);
+        } else {
+            const TexRegion &region = atlas->get("splash-intro");
+            batch->col(Color(1.0f, 1.0f, 1.0f, 1.0f - Mathf::clamp((Time::time() - (App::icontrol().getResetTime() + 2.5f)) / 0.5f)));
+            batch->draw(region, pos.x, pos.y - 5.0f, region.width / 8.0f, region.height / 8.0f);
+            batch->col(Color::white);
+        }
+
         toRender->clear();
+
+        batch->proj(proj);
         batch->flush();
         buffer->end();
 
@@ -187,5 +222,17 @@ namespace Fantasy {
 
         return true;
     }
+
+    void Renderer::unproject(double x, double y, double *newX, double *newY) {
+        double unusedX, unusedY, unusedZ;
+        int viewport[4];
+        viewport[0] = viewport[1] = 0;
+        App::instance->getViewport(&viewport[2], &viewport[3]);
+
+        gluUnProject(
+            x, y, 0.0,
+            glm::value_ptr(glm::identity<glm::dmat4>()), glm::value_ptr(flipProj), viewport,
+            newX == NULL ? &unusedX : newX, newY == NULL ? &unusedY : newY, &unusedZ
+        );
+    }
 }
-;

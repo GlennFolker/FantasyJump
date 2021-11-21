@@ -83,7 +83,7 @@ namespace Fantasy {
 
     class HealthComp: public Component {
         public:
-        float health, maxHealth, damage, hitTime;
+        float health, maxHealth, damage, regeneration, hitTime;
         bool selfDamage, showBar;
 
         private:
@@ -92,6 +92,7 @@ namespace Fantasy {
         public:
         HealthComp(entt::entity, float);
         HealthComp(entt::entity, float, float);
+        HealthComp(entt::entity, float, float, float);
 
         public:
         void update() override;

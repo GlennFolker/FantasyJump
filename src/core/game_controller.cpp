@@ -27,7 +27,8 @@ namespace Fantasy {
 
         content = new Contents();
 
-        restartTime = -1.0f;
+        leakKilled = 0;
+        restartTime = winTime = resetTime = -1.0f;
         player = entt::entity();
         App::instance->input->attach(Input::MOUSE, [&](InputContext &ctx) {
             if(ctx.read<SDL_MouseButtonEvent>().button != SDL_BUTTON_LEFT || !regist->valid(player)) return;
@@ -35,7 +36,7 @@ namespace Fantasy {
             JumpComp &comp = regist->get<JumpComp>(player);
             if(!ctx.performed) {
                 double x, y;
-                App::instance->unproject(App::instance->getMouseX(), App::instance->getMouseY(), &x, &y);
+                App::irenderer().unproject(App::instance->getMouseX(), App::instance->getMouseY(), &x, &y);
 
                 comp.release(x, y);
             } else {
@@ -49,7 +50,11 @@ namespace Fantasy {
 
         Events::on<EntDeathEvent>([this](Event &e) {
             EntDeathEvent &ent = (EntDeathEvent &)e;
-            if(ent.entity == player) restartTime = Time::time();
+            if(winTime == -1.0f && ent.entity == player) {
+                restartTime = Time::time();
+            } else if(restartTime == -1.0f && regist->any_of<IdentifierComp>(ent.entity) && regist->get<IdentifierComp>(ent.entity).id == "leak" && ++leakKilled >= 3) {
+                winTime = Time::time();
+            }
         });
     }
 
@@ -100,7 +105,9 @@ namespace Fantasy {
             regist->emplace<HealthComp>(borderB, borderB, -1.0f, 10.0f);
         }
 
-        restartTime = -1.0f;
+        leakKilled = 0;
+        restartTime = winTime = -1.0f;
+        resetTime = Time::time();
         player = content->jumper->create();
 
         std::function<void(entt::entity, float)> adjust = [this](entt::entity e, float range) {
@@ -110,29 +117,25 @@ namespace Fantasy {
                     Mathf::random(-worldWidth + borderThickness, worldWidth - borderThickness) / 2.0f,
                     Mathf::random(-worldHeight + borderThickness, worldHeight - borderThickness) / 2.0f
                 ), 0.0f);
-                world->Step(0.0f, 1, 1);
             } while(body->GetTransform().p.Length() <= range);
         };
 
-        for(int i = 0; i < 5; i++) adjust(content->leak->create(), 40.0f);
+        for(int i = 0; i < 3; i++) adjust(content->leak->create(), 56.0f);
         for(int i = 0; i < 500; i++) adjust(content->spike->create(), 16.0f);
 
         resetting = false;
     }
 
     void GameController::update() {
-        if(restartTime != -1.0f && Time::time() - restartTime > 3.0f) resetGame();
+        if((restartTime != -1.0f && Time::time() - restartTime >= 3.0f) || (winTime != -1.0f && Time::time() - winTime >= 5.0f)) resetGame();
         removeEntities();
 
         world->Step(1.0f / 60.0f, 1, 1);
-        regist->each([this](const entt::entity e) {
-            if(!regist->valid(e)) return;
-            if(regist->any_of<RigidComp>(e)) regist->get<RigidComp>(e).update();
-            if(regist->any_of<JumpComp>(e)) regist->get<JumpComp>(e).update();
-            if(regist->any_of<HealthComp>(e)) regist->get<HealthComp>(e).update();
-            if(regist->any_of<ShooterComp>(e)) regist->get<ShooterComp>(e).update();
-            if(regist->any_of<TemporalComp>(e)) regist->get<TemporalComp>(e).update();
-        });
+        regist->view<RigidComp>().each([](const entt::entity &e, RigidComp &comp) { comp.update(); });
+        regist->view<JumpComp>().each([](const entt::entity &e, JumpComp &comp) { comp.update(); });
+        regist->view<HealthComp>().each([](const entt::entity &e, HealthComp &comp) { comp.update(); });
+        regist->view<ShooterComp>().each([](const entt::entity &e, ShooterComp &comp) { comp.update(); });
+        regist->view<TemporalComp>().each([](const entt::entity &e, TemporalComp &comp) { comp.update(); });
     }
 
     void GameController::BeginContact(b2Contact *contact) {
@@ -172,16 +175,14 @@ namespace Fantasy {
         }
     }
 
-    void GameController::scheduleRemoval(entt::entity e) {
-        removal->insert(e);
-    }
-
+    void GameController::scheduleRemoval(entt::entity e) { removal->insert(e); }
     void GameController::removeEntities() {
         for(entt::entity e : *removal) regist->destroy(e);
         removal->clear();
     }
 
-    bool GameController::isResetting() {
-        return resetting;
-    }
+    bool GameController::isResetting() { return resetting; }
+    float GameController::getWinTime() { return winTime; }
+    float GameController::getRestartTime() { return restartTime; }
+    float GameController::getResetTime() { return resetTime; }
 }

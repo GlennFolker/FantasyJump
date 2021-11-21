@@ -27,13 +27,9 @@ namespace Fantasy {
         static App *instance;
 
         std::vector<AppListener *> *listeners;
-        SDL_Window *window = NULL;
+        SDL_Window *window;
         SDL_GLContext context;
 
-        glm::dmat4 proj;
-        glm::dmat4 flipProj;
-        glm::dvec2 pos;
-        glm::dvec2 scl;
         Input *input;
         GameController *control;
         Renderer *renderer;
@@ -55,7 +51,6 @@ namespace Fantasy {
         int getMouseX();
         int getMouseY();
         float getAspect();
-        void unproject(double, double, double *, double *);
 
         static inline GameController &icontrol() { return *instance->control; }
         static inline Contents &icontent() { return *instance->control->content; }
