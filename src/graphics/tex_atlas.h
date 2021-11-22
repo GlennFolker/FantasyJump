@@ -28,9 +28,9 @@ namespace Fantasy {
 
         public:
         TexAtlas();
-        TexAtlas(const char *);
-        TexAtlas(std::istream &&);
-        TexAtlas(const std::istream &);
+        TexAtlas(const std::string &);
+        TexAtlas(const std::string &, std::istream &&);
+        TexAtlas(const std::string &, const std::istream &);
         ~TexAtlas();
 
         const TexRegion &get(const std::string &) const;

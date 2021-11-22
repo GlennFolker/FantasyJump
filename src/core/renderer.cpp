@@ -55,7 +55,7 @@ namespace Fantasy {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        atlas = new TexAtlas("assets/texture.atlas");
+        atlas = new TexAtlas("assets/sprites/texture.atlas");
         batch = new SpriteBatch();
         buffer = new FrameBuffer(App::instance->getWidth(), App::instance->getHeight());
         toRender = new std::vector<entt::entity>();

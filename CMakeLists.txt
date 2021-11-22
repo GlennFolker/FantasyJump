@@ -34,8 +34,10 @@ target_compile_features(Packer PRIVATE cxx_std_17)
 find_package(OpenGL REQUIRED)
 find_package(GLEW CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(Vorbis CONFIG REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2-image CONFIG REQUIRED)
+find_package(sdl2-mixer CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 find_package(libpng CONFIG REQUIRED)
@@ -48,12 +50,11 @@ endif()
 target_link_libraries(Fantasy PRIVATE
     EnTT::EnTT box2d::box2d
     opengl32 GLEW::GLEW glm::glm
-    SDL2::SDL2_image SDL2::SDL2main SDL2::SDL2
+    SDL2::SDL2_image SDL2::SDL2_mixer SDL2::SDL2main SDL2::SDL2
+    Vorbis::vorbis Vorbis::vorbisenc Vorbis::vorbisfile
 )
 
-target_link_libraries(Packer PRIVATE
-    png_static
-)
+target_link_libraries(Packer PRIVATE png_static)
 
 include(InstallRequiredSystemLibraries)
 add_custom_command(

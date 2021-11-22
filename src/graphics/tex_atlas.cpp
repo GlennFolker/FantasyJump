@@ -26,12 +26,17 @@ namespace Fantasy {
     }
 
     TexAtlas::TexAtlas() {}
-    TexAtlas::TexAtlas(const char *filename): TexAtlas((std::istream &&)std::move(std::ifstream(filename, std::ios::binary))) {}
-    TexAtlas::TexAtlas(const std::istream &stream): TexAtlas((std::istream &&)std::move(stream)) {}
-    TexAtlas::TexAtlas(std::istream &&stream) {
+    TexAtlas::TexAtlas(const std::string &filename): TexAtlas(filename, (std::istream &&)std::move(std::ifstream(filename, std::ios::binary))) {}
+    TexAtlas::TexAtlas(const std::string &filename, const std::istream &stream): TexAtlas(filename, (std::istream &&)std::move(stream)) {}
+    TexAtlas::TexAtlas(const std::string &filename, std::istream &&stream) {
         char version;
         stream >> version;
 
+        std::string prefix = filename;
+        int slash = prefix.find_last_of("/");
+        if(slash == std::string::npos) slash = prefix.find_last_of("\\");
+        if(slash != std::string::npos) prefix = prefix.substr(0, slash + 1);
+        
         switch(version) {
             case 1: {
                 size_t pageSize;
@@ -45,7 +50,7 @@ namespace Fantasy {
                     stream.read(pageName, pageNameSize);
                     pageName[pageNameSize] = '\0';
 
-                    Tex2D *pageTex = new Tex2D(std::string("assets/").append(pageName).c_str());
+                    Tex2D *pageTex = new Tex2D(std::string(prefix).append(pageName).c_str());
                     pageTex->load();
                     pageTex->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
                     pageTex->setWrap(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);

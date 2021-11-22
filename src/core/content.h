@@ -1,6 +1,7 @@
 #ifndef CONTENT_H
 #define CONTENT_H
 
+#include <SDL_mixer.h>
 #include <unordered_map>
 #include <vector>
 #include <functional>
@@ -25,7 +26,6 @@ namespace Fantasy {
 
         public:
         Content(const Content &) = delete;
-        Content(Content &&) = delete;
         Content(const std::string &);
     };
 
@@ -69,6 +69,10 @@ namespace Fantasy {
         std::vector<std::unordered_map<std::string, Content *> *> *contents;
 
         public:
+        Mix_Chunk
+            *sfxShootSmall, *sfxShootMed, *sfxShootEnergy, *sfxShootSummon,
+            *sfxExplodeSmall, *sfxExplodeMed, *sfxExplodeBig;
+
         DrawType
             *genericRegion, *drawJumper, *drawLeak;
 
@@ -116,6 +120,9 @@ namespace Fantasy {
         }
 
         std::unordered_map<std::string, Content *> *getBy(CType);
+
+        private:
+        Mix_Chunk *loadSound(const std::string &path);
     };
 }
 

@@ -1,6 +1,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
+#include <SDL_mixer.h>
 #include <box2d/box2d.h>
 #include <entt/entity/registry.hpp>
 #include <string>
@@ -21,6 +22,7 @@ namespace Fantasy {
         virtual void update();
         void remove();
         entt::entity createFx(const std::string &, bool follow = false);
+        int createSfx(Mix_Chunk *);
         entt::entity getRef();
     };
 
@@ -30,6 +32,7 @@ namespace Fantasy {
         float rotateSpeed;
 
         std::string spawnFx, deathFx;
+        Mix_Chunk *spawnSfx, *deathSfx;
 
         private:
         bool spawned;
@@ -65,6 +68,7 @@ namespace Fantasy {
         public:
         float force, timeout;
         std::string effect;
+        Mix_Chunk *sound;
 
         private:
         bool holding, jumping;
@@ -118,6 +122,7 @@ namespace Fantasy {
     class ShooterComp: public Component {
         public:
         std::string bullet, shootFx;
+        Mix_Chunk *shootSfx;
         float rate, impulse, range, inaccuracy;
 
         private:
@@ -164,4 +169,3 @@ namespace Fantasy {
 }
 
 #endif
-

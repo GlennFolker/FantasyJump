@@ -11,6 +11,14 @@ namespace Fantasy {
     Contents::Contents() {
         contents = new std::vector<std::unordered_map<std::string, Content *> *>((int)CType::ALL);
 
+        sfxShootSmall = loadSound("shoot-small");
+        sfxShootMed = loadSound("shoot-medium");
+        sfxShootEnergy = loadSound("shoot-energy");
+        sfxShootSummon = loadSound("shoot-summon");
+        sfxExplodeSmall = loadSound("explode-small");
+        sfxExplodeMed = loadSound("explode-medium");
+        sfxExplodeBig = loadSound("explode-big");
+
         genericRegion = create<DrawType>("drawer-generic-region", [](entt::entity e) {
             entt::registry &registry = App::iregistry();
 
@@ -69,12 +77,18 @@ namespace Fantasy {
             b2Body *body = App::iworld().CreateBody(&bodyDef);
             body->CreateFixture(&fixt);
 
-            registry.emplace<RigidComp>(e, e, body).deathFx = destructMed->name;
+            RigidComp &comp = registry.emplace<RigidComp>(e, e, body);
+            comp.deathFx = destructMed->name;
+            comp.deathSfx = sfxExplodeMed;
+
+            ShooterComp &shoot = registry.emplace<ShooterComp>(e, e, bulletSmall->name, 0.24f);
+            shoot.shootFx = smokeSmall->name;
+            shoot.shootSfx = sfxShootSmall;
+
             registry.emplace<DrawComp>(e, e, drawJumper->name, 1.0f, 1.0f, 2.0f);
             registry.emplace<JumpComp>(e, e, 100.0f, 0.5f).effect = jumped->name;
             registry.emplace<HealthComp>(e, e, 150.0f, 5.0f, 0.04f);
             registry.emplace<TeamComp>(e, e, Team::AZURE, 10.0f);
-            registry.emplace<ShooterComp>(e, e, bulletSmall->name, 0.24f).shootFx = smokeSmall->name;
         });
 
         spike = create<EntityType>("ent-spike", [this](entt::entity e) {
@@ -101,11 +115,15 @@ namespace Fantasy {
             RigidComp &comp = registry.emplace<RigidComp>(e, e, body);
             comp.rotateSpeed = glm::radians(Mathf::random(1.0f, 2.5f) * (Mathf::random() >= 0.5f ? 1.0f : -1.0f));
             comp.deathFx = destructBig->name;
+            comp.deathSfx = sfxExplodeMed;
+
+            ShooterComp &shoot = registry.emplace<ShooterComp>(e, e, bulletMed->name, 1.2f, 5.0f, 10.0f);
+            shoot.shootFx = smokeBig->name;
+            shoot.shootSfx = sfxShootMed;
 
             registry.emplace<DrawComp>(e, e, genericRegion->name, 2.0f, 2.0f, 1.0f).region = App::iatlas().get("spike");
             registry.emplace<HealthComp>(e, e, 100.0f, 10.0f);
             registry.emplace<TeamComp>(e, e, Team::KAYDE, 15.0f);
-            registry.emplace<ShooterComp>(e, e, bulletMed->name, 1.2f, 5.0f, 10.0f).shootFx = smokeBig->name;
         });
 
         drawLeak = create<DrawType>("drawer-ent-leak", [](entt::entity e) {
@@ -153,10 +171,16 @@ namespace Fantasy {
             body->CreateFixture(&fixt);
             body->CreateFixture(&clip);
 
-            registry.emplace<RigidComp>(e, e, body).deathFx = leaked->name;
+            RigidComp &comp = registry.emplace<RigidComp>(e, e, body);
+            comp.deathFx = leaked->name;
+            comp.deathSfx = sfxExplodeBig;
+
+            ShooterComp &shoot = registry.emplace<ShooterComp>(e, e, bulletLeak->name, 0.84f, 24.0f, 48.0f);
+            shoot.shootFx = laserDefuse->name;
+            shoot.shootSfx = sfxShootSummon;
+
             registry.emplace<HealthComp>(e, e, 320.0f, 150.0f);
             registry.emplace<TeamComp>(e, e, Team::KAYDE, 30.0f);
-            registry.emplace<ShooterComp>(e, e, bulletLeak->name, 0.84f, 24.0f, 48.0f).shootFx = laserDefuse->name;
             registry.emplace<DrawComp>(e, e, drawLeak->name, 1.0f, 1.0f, 2.5f);
             registry.emplace<IdentifierComp>(e, e, "leak");
         });
@@ -181,14 +205,17 @@ namespace Fantasy {
             b2Body *body = App::iworld().CreateBody(&bodyDef);
             body->CreateFixture(&fixt);
 
-            registry.emplace<RigidComp>(e, e, body).deathFx = destructSmall->name;
+            RigidComp &comp = registry.emplace<RigidComp>(e, e, body);
+            comp.deathFx = destructSmall->name;
+            comp.deathSfx = sfxExplodeSmall;
+
+            HealthComp &health = registry.emplace<HealthComp>(e, e, 5.0f, 10.0f);
+            health.selfDamage = true;
+            health.showBar = false;
+
             registry.emplace<DrawComp>(e, e, genericRegion->name, 0.5f, 0.5f, 3.0f).region = App::iatlas().get("bullet-small");
             registry.emplace<TeamComp>(e, e, 1.0f);
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
-
-            HealthComp &comp = registry.emplace<HealthComp>(e, e, 5.0f, 10.0f);
-            comp.selfDamage = true;
-            comp.showBar = false;
         });
 
         bulletMed = create<EntityType>("ent-bullet-medium", [this](entt::entity e) {
@@ -214,14 +241,15 @@ namespace Fantasy {
             RigidComp &comp = registry.emplace<RigidComp>(e, e, body);
             comp.rotateSpeed = glm::radians(Mathf::random() > 0.5f ? 10.0f : -10.0f);
             comp.deathFx = destructSmall->name;
-
-            registry.emplace<DrawComp>(e, e, genericRegion->name, 0.75f, 0.75f, 3.0f).region = App::iatlas().get("bullet-medium");
-            registry.emplace<TeamComp>(e, e, 2.0f);
-            registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
+            comp.deathSfx = sfxExplodeSmall;
 
             HealthComp &health = registry.emplace<HealthComp>(e, e, 10.0f, 20.0f);
             health.selfDamage = true;
             health.showBar = false;
+
+            registry.emplace<DrawComp>(e, e, genericRegion->name, 0.75f, 0.75f, 3.0f).region = App::iatlas().get("bullet-medium");
+            registry.emplace<TeamComp>(e, e, 2.0f);
+            registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
         });
 
         bulletLeak = create<EntityType>("ent-bullet-leak", [this](entt::entity e) {
@@ -244,11 +272,17 @@ namespace Fantasy {
             b2Body *body = App::iworld().CreateBody(&bodyDef);
             body->CreateFixture(&fixt);
 
-            registry.emplace<RigidComp>(e, e, body).deathFx = destructBig->name;
+            RigidComp &comp = registry.emplace<RigidComp>(e, e, body);
+            comp.deathFx = destructBig->name;
+            comp.deathSfx = sfxExplodeMed;
+
+            ShooterComp &shoot = registry.emplace<ShooterComp>(e, e, laser->name, 0.5f);
+            shoot.shootFx = smokeBig->name;
+            shoot.shootSfx = sfxShootEnergy;
+
             registry.emplace<DrawComp>(e, e, genericRegion->name, 1.25f, 1.25f, 3.5f).region = App::iatlas().get("bullet-leak");
             registry.emplace<HealthComp>(e, e, 100.0f, 100.0f);
             registry.emplace<TeamComp>(e, e, 20.0f);
-            registry.emplace<ShooterComp>(e, e, laser->name, 0.5f).shootFx = smokeBig->name;
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
         });
 
@@ -271,14 +305,17 @@ namespace Fantasy {
             b2Body *body = App::iworld().CreateBody(&bodyDef);
             body->CreateFixture(&fixt);
             
-            registry.emplace<RigidComp>(e, e, body).deathFx = laserDefuse->name;
+            RigidComp &comp = registry.emplace<RigidComp>(e, e, body);
+            comp.deathFx = laserDefuse->name;
+            comp.deathSfx = sfxExplodeSmall;
+
+            HealthComp &health = registry.emplace<HealthComp>(e, e, 5.0f, 10.0f);
+            health.selfDamage = true;
+            health.showBar = false;
+
             registry.emplace<DrawComp>(e, e, genericRegion->name, 0.25f, 2.0f, 3.0f).region = App::iatlas().get("laser");
             registry.emplace<TeamComp>(e, e, 10.0f);
             registry.emplace<TemporalComp>(e, e, TemporalComp::RANGE);
-
-            HealthComp &comp = registry.emplace<HealthComp>(e, e, 5.0f, 10.0f);
-            comp.selfDamage = true;
-            comp.showBar = false;
         });
 
         jumped = create<EffectType>("fx-jumped", create<DrawType>("drawer-fx-jumped", [](entt::entity e) {
@@ -510,6 +547,13 @@ namespace Fantasy {
 
     Contents::~Contents() {
         delete contents;
+        Mix_FreeChunk(sfxShootSmall);
+        Mix_FreeChunk(sfxShootMed);
+        Mix_FreeChunk(sfxShootEnergy);
+        Mix_FreeChunk(sfxShootSummon);
+        Mix_FreeChunk(sfxExplodeSmall);
+        Mix_FreeChunk(sfxExplodeMed);
+        Mix_FreeChunk(sfxExplodeBig);
     }
 
     std::unordered_map<std::string, Content *> *Contents::getBy(CType type) {
@@ -517,6 +561,16 @@ namespace Fantasy {
         if(contents->at(ordinal) == NULL) contents->at(ordinal) = new std::unordered_map<std::string, Content *>();
 
         return contents->at(ordinal);
+    }
+
+    Mix_Chunk *Contents::loadSound(const std::string &path) {
+        std::string actual("assets/sounds/");
+        actual.append(path).append(".ogg");
+
+        Mix_Chunk *chunk = Mix_LoadWAV(actual.c_str());
+        if(!chunk) throw std::runtime_error(std::string("Couldn't load '").append(actual).append("': ").append(Mix_GetError()).c_str());
+
+        return chunk;
     }
 
     Content::Content(const std::string &name) {

@@ -28,17 +28,37 @@ namespace Fantasy {
         return fx;
     }
 
+    int Component::createSfx(Mix_Chunk *sound) {
+        entt::registry &registry = App::iregistry();
+        int channel = Mix_PlayChannel(-1, sound, 0);
+        if(channel < 0) return channel;
+
+        if(registry.any_of<RigidComp>(ref)) {
+            b2Vec2 pos = b2Vec2(App::irenderer().pos.x, App::irenderer().pos.y) - registry.get<RigidComp>(ref).body->GetPosition();
+            float angle = glm::degrees(glm::orientedAngle(glm::vec2(0.0f, 1.0f), glm::normalize(glm::vec2(pos.x, pos.y))));
+            angle = fmodf(angle, 360.0f);
+            angle += 360.0f;
+            angle = fmodf(angle, 360.0f);
+
+            Mix_SetPosition(channel, angle, pos.Length() * 2.0f);
+        }
+
+        return channel;
+    }
+
     RigidComp::RigidComp(entt::entity e, b2Body *body): Component(e) {
         this->body = body;
         this->body->GetUserData().pointer = (uintptr_t)ref;
         rotateSpeed = 0.0f;
         spawned = false;
+        spawnSfx = deathSfx = NULL;
     }
 
     void RigidComp::update() {
         if(!spawned) {
             spawned = true;
             if(!spawnFx.empty()) createFx(spawnFx);
+            if(spawnSfx) createSfx(spawnSfx);
         }
 
         if(!Mathf::near(rotateSpeed, 0.0f)) body->SetTransform(body->GetPosition(), body->GetAngle() + rotateSpeed);
@@ -70,7 +90,10 @@ namespace Fantasy {
 
     void RigidComp::onDestroy(entt::registry &registry, entt::entity entity) {
         RigidComp &comp = registry.get<RigidComp>(entity);
-        if(!App::icontrol().isResetting() && !comp.deathFx.empty()) comp.createFx(comp.deathFx);
+        if(!App::icontrol().isResetting()) {
+            if(!comp.deathFx.empty()) comp.createFx(comp.deathFx);
+            if(comp.deathSfx) comp.createSfx(comp.deathSfx);
+        }
 
         App::iworld().DestroyBody(comp.body);
     }
@@ -105,6 +128,7 @@ namespace Fantasy {
         holding = false;
         jumping = false;
         time = -1.0f;
+        sound = NULL;
     }
 
     void JumpComp::hold() {
@@ -214,6 +238,7 @@ namespace Fantasy {
         this->range = range;
         lastShoot = timer = Time::time();
         inaccuracy = 0.0f;
+        shootSfx = NULL;
     }
 
     void ShooterComp::update() {
@@ -287,6 +312,7 @@ namespace Fantasy {
 
             b2Body *target = report.get();
             if(target != NULL) {
+                if(shootSfx) createSfx(shootSfx);
                 if(!shootFx.empty()) createFx(shootFx, true);
                 entt::entity bullet = App::icontent().getByName<EntityType>(this->bullet)->create();
 
