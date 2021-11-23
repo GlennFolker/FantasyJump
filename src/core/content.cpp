@@ -179,7 +179,7 @@ namespace Fantasy {
             shoot.shootFx = laserDefuse->name;
             shoot.shootSfx = sfxShootSummon;
 
-            registry.emplace<HealthComp>(e, e, 320.0f, 150.0f);
+            registry.emplace<HealthComp>(e, e, 480.0f, 150.0f);
             registry.emplace<TeamComp>(e, e, Team::KAYDE, 30.0f);
             registry.emplace<DrawComp>(e, e, drawLeak->name, 1.0f, 1.0f, 2.5f);
             registry.emplace<IdentifierComp>(e, e, "leak");

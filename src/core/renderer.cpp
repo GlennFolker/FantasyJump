@@ -62,19 +62,19 @@ uniform vec2 u_resolution;
 uniform vec2 u_position;
 
 uniform vec2 u_dimension_1;
-uniform vec2 u_intensity_1;
+uniform float u_intensity_1;
 uniform vec2 u_dimension_2;
-uniform vec2 u_intensity_2;
+uniform float u_intensity_2;
 
 void main() {
     gl_Position = vec4(a_position, 1.0, 1.0);
     vec2 pos = vec2(u_position.x, -u_position.y);
 
     vec2 scale_1 = u_resolution / u_dimension_1;
-    v_tex_coords_1 = a_tex_coords_0 * scale_1 - (0.5 * scale_1) + (pos * u_intensity_1);
+    v_tex_coords_1 = a_tex_coords_0 * scale_1 - (0.5 * scale_1) + (pos * u_intensity_1) / (u_dimension_1 * 2.0);
 
     vec2 scale_2 = u_resolution / u_dimension_2;
-    v_tex_coords_2 = a_tex_coords_0 * scale_2 - (0.5 * scale_2) + (pos * u_intensity_2);
+    v_tex_coords_2 = a_tex_coords_0 * scale_2 - (0.5 * scale_2) + (pos * u_intensity_2) / (u_dimension_2 * 2.0);
 })";
 
 static constexpr const char *PARALLAX_FRAGMENT_SHADER = R"(
@@ -191,13 +191,15 @@ namespace Fantasy {
         parallax->bind();
         glUniform2f(parallax->uniformLoc("u_resolution"), w, h);
         glUniform2f(parallax->uniformLoc("u_position"), pos.x, pos.y);
+
+        float bgScaleX = scl.x / 4.0f, bgScaleY = scl.y / 4.0f;
         glUniform1i(parallax->uniformLoc("u_texture_1"), backTex1->active(0));
-        glUniform2f(parallax->uniformLoc("u_dimension_1"), backTex1->width / (scl.x / 4.0f), backTex1->height / (scl.y / 4.0f));
-        glUniform2f(parallax->uniformLoc("u_intensity_1"), 0.01f, 0.05f);
+        glUniform2f(parallax->uniformLoc("u_dimension_1"), backTex1->width / bgScaleX, backTex1->height / bgScaleY);
+        glUniform1f(parallax->uniformLoc("u_intensity_1"), 0.27f);
         glUniform1i(parallax->uniformLoc("u_texture_2"), backTex2->active(1));
-        glUniform2f(parallax->uniformLoc("u_dimension_2"), backTex2->width / (scl.x / 4.0f), backTex2->height / (scl.y / 4.0f));
-        glUniform2f(parallax->uniformLoc("u_intensity_2"), 0.01f, 0.02f);
-        
+        glUniform2f(parallax->uniformLoc("u_dimension_2"), backTex2->width / bgScaleX, backTex2->height / bgScaleY);
+        glUniform1f(parallax->uniformLoc("u_intensity_2"), 0.1f);
+
         background->render(parallax, GL_TRIANGLES, 0, background->maxIndices);
 
         batch->col(Color::white);
