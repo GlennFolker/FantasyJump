@@ -11,7 +11,7 @@
 #include "../app.h"
 #include "../util/mathf.h"
 
-constexpr const char *BLOOM_VERTEX_SHADER = R"(
+static constexpr const char *BLOOM_VERTEX_SHADER = R"(
 #version 150 core
 in vec2 a_position;
 in vec2 a_tex_coords_0;
@@ -23,7 +23,7 @@ void main() {
     v_tex_coords = a_tex_coords_0;
 })";
 
-constexpr const char *BLOOM_FRAGMENT_SHADER = R"(
+static constexpr const char *BLOOM_FRAGMENT_SHADER = R"(
 #version 150 core
 out vec4 fragColor;
 in vec2 v_tex_coords;
@@ -50,6 +50,49 @@ void main() {
     fragColor = texture2D(u_texture, v_tex_coords) + sum / pow(2 * u_range + 1, 2) / u_suppress;
 })";
 
+static constexpr const char *PARALLAX_VERTEX_SHADER = R"(
+#version 150 core
+in vec2 a_position;
+in vec2 a_tex_coords_0;
+
+out vec2 v_tex_coords_1;
+out vec2 v_tex_coords_2;
+
+uniform vec2 u_resolution;
+uniform vec2 u_position;
+
+uniform vec2 u_dimension_1;
+uniform vec2 u_intensity_1;
+uniform vec2 u_dimension_2;
+uniform vec2 u_intensity_2;
+
+void main() {
+    gl_Position = vec4(a_position, 1.0, 1.0);
+    vec2 pos = vec2(u_position.x, -u_position.y);
+
+    vec2 scale_1 = u_resolution / u_dimension_1;
+    v_tex_coords_1 = a_tex_coords_0 * scale_1 - (0.5 * scale_1) + (pos * u_intensity_1);
+
+    vec2 scale_2 = u_resolution / u_dimension_2;
+    v_tex_coords_2 = a_tex_coords_0 * scale_2 - (0.5 * scale_2) + (pos * u_intensity_2);
+})";
+
+static constexpr const char *PARALLAX_FRAGMENT_SHADER = R"(
+#version 150 core
+out vec4 fragColor;
+
+in vec2 v_tex_coords_1;
+in vec2 v_tex_coords_2;
+
+uniform sampler2D u_texture_1;
+uniform sampler2D u_texture_2;
+
+void main() {
+    vec4 col_1 = texture2D(u_texture_1, v_tex_coords_1);
+    vec4 col_2 = texture2D(u_texture_2, v_tex_coords_2);
+    fragColor = col_1 * col_1.a + col_2 * col_2.a;
+})";
+
 namespace Fantasy {
     Renderer::Renderer() {
         glEnable(GL_BLEND);
@@ -59,24 +102,42 @@ namespace Fantasy {
         batch = new SpriteBatch();
         buffer = new FrameBuffer(App::instance->getWidth(), App::instance->getHeight());
         toRender = new std::vector<entt::entity>();
-        quad = new Mesh(4, 6, 2, new VertexAttr[2]{
-            VertexAttr::position2D,
-            VertexAttr::texCoords
-        });
 
-        float vertices[] = {
+        bloom = new Shader(BLOOM_VERTEX_SHADER, BLOOM_FRAGMENT_SHADER);
+        quad = new Mesh(4, 6, 2, new VertexAttr[2]{VertexAttr::position2D, VertexAttr::texCoords});
+        float quadvert[] = {
             -1.0f, -1.0f, 0.0f, 0.0f,
             1.0f, -1.0f, 1.0f, 0.0f,
             1.0f, 1.0f, 1.0f, 1.0f,
             -1.0f, 1.0f, 0.0f, 1.0f
         };
-
         unsigned short indices[] = {0, 1, 2, 2, 3, 0};
-
-        quad->setVertices(vertices, 0, sizeof(vertices) / sizeof(float));
+        quad->setVertices(quadvert, 0, sizeof(quadvert) / sizeof(float));
         quad->setIndices(indices, 0, sizeof(indices) / sizeof(unsigned short));
 
-        bloom = new Shader(BLOOM_VERTEX_SHADER, BLOOM_FRAGMENT_SHADER);
+        parallax = new Shader(PARALLAX_VERTEX_SHADER, PARALLAX_FRAGMENT_SHADER);
+        background = new Mesh(4, 6, 2, new VertexAttr[2]{VertexAttr::position2D, VertexAttr::texCoords});
+        float backvert[] = {
+            -1.0f, -1.0f, 0.0f, 1.0f,
+            1.0f, -1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 0.0f,
+            -1.0f, 1.0f, 0.0f, 0.0f
+        };
+        background->setVertices(backvert, 0, sizeof(backvert) / sizeof(float));
+        background->setIndices(indices, 0, sizeof(indices) / sizeof(unsigned short));
+
+        std::function<Tex2D *(const char *)> bgLoad = [](const char *name) {
+            Tex2D *tex = new Tex2D(name);
+            tex->load();
+            tex->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
+            tex->setWrap(GL_REPEAT, GL_REPEAT, GL_REPEAT);
+
+            return tex;
+        };
+
+        backTex1 = bgLoad("assets/background/background-1.png");
+        backTex2 = bgLoad("assets/background/background-2.png");
+
         pos = glm::dvec2(0.0, 0.0);
         scl = glm::dvec2(48.0, 48.0);
         proj = glm::identity<glm::dmat4>();
@@ -89,6 +150,10 @@ namespace Fantasy {
         delete buffer;
         delete quad;
         delete bloom;
+        delete background;
+        delete parallax;
+        delete backTex1;
+        delete backTex2;
         delete toRender;
     }
 
@@ -122,6 +187,18 @@ namespace Fantasy {
         buffer->begin();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        parallax->bind();
+        glUniform2f(parallax->uniformLoc("u_resolution"), w, h);
+        glUniform2f(parallax->uniformLoc("u_position"), pos.x, pos.y);
+        glUniform1i(parallax->uniformLoc("u_texture_1"), backTex1->active(0));
+        glUniform2f(parallax->uniformLoc("u_dimension_1"), backTex1->width / (scl.x / 4.0f), backTex1->height / (scl.y / 4.0f));
+        glUniform2f(parallax->uniformLoc("u_intensity_1"), 0.01f, 0.05f);
+        glUniform1i(parallax->uniformLoc("u_texture_2"), backTex2->active(1));
+        glUniform2f(parallax->uniformLoc("u_dimension_2"), backTex2->width / (scl.x / 4.0f), backTex2->height / (scl.y / 4.0f));
+        glUniform2f(parallax->uniformLoc("u_intensity_2"), 0.01f, 0.02f);
+        
+        background->render(parallax, GL_TRIANGLES, 0, background->maxIndices);
 
         batch->col(Color::white);
         batch->tint(Color());

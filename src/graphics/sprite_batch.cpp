@@ -6,7 +6,7 @@
 #include "../app.h"
 #include "../util/mathf.h"
 
-constexpr const char *DEFAULT_VERTEX_SHADER = R"(
+static constexpr const char *DEFAULT_VERTEX_SHADER = R"(
 #version 150 core
 
 in vec2 a_position;
@@ -27,7 +27,7 @@ void main() {
     v_tint = a_tint;
 })";
 
-constexpr const char *DEFAULT_FRAGMENT_SHADER = R"(
+static constexpr const char *DEFAULT_FRAGMENT_SHADER = R"(
 #version 150 core
 
 out vec4 fragColor;

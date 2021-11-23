@@ -22,10 +22,13 @@ namespace Fantasy {
         glm::dvec2 scl;
 
         private:
+        std::vector<entt::entity> *toRender;
         FrameBuffer *buffer;
         Mesh *quad;
         Shader *bloom;
-        std::vector<entt::entity> *toRender;
+        Mesh *background;
+        Shader *parallax;
+        Tex2D *backTex1, *backTex2;
 
         public:
         Renderer();
