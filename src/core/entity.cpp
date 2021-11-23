@@ -138,6 +138,7 @@ namespace Fantasy {
     }
 
     void JumpComp::release(float x, float y) {
+        if(!holding) return;
         holding = false;
         jumping = true;
         target = b2Vec2(x, y);

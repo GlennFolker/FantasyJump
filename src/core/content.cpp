@@ -49,7 +49,20 @@ namespace Fantasy {
                     batch.col(Color(Color::blue).lerp(Color::white, frac));
                     batch.draw(atlas.get("white"), pos.x + x, pos.y + y, size, size, glm::radians(45.0f));
                 });
-                
+
+                glm::dvec2 mpos;
+                App::irenderer().unproject(App::instance->getMouseX(), App::instance->getMouseY(), &mpos.x, &mpos.y);
+                mpos -= glm::dvec2(pos.x, pos.y);
+
+                float llen = (1.0f - powf(1.0f - frac, 3.0f)) * 5.0f;
+                float langle = glm::orientedAngle(glm::dvec2(1.0f, 0.0f), glm::normalize(mpos));
+                batch.col(Color(Color::blue.r, Color::blue.g, Color::blue.b, 0.0f).lerp(Color::lpurple, 1.0f - powf(1.0f - frac, 2.0f)));
+                batch.draw(atlas.get("white"), pos.x, pos.y, pos.x - 0.075, pos.y - 0.075, llen, 0.125f, langle);
+
+                float lx = pos.x + cosf(langle) * llen, ly = pos.y + sinf(langle) * llen;
+                batch.draw(atlas.get("white"), lx, ly, lx, ly - 0.075f, 1.0f, 0.125f, langle + glm::radians(150.0f));
+                batch.draw(atlas.get("white"), lx, ly, lx, ly - 0.075f, 1.0f, 0.125f, langle - glm::radians(150.0f));
+
                 float size = 1.4f + sinf(Time::time() * 20.0f) * 0.2f;
                 batch.col(Color(1.0f, 1.0f, 1.0f, powf(frac, 3.0f) * 0.5f));
                 batch.draw(atlas.get("jumper"), pos.x, pos.y, size, size, body->GetAngle() - glm::radians(90.0f));
@@ -142,6 +155,19 @@ namespace Fantasy {
                 float rot = fmodf(speeds[i] * direction * Time::time() * glm::pi<float>() + Mathf::srandom((unsigned int)e + i, glm::pi<float>()), glm::two_pi<float>());
                 batch.draw(region, pos.x, pos.y, region.width / 8.0f, region.height / 8.0f, rot);
             }
+
+            Mathf::randVecs((unsigned int)e, 64,
+                4.0f, 20.0f, 1.0f,
+                0.2f * direction * Time::time() * glm::two_pi<float>(),
+                [](float len) { return 0.08f + (1.0f - (len - 4.0f) / 16.0f) * 0.92f; },
+                [&](float x, float y) {
+                    float dst = glm::length(glm::vec2(x, y)) / 20.0f;
+
+                    batch.col(Color(Color::lyellow).lerp(Color(Color::purple.r, Color::purple.g, Color::purple.b, 0.2f), 1.0f - powf(1.0f - dst, 1.5f)));
+                    batch.draw(atlas.get("white"), pos.x + x, pos.y + y, pos.x + x, pos.y + y, 0.25f - dst * 0.125f, 3.5f, glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::normalize(glm::vec2(x, y))));
+                    batch.col(Color::white);
+                }
+            );
         });
 
         leak = create<EntityType>("ent-leak", [this](entt::entity e) {
@@ -161,7 +187,7 @@ namespace Fantasy {
             fixt.friction = 0.8f;
 
             b2CircleShape clipSize;
-            clipSize.m_radius = 7.5f;
+            clipSize.m_radius = 24.0f;
 
             b2FixtureDef clip;
             clip.shape = &clipSize;
