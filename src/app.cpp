@@ -45,7 +45,6 @@ namespace Fantasy {
         if(window == NULL) throw std::runtime_error(std::string("Couldn't create SDL window: ").append(SDL_GetError()).c_str());
 
         getViewport(&lastWidth, &lastHeight);
-        setFullscreen(config.fullscreen);
         
         context = SDL_GL_CreateContext(window);
         if(context == NULL) throw std::runtime_error(std::string("Couldn't create OpenGL context: ").append(SDL_GetError()).c_str());
@@ -65,6 +64,9 @@ namespace Fantasy {
         listeners = new std::vector<AppListener *>();
         listeners->push_back(control = new GameController());
         listeners->push_back(renderer = new Renderer());
+
+        glFinish();
+        setFullscreen(config.fullscreen);
 
         control->resetGame();
     }
@@ -127,13 +129,8 @@ namespace Fantasy {
         }
     }
 
-    void App::exit() {
-        exiting = true;
-    }
-
-    void App::getViewport(int *w, int *h) {
-        SDL_GetWindowSize(window, w, h);
-    }
+    void App::exit() { exiting = true; }
+    void App::getViewport(int *w, int *h) { SDL_GetWindowSize(window, w, h); }
 
     int App::getWidth() {
         int w;
@@ -149,10 +146,7 @@ namespace Fantasy {
         return h;
     }
 
-    void App::getMouse(int *x, int *y) {
-        SDL_GetMouseState(x, y);
-    }
-
+    void App::getMouse(int *x, int *y) { SDL_GetMouseState(x, y); }
     int App::getMouseX() {
         int x;
         getMouse(&x, NULL);
@@ -167,7 +161,5 @@ namespace Fantasy {
         return y;
     }
 
-    float App::getAspect() {
-        return (float)getWidth() / (float)getHeight();
-    }
+    float App::getAspect() { return (float)getWidth() / (float)getHeight(); }
 }
