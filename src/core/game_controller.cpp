@@ -28,7 +28,7 @@ namespace Fantasy {
         content = new Contents();
 
         leakKilled = 0;
-        restartTime = winTime = resetTime = -1.0f;
+        restartTime = winTime = resetTime = exitTime = -1.0f;
         player = entt::entity();
         App::instance->input->attach(Input::MOUSE, [&](InputContext &ctx) {
             if(ctx.read<SDL_MouseButtonEvent>().button != SDL_BUTTON_LEFT || !regist->valid(player)) return;
@@ -44,8 +44,15 @@ namespace Fantasy {
             }
         });
 
-        App::instance->input->attach(Input::KEYBOARD, [](InputContext &ctx) {
-            if(ctx.read<SDL_KeyboardEvent>().keysym.scancode == SDL_SCANCODE_ESCAPE) App::instance->exit();
+        App::instance->input->attach(Input::KEYBOARD, [&](InputContext &ctx) {
+            switch(ctx.read<SDL_KeyboardEvent>().keysym.scancode) {
+                case SDL_SCANCODE_F4: if(ctx.performed) { App::instance->setFullscreen(!App::instance->isFullscreen()); } break;
+                case SDL_SCANCODE_ESCAPE: if(ctx.performed) {
+                    if(exitTime == -1.0f) exitTime = Time::time();
+                } else {
+                    exitTime = -1.0f;
+                } break;
+            }
         });
 
         Events::on<EntDeathEvent>([this](Event &e) {
@@ -127,6 +134,7 @@ namespace Fantasy {
     }
 
     void GameController::update() {
+        if(exitTime != -1.0f && Time::time() - exitTime >= 1.0f) App::instance->exit();
         if((restartTime != -1.0f && Time::time() - restartTime >= 3.0f) || (winTime != -1.0f && Time::time() - winTime >= 5.0f)) resetGame();
         removeEntities();
 
@@ -185,4 +193,5 @@ namespace Fantasy {
     float GameController::getWinTime() { return winTime; }
     float GameController::getRestartTime() { return restartTime; }
     float GameController::getResetTime() { return resetTime; }
+    float GameController::getExitTime() { return exitTime; }
 }

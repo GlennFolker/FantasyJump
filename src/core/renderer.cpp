@@ -278,6 +278,16 @@ namespace Fantasy {
             batch->col(Color::white);
         }
 
+        if(App::icontrol().getExitTime() != -1.0f) {
+            const TexRegion &region = atlas->get("splash-quit");
+            batch->col(Color(1.0f, 1.0f, 1.0f, Mathf::clamp((Time::time() - App::icontrol().getExitTime()) / 1.0f)));
+
+            glm::dvec2 spos;
+            unproject(0.0, 0.0, &spos.x, &spos.y);
+            batch->draw(region, spos.x, spos.y, spos.x, spos.y - region.height / 8.0f, region.width / 8.0f, region.height / 8.0f);
+            batch->col(Color::white);
+        }
+
         toRender->clear();
 
         batch->proj(proj);

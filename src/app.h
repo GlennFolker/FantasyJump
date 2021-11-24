@@ -36,6 +36,8 @@ namespace Fantasy {
 
         private:
         bool exiting;
+        bool fullscreen;
+        int lastWidth, lastHeight;
 
         public:
         App(int, char *[], AppConfig);
@@ -44,6 +46,8 @@ namespace Fantasy {
         bool run();
         void exit();
 
+        bool isFullscreen();
+        void setFullscreen(bool);
         void getViewport(int *, int *);
         int getWidth();
         int getHeight();

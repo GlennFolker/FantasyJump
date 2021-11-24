@@ -18,18 +18,14 @@ namespace Fantasy {
             case SDL_MOUSEBUTTONUP:
                 ctx.performed = e.type == SDL_MOUSEBUTTONDOWN;
                 ctx.set(e.button);
-                for(std::function<void(InputContext &)> &func : *mouse) {
-                    func(ctx);
-                }
+                for(std::function<void(InputContext &)> &func : *mouse) func(ctx);
                 break;
 
             case SDL_KEYDOWN:
             case SDL_KEYUP:
                 ctx.performed = e.type == SDL_KEYDOWN;
                 ctx.set(e.key);
-                for(std::function<void(InputContext &)> &func : *keyboard) {
-                    func(ctx);
-                }
+                for(std::function<void(InputContext &)> &func : *keyboard) func(ctx);
                 break;
         }
     }

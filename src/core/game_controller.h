@@ -15,6 +15,7 @@ namespace Fantasy {
         float restartTime;
         float winTime;
         float resetTime;
+        float exitTime;
         bool resetting;
         int leakKilled;
         
@@ -38,6 +39,7 @@ namespace Fantasy {
         float getRestartTime();
         float getWinTime();
         float getResetTime();
+        float getExitTime();
 
         void BeginContact(b2Contact *) override;
         void EndContact(b2Contact *) override;

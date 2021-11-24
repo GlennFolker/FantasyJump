@@ -9,6 +9,7 @@ using namespace Fantasy;
 
 int main(int argc, char *argv[]) {
     AppConfig config = AppConfig();
+    config.fullscreen = true;
     config.resizable = true;
     config.width = 800;
     config.height = 600;
