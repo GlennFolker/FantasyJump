@@ -41,10 +41,10 @@ namespace Fantasy {
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-        window = SDL_CreateWindow("FantasyJump", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, config.width, config.height, flags);
+        lastWidth = config.width;
+        lastHeight = config.height;
+        window = SDL_CreateWindow("FantasyJump", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, config.width, config.height, flags);
         if(window == NULL) throw std::runtime_error(std::string("Couldn't create SDL window: ").append(SDL_GetError()).c_str());
-
-        getViewport(&lastWidth, &lastHeight);
         
         context = SDL_GL_CreateContext(window);
         if(context == NULL) throw std::runtime_error(std::string("Couldn't create OpenGL context: ").append(SDL_GetError()).c_str());
@@ -65,9 +65,7 @@ namespace Fantasy {
         listeners->push_back(control = new GameController());
         listeners->push_back(renderer = new Renderer());
 
-        glFinish();
         setFullscreen(config.fullscreen);
-
         control->resetGame();
     }
 
@@ -116,16 +114,11 @@ namespace Fantasy {
 
         if(fullscreen) {
             getViewport(&lastWidth, &lastHeight);
-
-            SDL_DisplayMode mode;
-            SDL_GetCurrentDisplayMode(0, &mode);
-
-            SDL_SetWindowSize(window, mode.w, mode.h);
-            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
         } else {
             SDL_SetWindowFullscreen(window, false);
             SDL_SetWindowSize(window, lastWidth, lastHeight);
-            SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+            SDL_SetWindowPosition(window, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED);
         }
     }
 

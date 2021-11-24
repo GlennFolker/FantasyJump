@@ -46,7 +46,7 @@ namespace Fantasy {
 
         App::instance->input->attach(Input::KEYBOARD, [&](InputContext &ctx) {
             switch(ctx.read<SDL_KeyboardEvent>().keysym.scancode) {
-                case SDL_SCANCODE_F4: if(ctx.performed) { App::instance->setFullscreen(!App::instance->isFullscreen()); } break;
+                case SDL_SCANCODE_F11: if(ctx.performed) { App::instance->setFullscreen(!App::instance->isFullscreen()); } break;
                 case SDL_SCANCODE_ESCAPE: if(ctx.performed) {
                     if(exitTime == -1.0f) exitTime = Time::time();
                 } else {
