@@ -164,7 +164,7 @@ namespace Fantasy {
                     float dst = glm::length(glm::vec2(x, y)) / 20.0f;
 
                     batch.col(Color(Color::lyellow).lerp(Color(Color::purple.r, Color::purple.g, Color::purple.b, 0.2f), 1.0f - powf(1.0f - dst, 1.5f)));
-                    batch.draw(atlas.get("white"), pos.x + x, pos.y + y, pos.x + x, pos.y + y, 0.25f - dst * 0.125f, 3.5f, glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::normalize(glm::vec2(x, y))));
+                    batch.draw(atlas.get("white"), pos.x + x, pos.y + y, 0.25f - dst * 0.125f, 3.5f, glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::normalize(glm::vec2(x, y))));
                     batch.col(Color::white);
                 }
             );

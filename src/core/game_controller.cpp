@@ -19,7 +19,6 @@ namespace Fantasy {
         regist = new entt::registry();
         regist->on_destroy<RigidComp>().connect<&RigidComp::onDestroy>();
         removal = new std::unordered_set<entt::entity>();
-        resetting = false;
 
         world = new b2World(b2Vec2(0.0f, -9.81f));
         world->SetContactListener(this);
@@ -28,7 +27,8 @@ namespace Fantasy {
         content = new Contents();
 
         leakKilled = 0;
-        restartTime = winTime = resetTime = exitTime = -1.0f;
+        playing = resetting = false;
+        restartTime = winTime = resetTime = exitTime = startTime = -1.0f;
         player = entt::entity();
         App::instance->input->attach(Input::MOUSE, [&](InputContext &ctx) {
             if(ctx.read<SDL_MouseButtonEvent>().button != SDL_BUTTON_LEFT || !regist->valid(player)) return;
@@ -55,6 +55,14 @@ namespace Fantasy {
             }
         });
 
+        App::instance->input->attach(Input::KEYBOARD, [&](InputContext &ctx) {
+            if(playing) return;
+            if(ctx.performed && ctx.read<SDL_KeyboardEvent>().keysym.scancode == SDL_SCANCODE_RETURN) {
+                playing = true;
+                resetGame();
+            }
+        });
+
         Events::on<EntDeathEvent>([this](Event &e) {
             EntDeathEvent &ent = (EntDeathEvent &)e;
             if(winTime == -1.0f && ent.entity == player) {
@@ -62,6 +70,10 @@ namespace Fantasy {
             } else if(restartTime == -1.0f && regist->any_of<IdentifierComp>(ent.entity) && regist->get<IdentifierComp>(ent.entity).id == "leak" && ++leakKilled >= 3) {
                 winTime = Time::time();
             }
+        });
+
+        Events::on<AppLoadEvent>([this](Event &e) {
+            startTime = Time::time();
         });
     }
 
@@ -145,7 +157,7 @@ namespace Fantasy {
         regist->view<ShooterComp>().each([](const entt::entity &e, ShooterComp &comp) { comp.update(); });
         regist->view<TemporalComp>().each([](const entt::entity &e, TemporalComp &comp) { comp.update(); });
     }
-
+    
     void GameController::BeginContact(b2Contact *contact) {
         b2Fixture *fa = contact->GetFixtureA(), *fb = contact->GetFixtureB();
         if(fa->IsSensor() || fb->IsSensor()) return;
@@ -190,8 +202,10 @@ namespace Fantasy {
     }
 
     bool GameController::isResetting() { return resetting; }
+    bool GameController::isPlaying() { return playing; }
     float GameController::getWinTime() { return winTime; }
     float GameController::getRestartTime() { return restartTime; }
     float GameController::getResetTime() { return resetTime; }
     float GameController::getExitTime() { return exitTime; }
+    float GameController::getStartTime() { return startTime; }
 }

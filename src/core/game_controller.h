@@ -16,7 +16,9 @@ namespace Fantasy {
         float winTime;
         float resetTime;
         float exitTime;
+        float startTime;
         bool resetting;
+        bool playing;
         int leakKilled;
         
         public:
@@ -35,11 +37,14 @@ namespace Fantasy {
         void update() override;
         void scheduleRemoval(entt::entity);
         void resetGame();
+
         bool isResetting();
+        bool isPlaying();
         float getRestartTime();
         float getWinTime();
         float getResetTime();
         float getExitTime();
+        float getStartTime();
 
         void BeginContact(b2Contact *) override;
         void EndContact(b2Contact *) override;

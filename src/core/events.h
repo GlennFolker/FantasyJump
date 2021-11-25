@@ -49,6 +49,8 @@ namespace Fantasy {
         EntDeathEvent();
         EntDeathEvent(entt::entity);
     };
+
+    class AppLoadEvent: public Event {};
 }
 
 #endif

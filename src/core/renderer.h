@@ -37,6 +37,9 @@ namespace Fantasy {
         void update() override;
         void unproject(double, double, double *, double *);
         bool ReportFixture(b2Fixture *fixture) override;
+
+        private:
+        void drawEntities();
     };
 }
 

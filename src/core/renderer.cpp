@@ -159,12 +159,13 @@ namespace Fantasy {
 
     void Renderer::update() {
         float time = Time::time();
-        b2World *world = App::instance->control->world;
-        entt::registry *regist = App::instance->control->regist;
-        entt::entity player = App::instance->control->player;
+        GameController &control = App::icontrol();
+        b2World &world = *control.world;
+        entt::registry &regist = *control.regist;
+        entt::entity player = control.player;
 
-        if(regist->valid(player)) {
-            b2Vec2 pos = regist->get<RigidComp>(player).body->GetTransform().p;
+        if(regist.valid(player)) {
+            b2Vec2 pos = regist.get<RigidComp>(player).body->GetTransform().p;
             this->pos = glm::vec2(pos.x, pos.y);
         }
 
@@ -183,10 +184,64 @@ namespace Fantasy {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        buffer->resize(App::instance->getWidth(), App::instance->getHeight());
+        buffer->resize(rw, rh);
         buffer->begin();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        if(control.isPlaying()) {
+            drawEntities();
+        } else {
+            TexRegion regions[] = {atlas->get("splash-inst-1"), atlas->get("splash-inst-2"), atlas->get("splash-inst-3"), atlas->get("splash-inst-4"), atlas->get("splash-inst-5")};
+            float totalHeight = regions[0].height / 2.0f;
+            for(int i = 0; i < 5; i++) totalHeight += regions[i].height / 6.0f;
+
+            float height = 0.0f;
+            for(int i = 0; i < 5; i++) {
+                const TexRegion &region = regions[i];
+
+                float prog = Mathf::clamp((Time::time() - (control.getStartTime() + 0.2f * i + 0.5f)) / 1.5f);
+                batch->col(Color(1.0f, 1.0f, 1.0f, 0.0f).lerp(Color::white, prog));
+                batch->draw(region,
+                    0.0f, totalHeight / 2.0f + height - (1.0f - powf(1.0f - prog, 3.0f) * 1.5f),
+                    region.width / 6.0f, region.height / 6.0f
+                );
+
+                height -= region.height / 3.0f;
+            }
+
+            batch->col(Color::white);
+        }
+
+        if(control.getExitTime() != -1.0f) {
+            const TexRegion &region = atlas->get("splash-quit");
+            batch->col(Color(1.0f, 1.0f, 1.0f, Mathf::clamp((Time::time() - control.getExitTime()) / 1.0f)));
+
+            glm::dvec2 spos;
+            unproject(0.0, 0.0, &spos.x, &spos.y);
+            batch->draw(region, spos.x, spos.y, spos.x, spos.y - region.height / 8.0f, region.width / 8.0f, region.height / 8.0f);
+            batch->col(Color::white);
+        }
+
+        batch->proj(proj);
+        batch->flush();
+        buffer->end();
+
+        bloom->bind();
+        glUniform1i(bloom->uniformLoc("u_texture"), buffer->texture->active(0));
+        glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 2.5f, App::instance->getHeight() / 2.5f);
+        glUniform1i(bloom->uniformLoc("u_range"), 4);
+        glUniform1f(bloom->uniformLoc("u_suppress"), 1.2f);
+
+        quad->render(bloom, GL_TRIANGLES, 0, quad->maxIndices);
+    }
+
+    void Renderer::drawEntities() {
+        b2World &world = App::iworld();
+        entt::registry &regist = App::iregistry();
+        GameController &control = App::icontrol();
+
+        float w = App::instance->getWidth() / scl.x, h = App::instance->getHeight() / scl.y;
 
         parallax->bind();
         glUniform2f(parallax->uniformLoc("u_resolution"), w, h);
@@ -209,7 +264,7 @@ namespace Fantasy {
         bound.lowerBound = b2Vec2(pos.x - w, pos.y - h);
         bound.upperBound = b2Vec2(pos.x + w, pos.y + h);
 
-        world->QueryAABB(this, bound);
+        world.QueryAABB(this, bound);
         std::sort(toRender->begin(), toRender->end(), [](const entt::entity &a, const entt::entity &b) {
             entt::registry &registry = App::iregistry();
             float za = registry.get<DrawComp>(a).z, zb = registry.get<DrawComp>(b).z;
@@ -219,19 +274,19 @@ namespace Fantasy {
             } else {
                 return za < zb;
             }
-        });
+            });
 
         for(const entt::entity &e : *toRender) {
             batch->col(Color::white);
             batch->tint(Color());
-            regist->get<DrawComp>(e).update();
+            regist.get<DrawComp>(e).update();
 
-            if(regist->any_of<HealthComp>(e)) {
-                HealthComp &comp = regist->get<HealthComp>(e);
+            if(regist.any_of<HealthComp>(e)) {
+                HealthComp &comp = regist.get<HealthComp>(e);
                 if(!comp.showBar || !comp.canHurt()) continue;
 
-                b2Vec2 pos = regist->get<RigidComp>(e).body->GetPosition();
-                
+                b2Vec2 pos = regist.get<RigidComp>(e).body->GetPosition();
+
                 float frac = comp.health / comp.maxHealth;
                 const TexRegion &region = atlas->get("white");
 
@@ -246,8 +301,8 @@ namespace Fantasy {
             batch->col(Color::white);
             batch->tint(Color());
         }
-        
-        App::iregistry().view<IdentifierComp>().each([this](const entt::entity &e, IdentifierComp &comp) {
+
+        regist.view<IdentifierComp>().each([this](const entt::entity &e, IdentifierComp &comp) {
             entt::registry &registry = App::iregistry();
             if(comp.id != "leak" || !registry.any_of<RigidComp>(e)) return;
 
@@ -256,7 +311,7 @@ namespace Fantasy {
 
             b2Vec2 result = target - pos;
             result.Normalize();
-            
+
             float angle = glm::orientedAngle(glm::vec2(1.0f, 0.0f), glm::vec2(result.x, result.y));
             result *= 3.0f;
 
@@ -265,42 +320,20 @@ namespace Fantasy {
             batch->col(Color::white);
         });
 
-        if(App::icontrol().getRestartTime() != -1.0f) {
+        if(control.getRestartTime() != -1.0f) {
             const TexRegion &region = atlas->get("splash-lose");
             batch->draw(region, pos.x, pos.y - 5.0f, region.width / 8.0f, region.height / 8.0f);
-        } else if(App::icontrol().getWinTime() != -1.0f) {
+        } else if(control.getWinTime() != -1.0f) {
             const TexRegion &region = atlas->get("splash-win");
             batch->draw(region, pos.x, pos.y - 5.0f, region.width / 8.0f, region.height / 8.0f);
         } else {
             const TexRegion &region = atlas->get("splash-intro");
-            batch->col(Color(1.0f, 1.0f, 1.0f, 1.0f - Mathf::clamp((Time::time() - (App::icontrol().getResetTime() + 2.5f)) / 0.5f)));
+            batch->col(Color(1.0f, 1.0f, 1.0f, 1.0f - Mathf::clamp((Time::time() - (control.getResetTime() + 2.5f)) / 0.5f)));
             batch->draw(region, pos.x, pos.y - 5.0f, region.width / 8.0f, region.height / 8.0f);
             batch->col(Color::white);
         }
 
-        if(App::icontrol().getExitTime() != -1.0f) {
-            const TexRegion &region = atlas->get("splash-quit");
-            batch->col(Color(1.0f, 1.0f, 1.0f, Mathf::clamp((Time::time() - App::icontrol().getExitTime()) / 1.0f)));
-
-            glm::dvec2 spos;
-            unproject(0.0, 0.0, &spos.x, &spos.y);
-            batch->draw(region, spos.x, spos.y, spos.x, spos.y - region.height / 8.0f, region.width / 8.0f, region.height / 8.0f);
-            batch->col(Color::white);
-        }
-
         toRender->clear();
-
-        batch->proj(proj);
-        batch->flush();
-        buffer->end();
-
-        bloom->bind();
-        glUniform1i(bloom->uniformLoc("u_texture"), buffer->texture->active(0));
-        glUniform2f(bloom->uniformLoc("u_resolution"), App::instance->getWidth() / 2.5f, App::instance->getHeight() / 2.5f);
-        glUniform1i(bloom->uniformLoc("u_range"), 4);
-        glUniform1f(bloom->uniformLoc("u_suppress"), 1.2f);
-
-        quad->render(bloom, GL_TRIANGLES, 0, quad->maxIndices);
     }
 
     bool Renderer::ReportFixture(b2Fixture *fixture) {

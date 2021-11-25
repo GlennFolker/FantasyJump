@@ -9,6 +9,7 @@
 
 #include "app.h"
 #include "core/renderer.h"
+#include "core/events.h"
 
 namespace Fantasy {
     App *App::instance = NULL;
@@ -49,7 +50,7 @@ namespace Fantasy {
         context = SDL_GL_CreateContext(window);
         if(context == NULL) throw std::runtime_error(std::string("Couldn't create OpenGL context: ").append(SDL_GetError()).c_str());
 
-        SDL_Log("GL version: %s", glGetString(GL_VERSION));
+        SDL_Log("OpenGL version: %s", glGetString(GL_VERSION));
 
         GLenum error = GL_NO_ERROR;
         glewExperimental = GL_TRUE;
@@ -66,7 +67,7 @@ namespace Fantasy {
         listeners->push_back(renderer = new Renderer());
 
         setFullscreen(config.fullscreen);
-        control->resetGame();
+        Events::fire<AppLoadEvent>(AppLoadEvent());
     }
 
     App::~App() {
