@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 #include "frame_buffer.h"
 #include "../app.h"

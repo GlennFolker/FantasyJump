@@ -2,8 +2,8 @@
 #include <glm/gtx/vector_angle.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <gl/glew.h>
-#include <gl/GLU.h>
+#include <GL/glew.h>
+#include <GL/glu.h>
 
 #include "renderer.h"
 #include "entity.h"

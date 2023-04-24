@@ -2,7 +2,7 @@
 #include <SDL_version.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <SDL_opengl.h>
 #include <stdexcept>
 #include <string>

@@ -1,7 +1,7 @@
 #ifndef APP_H
 #define APP_H
 
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <glm/mat4x4.hpp>
 #include <SDL.h>
 #include <SDL_opengl.h>

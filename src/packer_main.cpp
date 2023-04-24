@@ -1,11 +1,12 @@
+#include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
-#include <cstdio>
-#include <math.h>
 #include <functional>
-#include <cstring>
-#include <vector>
+#include <math.h>
+#include <optional>
 #include <unordered_map>
+#include <vector>
 
 #include "util/pngio.h"
 

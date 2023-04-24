@@ -2,7 +2,7 @@
 #define TEX_H
 
 #include <SDL_image.h>
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 namespace Fantasy {
     class Tex {
