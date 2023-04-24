@@ -1,8 +1,0 @@
-/home/folker/FantasyJump/build/CMakeFiles/Fantasy.dir
-/home/folker/FantasyJump/build/CMakeFiles/Packer.dir
-/home/folker/FantasyJump/build/CMakeFiles/edit_cache.dir
-/home/folker/FantasyJump/build/CMakeFiles/rebuild_cache.dir
-/home/folker/FantasyJump/build/CMakeFiles/list_install_components.dir
-/home/folker/FantasyJump/build/CMakeFiles/install.dir
-/home/folker/FantasyJump/build/CMakeFiles/install/local.dir
-/home/folker/FantasyJump/build/CMakeFiles/install/strip.dir
