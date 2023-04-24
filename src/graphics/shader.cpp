@@ -9,14 +9,14 @@ namespace Fantasy {
     Shader::Shader(const char *vertSource, const char *fragSource): Shader(&vertSource, &fragSource) {}
     Shader::Shader(const char **vertSource, const char **fragSource) {
         vertPtr = createShader(GL_VERTEX_SHADER, vertSource);
-        if(vertPtr == NULL) throw std::runtime_error("Couldn't create vertex shader.");
+        if(vertPtr == 0) throw std::runtime_error("Couldn't create vertex shader.");
 
         fragPtr = createShader(GL_FRAGMENT_SHADER, fragSource);
-        if(fragPtr == NULL) throw std::runtime_error("Couldn't create fragment shader.");
+        if(fragPtr == 0) throw std::runtime_error("Couldn't create fragment shader.");
 
         progPtr = glCreateProgram();
-        if(progPtr == NULL) throw std::runtime_error("Couldn't create GL program.");
-        
+        if(progPtr == 0) throw std::runtime_error("Couldn't create GL program.");
+
         glAttachShader(progPtr, vertPtr);
         glAttachShader(progPtr, fragPtr);
         glBindFragDataLocation(progPtr, 0, "fragColor");
@@ -73,9 +73,9 @@ namespace Fantasy {
 
     unsigned int Shader::createShader(int type, const char **source) {
         unsigned int shader = glCreateShader(type);
-        if(!shader) return NULL;
+        if(!shader) return 0;
 
-        glShaderSource(shader, 1, source, NULL);
+        glShaderSource(shader, 1, source, 0);
         glCompileShader(shader);
 
         int compiled;
@@ -84,7 +84,7 @@ namespace Fantasy {
         logShader(shader);
         if(compiled != GL_TRUE) {
             glDeleteShader(shader);
-            return NULL;
+            return 0;
         } else {
             return shader;
         }

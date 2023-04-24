@@ -10,7 +10,7 @@ namespace Fantasy {
     Tex::Tex(const char *filename): Tex(IMG_Load(filename)) {}
     Tex::Tex(SDL_Surface *surface) {
         this->surface = surface;
-        data = NULL;
+        data = 0;
     }
 
     Tex::~Tex() {
@@ -21,9 +21,9 @@ namespace Fantasy {
         glGenTextures(1, &data);
         set(surface);
 
-        if(surface != NULL) {
+        if(surface != nullptr) {
             SDL_FreeSurface(surface);
-            surface = NULL;
+            surface = nullptr;
         }
     }
 
@@ -46,27 +46,27 @@ namespace Fantasy {
     }
 
     void Tex2D::set(SDL_Surface *surface, bool bind) {
-        if(surface != NULL) {
+        if(surface != nullptr) {
             width = surface->w;
             height = surface->h;
         }
 
-        SDL_Surface *substitute = NULL;
-        if(surface != NULL && surface->format->format != SDL_PIXELFORMAT_ABGR8888) {
+        SDL_Surface *substitute = nullptr;
+        if(surface != nullptr && surface->format->format != SDL_PIXELFORMAT_ABGR8888) {
             substitute = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ABGR8888, 0);
         }
-        
+
         if(bind) this->bind();
         glTexImage2D(
             GL_TEXTURE_2D, 0,
             GL_RGBA8,
             width, height, 0,
             GL_RGBA,
-            GL_UNSIGNED_BYTE, substitute != NULL ? substitute->pixels : surface != NULL ? surface->pixels : NULL
+            GL_UNSIGNED_BYTE, substitute != nullptr ? substitute->pixels : surface != nullptr ? surface->pixels : nullptr
         );
-        
+
         glGenerateMipmap(GL_TEXTURE_2D);
-        if(substitute != NULL) SDL_FreeSurface(substitute);
+        if(substitute != nullptr) SDL_FreeSurface(substitute);
     }
 
     void Tex2D::setWrap(int s, int t, int r, bool bind) {

@@ -584,7 +584,7 @@ namespace Fantasy {
 
     std::unordered_map<std::string, Content *> *Contents::getBy(CType type) {
         int ordinal = (int)type;
-        if(contents->at(ordinal) == NULL) contents->at(ordinal) = new std::unordered_map<std::string, Content *>();
+        if(contents->at(ordinal) == nullptr) contents->at(ordinal) = new std::unordered_map<std::string, Content *>();
 
         return contents->at(ordinal);
     }

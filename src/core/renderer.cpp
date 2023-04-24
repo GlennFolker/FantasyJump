@@ -354,7 +354,7 @@ namespace Fantasy {
         gluUnProject(
             x, y, 0.0,
             glm::value_ptr(glm::identity<glm::dmat4>()), glm::value_ptr(flipProj), viewport,
-            newX == NULL ? &unusedX : newX, newY == NULL ? &unusedY : newY, &unusedZ
+            newX == nullptr ? &unusedX : newX, newY == nullptr ? &unusedY : newY, &unusedZ
         );
     }
 }

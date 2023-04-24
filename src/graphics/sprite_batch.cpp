@@ -44,7 +44,7 @@ void main() {
 })";
 
 namespace Fantasy {
-    SpriteBatch::SpriteBatch(): SpriteBatch(8191, NULL) {}
+    SpriteBatch::SpriteBatch(): SpriteBatch(8191, nullptr) {}
     SpriteBatch::SpriteBatch(size_t size, Shader *shader) {
         if(size > 8191) throw std::runtime_error("Max vertices is 8191");
 
@@ -53,7 +53,7 @@ namespace Fantasy {
         tinted = Color();
         tintBits = tinted.fabgr();
         index = 0;
-        texture = NULL;
+        texture = nullptr;
         projection = glm::identity<glm::mat4>();
 
         size_t indicesCount = size * 6;
@@ -75,7 +75,7 @@ namespace Fantasy {
         vertices = new float[vertLength];
         tmp = new float[spriteSize * 4];
 
-        this->shader = shader == NULL ? new Shader(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER) : shader;
+        this->shader = shader == nullptr ? new Shader(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER) : shader;
 
         unsigned short *indices = new unsigned short[indicesCount];
         for(size_t i = 0, j = 0; i < indicesCount; i += 6, j += 4) {
@@ -91,9 +91,9 @@ namespace Fantasy {
     }
 
     SpriteBatch::~SpriteBatch() {
-        if(shader != NULL) delete shader;
-        if(mesh != NULL) delete mesh;
-        if(vertices != NULL) delete[] vertices;
+        if(shader != nullptr) delete shader;
+        if(mesh != nullptr) delete mesh;
+        if(vertices != nullptr) delete[] vertices;
     }
 
     void SpriteBatch::draw(Tex2D *texture, float *vertices, size_t offset, size_t length) {
@@ -200,7 +200,7 @@ namespace Fantasy {
     }
 
     void SpriteBatch::flush() {
-        if(index == 0 || texture == NULL) return;
+        if(index == 0 || texture == nullptr) return;
 
         shader->bind();
         glUniformMatrix4fv(shader->uniformLoc("u_proj"), 1, false, glm::value_ptr(projection));

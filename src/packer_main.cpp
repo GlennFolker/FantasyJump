@@ -29,8 +29,8 @@ struct Node {
 
     Node() {
         full = false;
-        left = std::shared_ptr<Node>(NULL);
-        right = std::shared_ptr<Node>(NULL);
+        left = std::shared_ptr<Node>(nullptr);
+        right = std::shared_ptr<Node>(nullptr);
     }
 };
 
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 
     printf("Packing textures in %s...\n", target.string().c_str());
     std::vector<Png *> textures;
-    
+
     fs::recursive_directory_iterator it(target);
     for(const fs::directory_entry &child : it) {
         std::string cpath = child.path().string();
@@ -127,8 +127,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("Packing %d texture%s...\nMax width : %d\nMax height: %d\nPadding: %d\n", textures.size(), textures.size() != 1 ? "s" : "", maxWidth, maxHeight, padding);
-    
+    printf("Packing %ld texture%s...\nMax width : %d\nMax height: %d\nPadding: %d\n", textures.size(), textures.size() != 1 ? "s" : "", maxWidth, maxHeight, padding);
+
     std::sort(textures.begin(), textures.end(), [](const Png *a, const Png *b) -> bool {
         return fmax(a->width, a->height) > fmax(b->width, b->height);
     });
@@ -158,11 +158,11 @@ int main(int argc, char *argv[]) {
         rect = node.value()->rect;
         rect.width -= padding;
         rect.height -= padding;
-        
+
         page.rects.emplace(texture, rect);
     }
 
-    printf("Generating %d page%s...\n", pages.size(), pages.size() != 1 ? "s" : "");
+    printf("Generating %ld page%s...\n", pages.size(), pages.size() != 1 ? "s" : "");
 
     std::ofstream out(fs::path(root).append("texture.atlas").string().c_str(), std::ios::binary);
     if(!out.is_open()) {
@@ -171,12 +171,12 @@ int main(int argc, char *argv[]) {
         printf("Couldn't open output file.\n");
         return 1;
     }
-    
+
     const std::string &targetstr = target.string();
     int num = 0;
 
-    out << (char)1; // Atlas version.
-    
+    out << (char)1;
+
     size_t size = pages.size();
     out.write(reinterpret_cast<char *>(&size), sizeof(size_t));
     for(const Page &page : pages) {
@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
 
     out.close();
     for(const Png *texture : textures) delete texture;
-    
+
     printf("Done generating.\n");
     return 0;
 }

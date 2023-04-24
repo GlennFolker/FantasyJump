@@ -5,7 +5,7 @@
 #include "../app.h"
 
 namespace Fantasy {
-    FrameBuffer *FrameBuffer::last = NULL;
+    FrameBuffer *FrameBuffer::last = nullptr;
 
     FrameBuffer::FrameBuffer(): FrameBuffer(2, 2) {}
     FrameBuffer::FrameBuffer(int width, int height) : FrameBuffer(width, height, true) {}
@@ -19,25 +19,24 @@ namespace Fantasy {
         hasColor = color;
         hasDepth = depth;
         hasStencil = stencil;
-        before = NULL;
+        before = nullptr;
         capturing = false;
 
         glGenFramebuffers(1, &data);
         begin();
 
         if(color) {
-            texture = new Tex2D(width, height, NULL);
+            texture = new Tex2D(width, height, nullptr);
             texture->load();
             texture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
             texture->setWrap(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
 
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->data, 0);
         } else {
-            texture = NULL;
+            texture = nullptr;
         }
 
         if(depth || stencil) {
-            //TODO encapsulate
             glGenRenderbuffers(1, &render);
             glBindRenderbuffer(GL_RENDERBUFFER, render);
 
@@ -56,15 +55,15 @@ namespace Fantasy {
                 GL_RENDERBUFFER, render
             );
         } else {
-            render = NULL;
+            render = 0;
         }
 
         end();
     }
 
     FrameBuffer::~FrameBuffer() {
-        if(texture != NULL) delete texture;
-        if(render != NULL) glDeleteRenderbuffers(1, &render);
+        if(texture != nullptr) delete texture;
+        if(render != 0) glDeleteRenderbuffers(1, &render);
         glDeleteFramebuffers(1, &data);
     }
 
@@ -72,7 +71,7 @@ namespace Fantasy {
         if(capturing || (this->width == width && this->height == height)) return;
 
         this->~FrameBuffer();
-        before = NULL;
+        before = nullptr;
         capturing = false;
         this->width = width;
         this->height = height;
@@ -81,18 +80,17 @@ namespace Fantasy {
         begin();
 
         if(hasColor) {
-            texture = new Tex2D(width, height, NULL);
+            texture = new Tex2D(width, height, nullptr);
             texture->load();
             texture->setFilter(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
             texture->setWrap(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
 
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->data, 0);
         } else {
-            texture = NULL;
+            texture = nullptr;
         }
 
         if(hasDepth || hasStencil) {
-            //TODO encapsulate
             glGenRenderbuffers(1, &render);
             glBindRenderbuffer(GL_RENDERBUFFER, render);
 
@@ -111,7 +109,7 @@ namespace Fantasy {
                 GL_RENDERBUFFER, render
             );
         } else {
-            render = NULL;
+            render = 0;
         }
 
         end();
@@ -133,8 +131,8 @@ namespace Fantasy {
         capturing = false;
 
         last = before;
-        glBindFramebuffer(GL_FRAMEBUFFER, before == NULL ? NULL : before->data);
-        before = NULL;
+        glBindFramebuffer(GL_FRAMEBUFFER, before == nullptr ? 0 : before->data);
+        before = nullptr;
         glViewport(0, 0, App::instance->getWidth(), App::instance->getHeight());
     }
 }

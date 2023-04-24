@@ -5,7 +5,7 @@
 #include "tex_atlas.h"
 
 namespace Fantasy {
-    TexRegion::TexRegion(): TexRegion(NULL, 0, 0, 1, 1) {}
+    TexRegion::TexRegion(): TexRegion(nullptr, 0, 0, 1, 1) {}
     TexRegion::TexRegion(Tex2D *texture): TexRegion(texture, 0, 0, texture->width, texture->height) {}
     TexRegion::TexRegion(Tex2D *texture, int x, int y, int width, int height) {
         this->texture = texture;
@@ -14,7 +14,7 @@ namespace Fantasy {
         this->width = width;
         this->height = height;
 
-        if(texture == NULL) {
+        if(texture == nullptr) {
             u = v2 = 0.0f;
             u2 = v = 1.0f;
         } else {

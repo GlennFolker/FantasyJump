@@ -19,10 +19,10 @@ int main(int argc, char *argv[]) {
         app = new App(argc, argv, config);
     } catch(std::exception &e) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", e.what());
-        app = NULL;
+        app = nullptr;
     }
 
-    if(app != NULL && app->run()) {
+    if(app != nullptr && app->run()) {
         delete app;
 
         SDL_Log("Ended successful launch, program exited with code 0.");

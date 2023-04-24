@@ -10,7 +10,7 @@ namespace Fantasy {
         this->filename = filename;
         width = height = -1;
         errored = false;
-        data = NULL;
+        data = nullptr;
 
         FILE *fp = fopen(filename.c_str(), "rb");
         if(!fp) {
@@ -19,7 +19,7 @@ namespace Fantasy {
             return;
         }
 
-        png_struct *png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+        png_struct *png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
         if(!png_ptr) {
             printf("%s: Failed to create read struct.\n", filename.c_str());
 
@@ -32,7 +32,7 @@ namespace Fantasy {
         if(!info_ptr) {
             printf("%s: Failed to create info struct.\n", filename.c_str());
 
-            png_destroy_read_struct(&png_ptr, NULL, NULL);
+            png_destroy_read_struct(&png_ptr, nullptr, nullptr);
             fclose(fp);
             errored = true;
             return;
@@ -41,7 +41,7 @@ namespace Fantasy {
         if(setjmp(png_jmpbuf(png_ptr))) {
             printf("%s: PNG loading encountered errors.\n", filename.c_str());
 
-            png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+            png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
             fclose(fp);
             errored = true;
             return;
@@ -70,7 +70,7 @@ namespace Fantasy {
 
         png_read_image(png_ptr, data);
 
-        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
         fclose(fp);
     }
 
@@ -87,7 +87,7 @@ namespace Fantasy {
     }
 
     Png::~Png() {
-        if(data != NULL) {
+        if(data != nullptr) {
             for(int y = 0; y < height; y++) delete[] data[y];
             delete[] data;
         }
@@ -100,7 +100,7 @@ namespace Fantasy {
             return;
         }
 
-        png_struct *png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+        png_struct *png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
         if(!png_ptr) {
             printf("%s: Couldn't create write struct.", filename.c_str());
             return;
@@ -108,7 +108,7 @@ namespace Fantasy {
 
         png_info *info_ptr = png_create_info_struct(png_ptr);
         if(!info_ptr) {
-            printf("%s: Couldn't create info struct.");
+            printf("%s: Couldn't create info struct.", filename.c_str());
             return;
         }
 
@@ -116,7 +116,7 @@ namespace Fantasy {
         png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
         png_write_info(png_ptr, info_ptr);
         png_write_image(png_ptr, data);
-        png_write_end(png_ptr, NULL);
+        png_write_end(png_ptr, nullptr);
 
         png_destroy_write_struct(&png_ptr, &info_ptr);
         fclose(png_file);

@@ -51,7 +51,7 @@ namespace Fantasy {
         this->body->GetUserData().pointer = (uintptr_t)ref;
         rotateSpeed = 0.0f;
         spawned = false;
-        spawnSfx = deathSfx = NULL;
+        spawnSfx = deathSfx = nullptr;
     }
 
     void RigidComp::update() {
@@ -128,7 +128,7 @@ namespace Fantasy {
         holding = false;
         jumping = false;
         time = -1.0f;
-        sound = NULL;
+        sound = nullptr;
     }
 
     void JumpComp::hold() {
@@ -239,7 +239,7 @@ namespace Fantasy {
         this->range = range;
         lastShoot = timer = Time::time();
         inaccuracy = 0.0f;
-        shootSfx = NULL;
+        shootSfx = nullptr;
     }
 
     void ShooterComp::update() {
@@ -265,7 +265,7 @@ namespace Fantasy {
                     this->origin = origin;
                     this->radius = radius * radius;
                     this->team = team;
-                    closest = NULL;
+                    closest = nullptr;
                 }
 
                 bool ReportFixture(b2Fixture *fixture) override {
@@ -282,7 +282,7 @@ namespace Fantasy {
                     float range = (body->GetPosition() - origin).LengthSquared();
                     if(range > radius) return true;
 
-                    if(closest == NULL) {
+                    if(closest == nullptr) {
                         closest = body;
                         return true;
                     }
@@ -312,7 +312,7 @@ namespace Fantasy {
             world.QueryAABB(&report, bound);
 
             b2Body *target = report.get();
-            if(target != NULL) {
+            if(target != nullptr) {
                 if(shootSfx) createSfx(shootSfx);
                 if(!shootFx.empty()) createFx(shootFx, true);
                 entt::entity bullet = App::icontent().getByName<EntityType>(this->bullet)->create();

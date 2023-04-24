@@ -12,7 +12,7 @@ namespace Fantasy {
         bool performed;
 
         InputContext() {
-            data = NULL;
+            data = nullptr;
             performed = false;
         }
 

@@ -56,12 +56,12 @@ namespace Fantasy {
         glGenBuffers(1, &verticesData);
         glBindBuffer(GL_ARRAY_BUFFER, verticesData);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, NULL);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glGenBuffers(1, &indicesData);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indicesData);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     Mesh::~Mesh() {
@@ -90,7 +90,7 @@ namespace Fantasy {
 
     void Mesh::render(Shader *shader, unsigned int type, size_t offset, size_t count) {
         bind(shader);
-        glDrawElements(type, count, GL_UNSIGNED_SHORT, (void *)offset);
+        glDrawElements(type, count, GL_UNSIGNED_SHORT, reinterpret_cast<void *>(offset));
         unbind(shader);
     }
 
@@ -103,7 +103,7 @@ namespace Fantasy {
             unsigned int loc = shader->attributeLoc(attr.alias);
 
             glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, attr.components, attr.type, attr.normalized, vertSize, (void *)off);
+            glVertexAttribPointer(loc, attr.components, attr.type, attr.normalized, vertSize, reinterpret_cast<void *>(off));
 
             off += attr.size;
         }
@@ -113,7 +113,7 @@ namespace Fantasy {
 
     void Mesh::unbind(Shader *shader) {
         for(size_t i = 0; i < attrCount; i++) glDisableVertexAttribArray(shader->attributeLoc(attributes[i].alias));
-        glBindBuffer(GL_ARRAY_BUFFER, NULL);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 }
